@@ -330,10 +330,6 @@ python3 -m playwright install chromium
 
 ## Code Architecture & Best Practices
 
-### Why This Approach?
-
-PolarisGate was built with AI-assisted development (Cline). To ensure correctness, every design decision follows industry-standard patterns that are enforced through automated tests — not manual review.
-
 ### Backend Architecture
 
 #### Gateway Pattern (Single Entry Point)
@@ -498,8 +494,6 @@ def test_only_content_safety_endpoints():
     violations = [p for p in paths if any(f in p.lower() for f in FORBIDDEN)]
     assert len(violations) == 0, f"Forbidden endpoints: {violations}"
 ```
-
-**Why:** This is a **product strategy test** — unique to AI-assisted development. If AI adds agent governance features back, this test fails immediately. It acts as a automated architectural review.
 
 #### Contract Tests
 
