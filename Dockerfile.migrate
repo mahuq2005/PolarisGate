@@ -1,0 +1,4 @@
+FROM python:3.11-slim
+RUN pip install asyncpg
+COPY scripts/init_db.py /init_db.py
+CMD ["python", "/init_db.py"]

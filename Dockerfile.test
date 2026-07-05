@@ -1,0 +1,45 @@
+FROM python:3.11-slim
+WORKDIR /app
+
+# Install test dependencies
+COPY tests/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire services directory so imports like 'from shared.xxx' work
+COPY services/ /app/services/
+
+# Copy test files
+COPY tests/ /app/tests/
+
+# Copy project root files needed by security pipeline integration tests
+# Note: .github/, scripts/, *.sh, Dockerfile*, *.md are excluded by .dockerignore
+# so we use COPY with specific paths to override the ignore rules
+COPY .bandit.yaml /app/.bandit.yaml
+COPY .safety-policy.yml /app/.safety-policy.yml
+COPY semgrep/ /app/semgrep/
+COPY pyproject.toml /app/pyproject.toml
+COPY policies/ /app/policies/
+
+# Note: .github/, scripts/, *.sh, Makefile are excluded by .dockerignore
+# and cannot be overridden with explicit COPY. The security pipeline
+# integration tests gracefully skip when these files are missing.
+# To run those tests, build with: docker build -f Dockerfile.test --no-cache .
+
+# Copy benchmark results for accuracy regression tests
+# Note: .dockerignore excludes *.json, so we copy as .json.txt then rename
+COPY accuracy_benchmark_results.json /app/accuracy_benchmark_results.json.txt
+RUN cp /app/accuracy_benchmark_results.json.txt /app/accuracy_benchmark_results.json
+
+# Install extra deps required by the copied modules
+RUN pip install --no-cache-dir httpx redis pyyaml 'python-jose[cryptography]' bcrypt opentelemetry-exporter-otlp-proto-http 'pydantic[email]' slowapi tenacity fastapi uvicorn circuitbreaker prometheus-client
+
+# Install security scanning tools for security pipeline integration tests
+RUN pip install --no-cache-dir bandit semgrep
+
+# Set PYTHONPATH so 'from shared.xxx' and 'from hd_cascade.xxx' resolve correctly
+ENV PYTHONPATH=/app/services:/app/services/hallucination-detector
+
+# Set env vars for tests (matching .env values)
+ENV ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+CMD ["python", "-m", "pytest", "tests/", "-v", "--tb=short"]

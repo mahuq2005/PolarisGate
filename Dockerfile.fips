@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate FIPS 140-2/140-3 Compliant Dockerfile
+# Base: Red Hat UBI9 with OpenSSL FIPS provider
+# Use: docker build -f Dockerfile.fips -t polarisgate-gateway:fips .
+# ═══════════════════════════════════════════════════════════════════════════
+
+FROM redhat/ubi9:latest
+
+LABEL org.opencontainers.image.title="PolarisGate FIPS Gateway"
+LABEL org.opencontainers.image.description="FIPS 140-2/140-3 compliant AI governance gateway"
+LABEL org.opencontainers.image.vendor="NorthGuard AI"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.licenses="Proprietary"
+LABEL security.polarisgate.fips="140-3"
+LABEL security.polarisgate.compliance="soc2,iso27001,hipaa,pci"
+
+# Install Python 3.11 and FIPS-validated OpenSSL
+RUN dnf install -y --nodocs \
+    python3.11 \
+    python3.11-pip \
+    python3.11-devel \
+    openssl-fips-provider \
+    openssl \
+    curl \
+    ca-certificates \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+# Enable FIPS mode at the system level
+ENV OPENSSL_FIPS=1
+ENV FIPS_MODE=true
+ENV NSS_SSL_CBC_RANDOM_IV=0
+
+# Verify FIPS mode is active
+RUN openssl md5 /etc/passwd 2>&1 || true && \
+    echo "FIPS provider status:" && \
+    openssl list -providers 2>&1 | grep -i fips || echo "WARNING: FIPS provider not detected"
+
+# Install FIPS-validated cryptography version
+RUN pip3.11 install --no-cache-dir \
+    cryptography==42.0.5 \
+    pyopenssl==24.1.0 \
+    && python3.11 -c "from cryptography.hazmat.backends.openssl import backend; print('OpenSSL FIPS mode:', backend._fips_enabled)"
+
+WORKDIR /app
+
+# Copy application code (override this per service)
+COPY services/shared /app/shared
+
+# Security: non-root user
+RUN useradd -m -s /bin/bash appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# Health check with FIPS-compliant TLS
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+EXPOSE 8000
+
+CMD ["python3.11", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

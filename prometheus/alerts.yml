@@ -1,0 +1,372 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate Prometheus Alerting Rules
+# Enterprise-grade: Security, performance, compliance, and AI safety alerts
+# ═══════════════════════════════════════════════════════════════════════════
+
+groups:
+  - name: polarisgate_alerts
+    interval: 30s
+    rules:
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Service Health
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been unreachable for more than 1 minute."
+          runbook: "https://docs.polarisgate.ai/runbooks/service-down"
+
+      - alert: ServiceHighRestarts
+        expr: rate(process_restarts_total[15m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.job }} restarting frequently"
+          description: "{{ $labels.job }} has restarted {{ $value }} times in the last 15 minutes."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Security Alerts
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: HighAuthFailureRate
+        expr: rate(auth_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High authentication failure rate ({{ $value }}/min)"
+          description: "Authentication failures exceeded 10 per minute — possible brute force attack."
+
+      - alert: CriticalAuthFailureRate
+        expr: rate(auth_failures_total[5m]) > 50
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Critical authentication failure rate ({{ $value }}/min)"
+          description: "Authentication failures exceeded 50 per minute — active attack likely."
+
+      - alert: TokenBlacklistGrowth
+        expr: rate(token_blacklist_additions_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High token revocation rate ({{ $value }}/min)"
+          description: "Token revocation rate exceeded 100 per minute — possible compromised tokens."
+
+      - alert: RateLimitExceeded
+        expr: rate(rate_limit_exceeded_total[5m]) > 50
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High rate limit violation rate ({{ $value }}/min)"
+          description: "Rate limit violations exceeded 50 per minute."
+
+      - alert: PIIExposureDetected
+        expr: pii_exposure_alerts_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "PII exposure detected"
+          description: "PII exposure alert triggered — immediate investigation required."
+
+      - alert: DLPViolation
+        expr: rate(dlp_violations_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "DLP violations detected ({{ $value }}/min)"
+          description: "Data Loss Prevention violations exceeded 5 per minute."
+
+      - alert: BreachNotificationPending
+        expr: breach_notifications_pending > 0
+        for: 1h
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Breach notifications pending ({{ $value }})"
+          description: "{{ $value }} breach notifications have been pending for over 1 hour."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Toxicity / Safety Alerts
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: HighToxicityRate
+        expr: rate(guardrail_toxic_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: safety
+        annotations:
+          summary: "High toxicity rate ({{ $value }} toxic traces per minute)"
+          description: "Toxicity rate exceeded 10 per minute for the last 2 minutes."
+
+      - alert: ToxicitySpike
+        expr: rate(guardrail_toxic_total[5m]) / rate(guardrail_toxic_total[30m]) > 3
+        for: 2m
+        labels:
+          severity: warning
+          team: safety
+        annotations:
+          summary: "Toxicity spike detected ({{ $value }}x increase)"
+          description: "Toxicity rate spiked compared to 30-minute average."
+
+      - alert: CriticalToxicitySpike
+        expr: rate(guardrail_toxic_total[5m]) / rate(guardrail_toxic_total[30m]) > 10
+        for: 1m
+        labels:
+          severity: critical
+          team: safety
+        annotations:
+          summary: "Critical toxicity spike ({{ $value }}x increase)"
+          description: "Toxicity rate spiked 10x compared to 30-minute average — possible attack."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Accuracy Monitoring
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: LowAccuracy
+        expr: avg(guardrail_accuracy_ratio[1h]) < 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Low guardrail accuracy ({{ $value | humanizePercentage }})"
+          description: "Guardrail accuracy dropped below 85% in the last hour."
+
+      - alert: CriticalAccuracy
+        expr: avg(guardrail_accuracy_ratio[1h]) < 0.70
+        for: 5m
+        labels:
+          severity: critical
+          team: ml
+        annotations:
+          summary: "Critical accuracy drop ({{ $value | humanizePercentage }})"
+          description: "Guardrail accuracy dropped below 70% — immediate investigation required."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Latency Alerts
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(guardrail_check_duration_seconds_bucket[5m])) > 2.0
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High guardrail latency (p95 > 2s)"
+          description: "95th percentile guardrail check latency exceeded 2 seconds."
+
+      - alert: CriticalLatency
+        expr: histogram_quantile(0.99, rate(guardrail_check_duration_seconds_bucket[5m])) > 5.0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Critical guardrail latency (p99 > 5s)"
+          description: "99th percentile guardrail check latency exceeded 5 seconds."
+
+      - alert: GatewayLatency
+        expr: histogram_quantile(0.95, rate(gateway_request_duration_seconds_bucket[5m])) > 1.0
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High gateway latency (p95 > 1s)"
+          description: "95th percentile gateway request latency exceeded 1 second."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Hallucination Detection
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: HighHallucinationRate
+        expr: rate(hallucination_detected_total[5m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+          team: safety
+        annotations:
+          summary: "High hallucination rate ({{ $value }} per minute)"
+          description: "Hallucination detection rate exceeded 20 per minute."
+
+      - alert: HallucinationAccuracyDrop
+        expr: avg(hallucination_accuracy_ratio[1h]) < 0.80
+        for: 5m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Hallucination detector accuracy dropped ({{ $value | humanizePercentage }})"
+          description: "Hallucination detection accuracy below 80% in the last hour."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Redis / Stream Health
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: RedisStreamLag
+        expr: redis_stream_length_gauge{trace_stream} > 1000
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Redis trace stream backlog > 1000 messages"
+
+      - alert: RedisStreamCriticalLag
+        expr: redis_stream_length_gauge{trace_stream} > 5000
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Redis trace stream backlog > 5000 messages"
+          description: "Critical backlog — processing may be falling behind."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Drift Detection
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: ModelDriftDetected
+        expr: drift_score > 0.15
+        for: 5m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Model drift detected (score: {{ $value }})"
+          description: "Drift score exceeded 0.15 — retraining may be needed."
+
+      - alert: CriticalModelDrift
+        expr: drift_score > 0.30
+        for: 2m
+        labels:
+          severity: critical
+          team: ml
+        annotations:
+          summary: "Critical model drift (score: {{ $value }})"
+          description: "Drift score exceeded 0.30 — immediate retraining recommended."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Resource Usage
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 1024
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage ({{ $value | humanize1024 }}MB)"
+          description: "Service memory usage exceeded 1GB."
+
+      - alert: CriticalMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 2048
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Critical memory usage ({{ $value | humanize1024 }}MB)"
+          description: "Service memory usage exceeded 2GB."
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage ({{ $value | humanizePercentage }})"
+          description: "CPU usage exceeded 80% for 5 minutes."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Disk space below 10%"
+          description: "Available disk space is below 10% on {{ $labels.device }}."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Compliance Alerts
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: AuditLogAnomaly
+        expr: rate(audit_log_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: compliance
+        annotations:
+          summary: "Audit log errors detected ({{ $value }}/min)"
+          description: "Audit log errors exceeded 5 per minute — possible tampering."
+
+      - alert: EncryptionKeyExpiring
+        expr: encryption_key_expiry_days < 30
+        for: 1d
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Encryption key expiring in {{ $value }} days"
+          description: "Encryption key {{ $labels.key_id }} will expire in {{ $value }} days."
+
+      - alert: CertificateExpiring
+        expr: (cert_expiry_timestamp - time()) / 86400 < 30
+        for: 1d
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "TLS certificate expiring in {{ $value | humanizeDuration }}"
+          description: "Certificate {{ $labels.cert_name }} expires in {{ $value | humanizeDuration }}."
+
+      - alert: ConsentRevocationRate
+        expr: rate(consent_revocations_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: compliance
+        annotations:
+          summary: "High consent revocation rate ({{ $value }}/min)"
+          description: "Consent revocation rate exceeded 10 per minute."
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Budget / Cost Alerts
+      # ═══════════════════════════════════════════════════════════════════
+      - alert: BudgetThresholdExceeded
+        expr: budget_usage_ratio > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: finance
+        annotations:
+          summary: "Budget threshold exceeded ({{ $value | humanizePercentage }})"
+          description: "Budget usage exceeded 80% for {{ $labels.budget_id }}."
+
+      - alert: BudgetExhausted
+        expr: budget_usage_ratio > 1.0
+        for: 1m
+        labels:
+          severity: critical
+          team: finance
+        annotations:
+          summary: "Budget exhausted ({{ $value | humanizePercentage }})"
+          description: "Budget {{ $labels.budget_id }} has been fully exhausted."

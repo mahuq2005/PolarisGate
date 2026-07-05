@@ -1,0 +1,27 @@
+# PolarisGate Training Pipeline Docker Image
+# Includes GPU support via CUDA, LoRA fine-tuning, and data processing tools.
+# Build: docker build -f Dockerfile.train -t polarisgate-train .
+
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl git build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.train.txt .
+RUN pip install --no-cache-dir -r requirements.train.txt
+
+# Create data directories
+RUN mkdir -p /app/data/raw /app/data/clean /app/data/split /app/models
+
+ENV HF_HOME=/app/.cache/huggingface
+ENV TRANSFORMERS_CACHE=/app/.cache/huggingface/transformers
+ENV MLFLOW_TRACKING_URI=http://mlflow:5000
+ENV MLFLOW_EXPERIMENT_NAME=polarisgate-training
+
+# Scripts are mounted at runtime via volume (-v $(pwd)/scripts:/app/scripts:ro)
+# Pre-install all dependencies here so container starts fast
+
+CMD ["python", "-c", "print('PolarisGate Training Image ready. Use: make train')"]

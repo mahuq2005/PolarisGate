@@ -1,0 +1,38 @@
+# PolarisGate E2E Test Override
+# Run with: docker compose -f docker-compose.yml -f docker-compose.test.yml up tests
+# This override adds the tests service with minimal required dependencies.
+
+services:
+  # ─── E2E Test Runner ─────────────────────────────────────────────────────
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    image: polarisgate-tests
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      guardrails:
+        condition: service_healthy
+      aida-bridge:
+        condition: service_healthy
+      collector:
+        condition: service_healthy
+      agent-sidecar:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      - GATEWAY_URL=http://gateway:8000
+      - GUARDRAILS_URL=http://guardrails:8005
+      - AIDA_URL=http://aida-bridge:8001
+      - COLLECTOR_URL=http://collector:8006
+      - SIDECAR_URL=http://agent-sidecar:10000
+      - KILL_SWITCH_URL=http://kill-switch:10001
+      - DATABASE_URL=${DATABASE_URL}
+      - SKIP_SLOW_TESTS=1
+    networks:
+      - polarisgate_default
+    # Override CMD to run all tests with verbose output
+    command: ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "-x", "--timeout=120"]

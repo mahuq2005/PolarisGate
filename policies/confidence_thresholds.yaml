@@ -1,0 +1,58 @@
+# PolarisGate Domain-Specific Confidence Thresholds
+# Different domains require different hallucination detection thresholds
+domains:
+  banking:
+    description: "Financial services and banking operations"
+    hallucination_threshold: 0.95
+    action: "block"  # Never show hallucinated content
+    require_human_review: true
+    audit_level: "full"  # Every interaction is logged with full context
+
+  healthcare:
+    description: "Medical advice and health information"
+    hallucination_threshold: 0.98
+    action: "block"
+    require_human_review: true
+    audit_level: "full"
+
+  legal:
+    description: "Legal advice and document review"
+    hallucination_threshold: 0.95
+    action: "block"
+    require_human_review: true
+    audit_level: "full"
+
+  government:
+    description: "Government services and public information"
+    hallucination_threshold: 0.90
+    action: "block"
+    require_human_review: true
+    audit_level: "full"
+
+  customer_support:
+    description: "Customer service and support interactions"
+    hallucination_threshold: 0.70
+    action: "flag_with_warning"
+    require_human_review: false
+    audit_level: "summary"
+
+  internal_summary:
+    description: "Internal document summaries and analysis"
+    hallucination_threshold: 0.60
+    action: "log_only"
+    require_human_review: false
+    audit_level: "minimal"
+
+  education:
+    description: "Educational content and tutoring"
+    hallucination_threshold: 0.80
+    action: "flag_with_warning"
+    require_human_review: false
+    audit_level: "summary"
+
+  creative:
+    description: "Creative writing and content generation"
+    hallucination_threshold: 0.50
+    action: "log_only"
+    require_human_review: false
+    audit_level: "minimal"

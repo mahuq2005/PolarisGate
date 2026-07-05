@@ -1,0 +1,30 @@
+rules:
+  - id: no-command-injection
+    patterns:
+      - pattern-either:
+          - pattern: |
+              subprocess.call($CMD, ...)
+          - pattern: |
+              subprocess.check_call($CMD, ...)
+          - pattern: |
+              subprocess.check_output($CMD, ...)
+          - pattern: |
+              subprocess.Popen($CMD, ...)
+          - pattern: |
+              os.system($CMD)
+          - pattern: |
+              os.popen($CMD)
+      - metavariable-regex:
+          metavariable: $CMD
+          regex: .*f["'].*\{.*\}.*|.*\+.*
+    message: >
+      Potential command injection: constructing shell commands with string
+      interpolation. Use subprocess with a list of arguments instead of
+      shell=True, and validate all user-controlled inputs.
+    severity: ERROR
+    languages:
+      - python
+    paths:
+      exclude:
+        - tests/
+        - scripts/

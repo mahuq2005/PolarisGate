@@ -1,0 +1,87 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate Pre-commit Hooks
+# Enterprise-grade: Security, linting, type checking, secrets detection
+# Install: pre-commit install
+# Run all: pre-commit run --all-files
+# ═══════════════════════════════════════════════════════════════════════════
+repos:
+  # ─── General Quality Hooks ──────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: destroyed-symlinks
+      - id: fix-byte-order-marker
+
+  # ─── Python Linting & Formatting ────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ─── Type Checking ──────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports, --no-strict-optional, --warn-unused-configs]
+        additional_dependencies: [types-PyYAML, types-requests, types-python-dateutil]
+        files: ^services/
+        pass_filenames: false
+
+  # ─── Security Linting (SAST) ────────────────────────────────────────────
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.8
+    hooks:
+      - id: bandit
+        args: [-r, services/, -f, json, --quiet, --configfile, .bandit.yaml]
+        pass_filenames: false
+
+  # ─── Secrets Detection ──────────────────────────────────────────────────
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: .env.example|tests/|\.yaml$|package-lock.json
+
+  # ─── Dependency Vulnerability Check ─────────────────────────────────────
+  - repo: https://github.com/pyupio/safety
+    rev: 3.2.0
+    hooks:
+      - id: safety
+        args: [check, --policy-file, .safety-policy.yml, --full-report]
+        files: requirements.*\.txt$
+        pass_filenames: false
+
+  # ─── Dockerfile Linting ─────────────────────────────────────────────────
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint
+        args: [--failure-threshold, warning]
+        files: Dockerfile.*$
+
+  # ─── YAML Linting ───────────────────────────────────────────────────────
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict]
+        files: \.(yaml|yml)$

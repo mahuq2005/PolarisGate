@@ -1,0 +1,90 @@
+# NorthGuard .dockerignore
+# Exclude everything that shouldn't be in Docker build context
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.Python
+env/
+venv/
+.venv/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test artifacts
+test-results/
+load-test-results/
+reports/
+*.log
+*.xml
+*.html
+
+# Backup files
+*.bak
+*.bak_*
+*.patch
+Backup/
+
+# Docker
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+
+# Kubernetes
+k8s/
+
+# CI/CD
+.github/
+
+# Scripts
+scripts/
+*.sh
+
+# Documentation
+README.md
+*.md
+!services/**/*.md
+
+# Secrets
+**/secrets/
+**/certs/
+*.key
+*.crt
+*.pem
+*.cert
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~

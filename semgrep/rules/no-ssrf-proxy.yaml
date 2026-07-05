@@ -1,0 +1,31 @@
+rules:
+  - id: no-ssrf-proxy
+    patterns:
+      - pattern-either:
+          - pattern: |
+              httpx.AsyncClient(...)
+          - pattern: |
+              httpx.Client(...)
+          - pattern: |
+              requests.get($URL, ...)
+          - pattern: |
+              requests.post($URL, ...)
+          - pattern: |
+              httpx.AsyncClient().get($URL, ...)
+          - pattern: |
+              httpx.AsyncClient().post($URL, ...)
+      - metavariable-regex:
+          metavariable: $URL
+          regex: .*path.*|.*url.*|.*target.*|.*destination.*
+      - focus-metavariable: $URL
+    message: >
+      Potential SSRF vulnerability: making an outbound HTTP request to a
+      user-controlled URL. Ensure the URL is validated against an allowlist
+      and does not allow access to internal services (e.g., 169.254.169.254,
+      127.0.0.1, 10.x.x.x, 172.16.x.x, 192.168.x.x).
+    severity: WARNING
+    languages:
+      - python
+    paths:
+      exclude:
+        - tests/

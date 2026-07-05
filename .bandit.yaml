@@ -1,0 +1,55 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate Bandit Configuration
+# Enterprise-grade: Security linter for Python code
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Exclude these paths
+exclude_dirs:
+  - tests
+  - scripts
+  - .git
+  - __pycache__
+  - node_modules
+  - .eggs
+  - "*.egg-info"
+  - .mypy_cache
+  - .ruff_cache
+  - .pytest_cache
+
+# Test IDs to skip with justification
+skips:
+  # B101: assert used - acceptable in tests (tests excluded above)
+  - B101
+  # B311: pseudo-random generators - acceptable for non-security use
+  - B311
+  # B404: subprocess import - needed for system profiling
+  - B404
+  # B603: subprocess without shell - used with hardcoded commands
+  - B603
+  # B607: partial path - used with hardcoded system commands
+  - B607
+
+# Test IDs to include (empty = all)
+tests:
+
+# Confidence level threshold
+confidence:
+  - HIGH
+  - MEDIUM
+
+# Severity level threshold
+severity:
+  - HIGH
+  - MEDIUM
+  - LOW
+
+# Plugin configuration
+plugins:
+  # Skip specific tests in specific files
+  shell_injection:
+    skip:
+      - "scripts/*.sh"
+  hardcoded_password:
+    skip:
+      - "*.example"
+      - "tests/*"

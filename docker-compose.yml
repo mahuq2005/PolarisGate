@@ -1,0 +1,320 @@
+networks:
+  polarisgate_default:
+    driver: bridge
+services:
+  aida-bridge:
+    build:
+      context: .
+      dockerfile: services/aida-bridge/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    env_file: .env
+    environment:
+    - OLLAMA_URL=http://ollama:11434
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 45s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8001/health
+      timeout: 3s
+    image: polarisgate-aida-bridge
+    networks:
+    - polarisgate_default
+    ports:
+    - 8001:8001
+    restart: unless-stopped
+    volumes:
+    - aida_chroma:/app/chroma_db
+    - aida_pdfs:/app/pdfs
+  bias-monitor:
+    build:
+      context: .
+      dockerfile: services/bias-monitor/Dockerfile
+    env_file: .env
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 45s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8000/health
+      timeout: 3s
+    image: polarisgate-bias-monitor
+    networks:
+    - polarisgate_default
+    restart: unless-stopped
+    volumes: []
+  collector:
+    build:
+      context: .
+      dockerfile: services/collector/Dockerfile
+    env_file: .env
+    environment:
+    - REDIS_HOST=redis
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 45s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8006/health
+      timeout: 3s
+    image: polarisgate-collector
+    networks:
+    - polarisgate_default
+    ports:
+    - 8006:8006
+    restart: unless-stopped
+    volumes: []
+  frontend:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8002
+      context: ./frontend
+      dockerfile: Dockerfile
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 30s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:3000
+      timeout: 3s
+    image: polarisgate-frontend
+    networks:
+    - polarisgate_default
+    ports:
+    - 3001:3000
+    restart: unless-stopped
+    volumes: []
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    env_file: .env
+    environment:
+    - GUARDRAILS_URL=http://guardrails:8005
+    - AIDA_URL=http://aida-bridge:8001
+    - REDIS_HOST=redis
+    - POLICY_FILE_PATH=/app/policies/policies.yaml
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 45s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8000/health
+      timeout: 3s
+    image: polarisgate-gateway
+    networks:
+    - polarisgate_default
+    ports:
+    - 8002:8000
+    restart: unless-stopped
+    volumes:
+    - ./policies:/app/policies
+  guardrails:
+    build:
+      context: .
+      dockerfile: services/guardrails/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    env_file: .env
+    environment:
+    - AIDA_URL=http://aida-bridge:8001
+    - REDIS_HOST=redis
+    - OLLAMA_URL=http://ollama:11434
+    - TOXIC_MODEL_NAME=llama3.2:1b
+    - DATABASE_URL=${DATABASE_URL}
+    - POLICY_DB_PATH=/app/policies/policies.yaml
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 60s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8005/health
+      timeout: 3s
+    image: polarisgate-guardrails
+    networks:
+    - polarisgate_default
+    ports:
+    - 8005:8005
+    restart: unless-stopped
+    volumes:
+    - ./policies:/app/policies
+  hallucination-detector:
+    build:
+      context: .
+      dockerfile: services/hallucination-detector/Dockerfile
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+    - LLM_A_URL=http://ollama:11434/api/generate
+    - LLM_B_URL=http://ollama:11434/api/generate
+    - MODEL_A=llama3.2:1b
+    - MODEL_B=llama3.2:3b
+    - DATABASE_URL=${DATABASE_URL}
+    - THRESHOLDS_PATH=/app/policies/confidence_thresholds.yaml
+    healthcheck:
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8008/health
+      timeout: 5s
+    image: polarisgate-hallucination-detector
+    networks:
+    - polarisgate_default
+    ports:
+    - 8008:8008
+    restart: unless-stopped
+    volumes: []
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      frontend:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    image: polarisgate-nginx
+    networks:
+    - polarisgate_default
+    ports:
+    - 80:80
+    - 443:443
+    restart: unless-stopped
+    volumes: []
+  ollama:
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 60s
+      test:
+      - CMD-SHELL
+      - ollama list 2>/dev/null || exit 1
+      timeout: 10s
+    image: ollama/ollama:latest
+    networks:
+    - polarisgate_default
+    restart: unless-stopped
+    volumes: []
+  opa:
+    command:
+    - run
+    - --server
+    - --addr=0.0.0.0:8181
+    - --log-level=info
+    - --set=decision_logs.console=true
+    healthcheck:
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      test:
+      - CMD
+      - opa
+      - eval
+      - 1+1
+      timeout: 5s
+    image: openpolicyagent/opa:0.68.0-static
+    networks:
+    - polarisgate_default
+    ports:
+    - 8181:8181
+    restart: unless-stopped
+    volumes: []
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    env_file: .env
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 45s
+      test:
+      - CMD-SHELL
+      - pg_isready -U polarisgate
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+    - polarisgate_default
+    restart: unless-stopped
+    volumes: []
+  redis:
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 45s
+      test:
+      - CMD
+      - redis-cli
+      - -a
+      - ${REDIS_PASSWORD}
+      - ping
+      timeout: 3s
+    image: redis:7-alpine
+    networks:
+    - polarisgate_default
+    restart: unless-stopped
+    volumes: []
+volumes:
+  aida_chroma: null
+  aida_pdfs: null

@@ -1,0 +1,418 @@
+# PolarisGate Helm Chart Values
+# Enterprise-grade: security contexts, resource limits, autoscaling, secrets
+
+image:
+  repository: ghcr.io/polarisgate
+  tag: latest
+  pullPolicy: Always
+
+# Global settings applied to all deployments
+global:
+  environment: production
+  # Secrets should be stored in a Kubernetes Secret or external secrets manager
+  # These are just references - actual values come from --set or values file
+  postgres:
+    host: postgres
+    port: 5432
+    database: polarisgate
+  redis:
+    host: redis
+    port: 6379
+
+# Service-specific configurations
+services:
+  gateway:
+    port: 8000
+    replicas: 2
+    image: gateway
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: "500m"
+        memory: 512Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  guardrails:
+    port: 8005
+    replicas: 2
+    image: guardrails
+    env:
+      PII_HYBRID_ENABLED: "true"
+      OLLAMA_URL: "http://ollama:11434"
+      TOXIC_MODEL_NAME: "llama3.2:1b"
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: "1"
+        memory: 1Gi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  collector:
+    port: 8006
+    replicas: 1
+    image: collector
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: "500m"
+        memory: 512Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  aida-bridge:
+    port: 8001
+    replicas: 1
+    image: aida-bridge
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: "500m"
+        memory: 512Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  bias-monitor:
+    port: 8007
+    replicas: 1
+    image: bias-monitor
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: "500m"
+        memory: 512Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  frontend:
+    port: 3000
+    replicas: 2
+    image: frontend
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  internal-ca:
+    port: 8443
+    replicas: 1
+    image: internal-ca
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  cert-manager:
+    port: 8444
+    replicas: 1
+    image: cert-manager
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  sidecar-proxy:
+    port: 10000
+    replicas: 1
+    image: sidecar-proxy
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  kill-switch:
+    port: 10001
+    replicas: 1
+    image: kill-switch
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  budget-controller:
+    port: 8007
+    replicas: 1
+    image: budget-controller
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  semantic-cache:
+    port: 8010
+    replicas: 1
+    image: semantic-cache
+    resources:
+      limits:
+        cpu: "500m"
+        memory: 512Mi
+      requests:
+        cpu: "250m"
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  hallucination-detector:
+    port: 8008
+    replicas: 1
+    image: hallucination-detector
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: "1"
+        memory: 1Gi
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 70
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+  closed-loop:
+    port: 8009
+    replicas: 1
+    image: closed-loop
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: "500m"
+        memory: 512Mi
+    autoscaling:
+      enabled: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  hosts:
+    - host: polarisgate.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: gateway
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls:
+    - hosts:
+        - polarisgate.example.com
+      secretName: polarisgate-tls
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    scrapeInterval: 15s
+  grafana:
+    enabled: false
+
+# Database
+postgresql:
+  enabled: true
+  auth:
+    database: polarisgate
+    username: polarisgate
+  primary:
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: "1"
+        memory: 1Gi
+    persistence:
+      size: 10Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+  architecture: standalone
+  master:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: "500m"
+        memory: 512Mi
+    persistence:
+      size: 5Gi

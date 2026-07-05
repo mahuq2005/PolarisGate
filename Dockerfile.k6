@@ -1,0 +1,4 @@
+FROM grafana/k6:latest
+COPY tests/load_northguard.js /scripts/load_northguard.js
+ENTRYPOINT ["k6"]
+CMD ["run", "/scripts/load_northguard.js"]

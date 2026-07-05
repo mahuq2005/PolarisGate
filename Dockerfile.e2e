@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/playwright:v1.50.0-jammy
+
+RUN apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy package.json and install Node dependencies at /app level
+COPY tests/e2e/package.json /app/package.json
+RUN npm install
+
+# Install all browsers (chromium, firefox, webkit) – required for iPad tests
+RUN npx playwright install
+
+# Copy test files to /app (not /app/e2e) so module resolution is consistent
+COPY tests/e2e/*.js /app/
+COPY tests/e2e/*.ts /app/
+COPY tests/e2e/*.json /app/
+COPY tests/e2e/*.mjs /app/
+COPY tests/api_contract /app/api_contract
+COPY tests/requirements-e2e.txt /tmp/
+
+RUN pip3 install -r /tmp/requirements-e2e.txt
+
+CMD ["bash", "-c", "echo 'Running Playwire E2E tests (full-ui-walkthrough)...' && cd /app && npx playwright test full-ui-walkthrough.spec.js --config=playwright.config.js && echo 'Running API contract tests...' && pytest /app/api_contract -v"]

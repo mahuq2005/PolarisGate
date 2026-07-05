@@ -1,0 +1,68 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate Safety Policy
+# Enterprise-grade: Whitelist known false positives and accepted risks
+# Format: https://docs.pyup.io/docs/safety-20-policy-file
+# ═══════════════════════════════════════════════════════════════════════════
+
+security:
+  ignore-cvss-severity-below: 4.0
+  ignore-cvss-unknown-severity: false
+  ignore-unpinned-requirements: true
+  continue-on-vulnerability-error: false
+
+  # Ignored vulnerabilities with justification
+  ignore-vulnerabilities:
+    # python-jose 3.3.0 - Algorithm confusion (CVE-2024-33663)
+    # We only use HS256 for JWT, not RSA/ECDSA. Algorithm is explicitly set.
+    70715:
+      reason: >
+        We only use HS256 symmetric key algorithm. The vulnerability affects
+        RSA/ECDSA key confusion which is not applicable to our usage.
+    
+    # python-jose 3.3.0 - DoS via crafted JWE (CVE-2024-33664)
+    # We do not use JWE encryption, only JWT signing.
+    70716:
+      reason: >
+        We only use JWT for authentication tokens, not JWE encryption.
+        The DoS vulnerability in JWE decryption is not applicable.
+
+    # sentence-transformers 2.2.2 - Various CVEs
+    # Used only in offline model training/evaluation, not exposed to user input
+    73169:
+      reason: >
+        sentence-transformers is used only in offline training pipelines,
+        not in any service exposed to user input. Acceptable risk.
+
+    # pypdf 3.17.4 - Multiple CVEs
+    # Used only for PDF report generation from trusted internal data
+    89026, 84345, 84344, 93692, 93668, 93689, 86802, 86803, 86804, 88029, 87482, 89812, 78709, 80589, 80590, 87621:
+      reason: >
+        pypdf is used only for generating compliance PDF reports from
+        trusted internal data. Not exposed to user-uploaded PDFs.
+
+    # torch 2.2.0 - Various CVEs
+    # Used only in offline model training/evaluation
+    76771, 76769, 78828:
+      reason: >
+        PyTorch is used only in offline training pipelines and model
+        evaluation. Not exposed to user input or network requests.
+
+    # transformers 4.48.3 - ReDoS and deserialization CVEs
+    # Used only for BERT model inference with trusted inputs
+    79596, 79855, 78688, 79595, 77714, 77149, 78153, 93822, 85102, 77985, 77988, 77986:
+      reason: >
+        transformers is used only for BERT toxicity classification with
+        pre-processed, sanitized inputs. ReDoS vulnerabilities affect
+        tokenizer parsing of untrusted input, which we sanitize first.
+
+  # Vulnerability severity thresholds for CI/CD pipeline
+  # Fail the build if any vulnerability exceeds these thresholds
+  fail-build:
+    cvss-severity: high
+    exploitability: critical
+    age-in-days: 30
+
+  # Report configuration
+  report:
+    format: json
+    output: reports/safety-report.json

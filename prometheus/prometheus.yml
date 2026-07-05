@@ -1,0 +1,112 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate Prometheus Configuration
+# Enterprise-grade: Metrics collection for all services
+# ═══════════════════════════════════════════════════════════════════════════
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: polarisgate
+    environment: production
+
+rule_files:
+  - "alerts.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+scrape_configs:
+  - job_name: 'polarisgate-gateway'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['gateway:8000']
+        labels:
+          service: gateway
+
+  - job_name: 'polarisgate-guardrails'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['guardrails:8005']
+        labels:
+          service: guardrails
+
+  - job_name: 'polarisgate-hallucination'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['hallucination-detector:8006']
+        labels:
+          service: hallucination-detector
+
+  - job_name: 'polarisgate-collector'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['collector:8000']
+        labels:
+          service: collector
+
+  - job_name: 'polarisgate-bias-monitor'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['bias-monitor:8007']
+        labels:
+          service: bias-monitor
+
+  - job_name: 'polarisgate-budget-controller'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['budget-controller:8008']
+        labels:
+          service: budget-controller
+
+  - job_name: 'polarisgate-closed-loop'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['closed-loop:8009']
+        labels:
+          service: closed-loop
+
+  - job_name: 'polarisgate-kill-switch'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['kill-switch:8010']
+        labels:
+          service: kill-switch
+
+  - job_name: 'polarisgate-sidecar-proxy'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['sidecar-proxy:10000']
+        labels:
+          service: sidecar-proxy
+
+  - job_name: 'polarisgate-aida-bridge'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['aida-bridge:8002']
+        labels:
+          service: aida-bridge
+
+  - job_name: 'polarisgate-semantic-cache'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['semantic-cache:8010']
+        labels:
+          service: semantic-cache
+
+  - job_name: 'polarisgate-nginx'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['nginx:80']
+        labels:
+          service: nginx
+
+  - job_name: 'polarisgate-node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: node

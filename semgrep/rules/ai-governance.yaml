@@ -1,0 +1,178 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PolarisGate Semgrep Rules — AI Governance & Security
+# Enterprise-grade: Custom rules for AI safety, compliance, and security
+# ═══════════════════════════════════════════════════════════════════════════
+
+rules:
+  # ─── AI Safety Rules ────────────────────────────────────────────────────
+
+  - id: no-unsafe-llm-output
+    pattern: |
+      response = $LLM.generate($PROMPT)
+      ...
+      return response
+    message: >
+      LLM output must be validated through guardrails before returning.
+      Use guardrails.validate() or toxicity_detector.check() on the response.
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - services/gateway/
+        - services/aida-bridge/
+
+  - id: no-unvalidated-user-input-to-llm
+    pattern: |
+      $LLM.generate($USER_INPUT)
+    message: >
+      User input must be sanitized before passing to LLM.
+      Use sanitizer.sanitize() or guardrails.check_input() first.
+    severity: WARNING
+    languages: [python]
+    paths:
+      include:
+        - services/gateway/
+        - services/guardrails/
+
+  # ─── PII / Data Privacy Rules ───────────────────────────────────────────
+
+  - id: no-plaintext-pii-in-logs
+    patterns:
+      - pattern: |
+          logging.$LEVEL($MSG)
+      - pattern-not: |
+          logging.$LEVEL($MSG, extra={"pii_masked": True})
+      - metavariable-regex:
+          metavariable: $MSG
+          regex: (.*(email|ssn|sin|credit_card|phone|address).*)
+    message: >
+      PII data must be masked before logging. Use audit.mask_pii() or
+      ensure the log message does not contain raw PII fields.
+    severity: ERROR
+    languages: [python]
+
+  - id: no-hardcoded-encryption-keys
+    patterns:
+      - pattern: |
+          $KEY = "$VALUE"
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: ^[A-Za-z0-9+/=]{32,}$
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: .*(key|secret|password|token|credential).*
+    message: >
+      Hardcoded encryption keys or secrets detected. Use environment
+      variables or Vault for secrets management.
+    severity: ERROR
+    languages: [python, javascript, typescript]
+
+  # ─── Compliance Rules ───────────────────────────────────────────────────
+
+  - id: missing-audit-log
+    patterns:
+      - pattern: |
+          def $FUNC($REQ, ...):
+            ...
+            return $RESPONSE
+      - pattern-not-inside: |
+          audit.log(...)
+          ...
+    message: >
+      API endpoints must include audit logging for compliance.
+      Add audit.log() call before returning the response.
+    severity: WARNING
+    languages: [python]
+    paths:
+      include:
+        - services/gateway/app/
+        - services/aida-bridge/app/
+
+  - id: missing-rate-limit
+    patterns:
+      - pattern: |
+          @app.$METHOD("/api/...")
+          def $FUNC(...):
+            ...
+      - pattern-not-inside: |
+          @rate_limit(...)
+          ...
+    message: >
+      API endpoints should have rate limiting applied.
+      Add @rate_limit decorator to this endpoint.
+    severity: WARNING
+    languages: [python]
+    paths:
+      include:
+        - services/gateway/app/
+
+  # ─── Security Rules ─────────────────────────────────────────────────────
+
+  - id: no-unsafe-pickle
+    patterns:
+      - pattern: pickle.loads($DATA)
+      - pattern-not: pickle.loads($DATA, fix_imports=False, encoding="bytes")
+    message: >
+      Unsafe pickle deserialization detected. Use safe alternatives
+      like JSON or msgpack for untrusted data.
+    severity: ERROR
+    languages: [python]
+
+  - id: no-sql-injection
+    patterns:
+      - pattern: |
+          cursor.execute(f"...{$VAR}...")
+      - pattern-not: |
+          cursor.execute("...%s...", ($VAR,))
+    message: >
+      SQL injection vulnerability detected. Use parameterized queries
+      with %s placeholders instead of f-strings.
+    severity: ERROR
+    languages: [python]
+
+  - id: no-command-injection
+    patterns:
+      - pattern: |
+          subprocess.$METHOD(f"...{$VAR}...", shell=True)
+      - pattern-not: |
+          subprocess.$METHOD([...], shell=False)
+    message: >
+      Command injection vulnerability detected. Use subprocess with
+      argument lists (shell=False) instead of shell=True with f-strings.
+    severity: ERROR
+    languages: [python]
+
+  # ─── Model Governance Rules ─────────────────────────────────────────────
+
+  - id: no-unversioned-model
+    patterns:
+      - pattern: |
+          model = $MODEL_CLASS.load($PATH)
+      - pattern-not-inside: |
+          model_registry.get_version(...)
+          ...
+    message: >
+      Models should be loaded through the model registry with versioning.
+      Use model_registry.get_model() instead of direct file loading.
+    severity: WARNING
+    languages: [python]
+    paths:
+      include:
+        - services/guardrails/
+        - services/hallucination-detector/
+
+  - id: missing-model-drift-check
+    patterns:
+      - pattern: |
+          $MODEL.predict($INPUT)
+      - pattern-not-inside: |
+          drift_detector.check(...)
+          ...
+    message: >
+      Model predictions should be preceded by drift detection checks.
+      Add drift_detector.check() before calling predict().
+    severity: WARNING
+    languages: [python]
+    paths:
+      include:
+        - services/guardrails/

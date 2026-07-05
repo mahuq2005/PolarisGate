@@ -1,0 +1,703 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: polarisgate-nginx
+    ports:
+    - 80:80
+    - 443:443
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - nginx
+      - -t
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    image: polarisgate-gateway
+    ports:
+    - 8000:8000
+    env_file: .env
+    environment:
+    - GUARDRAILS_URL=http://guardrails:8005
+    - AIDA_URL=http://aida-bridge:8001
+    - REDIS_HOST=redis
+    - VAULT_ENABLED=${VAULT_ENABLED:-false}
+    - VAULT_ADDR=http://vault:8200
+    - VAULT_TOKEN=${VAULT_TOKEN:-}
+    - FIPS_MODE=${FIPS_MODE:-false}
+    - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
+    - COMPLIANCE_MODE=${COMPLIANCE_MODE:-full}
+    networks: null
+    volumes:
+    - polarisgate_default
+    - policy_data:/app/policies.yaml
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8000/health
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  guardrails:
+    build:
+      context: .
+      dockerfile: services/guardrails/Dockerfile
+    image: polarisgate-guardrails
+    ports:
+    - 8005:8005
+    env_file: .env
+    environment:
+    - AIDA_URL=http://aida-bridge:8001
+    - REDIS_HOST=redis
+    - OLLAMA_URL=http://ollama:11434
+    - TOXIC_MODEL_NAME=llama3.2:1b
+    - DATABASE_URL=${DATABASE_URL}
+    - GUARDRAILS_TIER=${GUARDRAILS_TIER:-}
+    networks: null
+    volumes:
+    - polarisgate_default
+    - policy_data:/app/policies.yaml
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8005/health
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+  aida-bridge:
+    build:
+      context: .
+      dockerfile: services/aida-bridge/Dockerfile
+    image: polarisgate-aida-bridge
+    ports:
+    - 8001:8001
+    env_file: .env
+    environment:
+    - OLLAMA_URL=http://ollama:11434
+    networks: null
+    volumes:
+    - aida_chroma:/app/chroma_db
+    - aida_pdfs:/app/pdfs
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8001/health
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  collector:
+    build:
+      context: .
+      dockerfile: services/collector/Dockerfile
+    image: polarisgate-collector
+    ports:
+    - 8006:8006
+    env_file: .env
+    environment:
+    - REDIS_HOST=redis
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8006/health
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+  bias-monitor:
+    build:
+      context: .
+      dockerfile: services/bias-monitor/Dockerfile
+    image: polarisgate-bias-monitor
+    env_file: .env
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8000/health
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    image: polarisgate-frontend
+    ports:
+    - 3001:3000
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:3000
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+  postgres:
+    image: postgres:15-alpine
+    env_file: .env
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U polarisgate
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - -a
+      - ${REDIS_PASSWORD}
+      - ping
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+  mlflow:
+    build:
+      context: .
+      dockerfile: services/mlflow/Dockerfile
+    image: polarisgate-mlflow
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+  retraining:
+    build:
+      context: .
+      dockerfile: services/retraining/Dockerfile
+    image: polarisgate-retraining
+    env_file: .env
+    environment:
+    - REDIS_HOST=redis
+    - MLFLOW_URL=http://mlflow:5000
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8007/health
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - ollama list 2>/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+  opa:
+    image: openpolicyagent/opa:0.68.0-static
+    command:
+    - run
+    - --server
+    - --addr=0.0.0.0:8181
+    - --log-level=info
+    - --set=decision_logs.console=true
+    ports:
+    - 8181:8181
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - opa
+      - eval
+      - 1+1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  agent-sidecar:
+    build:
+      context: .
+      dockerfile: services/sidecar-proxy/Dockerfile
+    image: polarisgate-sidecar
+    ports:
+    - 10000:10000
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      opa:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:10000/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+  internal-ca:
+    build:
+      context: .
+      dockerfile: services/internal-ca/Dockerfile
+    image: polarisgate-internal-ca
+    ports:
+    - 8443:8443
+    env_file: .env
+    environment:
+    - CA_PROVIDER=${CA_PROVIDER:-internal}
+    - KEY_SIZE=${CA_KEY_SIZE:-4096}
+    - CERT_VALIDITY_DAYS=${CA_CERT_VALIDITY_DAYS:-365}
+    - SERVICE_CERT_VALIDITY_DAYS=${CA_SERVICE_CERT_VALIDITY_DAYS:-30}
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import httpx; httpx.get('http://localhost:8443/health').raise_for_status()
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  cert-manager:
+    build:
+      context: .
+      dockerfile: services/cert-manager/Dockerfile
+    image: polarisgate-cert-manager
+    ports:
+    - 8444:8444
+    env_file: .env
+    environment:
+    - CA_URL=http://internal-ca:8443
+    - CERT_PATH=/etc/polarisgate/certs/service.crt
+    - KEY_PATH=/etc/polarisgate/certs/service.key
+    - CA_CERT_PATH=/etc/polarisgate/certs/ca.crt
+    - SERVICE_NAME=cert-manager
+    - CERT_CHECK_INTERVAL=21600
+    - CERT_RENEWAL_THRESHOLD_DAYS=15
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    depends_on:
+      internal-ca:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import httpx; httpx.get('http://localhost:8444/health').raise_for_status()
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+  sidecar-proxy:
+    build:
+      context: .
+      dockerfile: services/sidecar-proxy/Dockerfile
+    image: polarisgate-sidecar-proxy
+    ports:
+    - 10002:10000
+    env_file: .env
+    environment:
+    - DOCKER_HOST=tcp://localhost:2375
+    - SIDECAR_AUTH_TOKEN=${SIDECAR_AUTH_TOKEN}
+    - MTLS_ENABLED=${MTLS_ENABLED:-false}
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import httpx; httpx.get('http://localhost:10000/health').raise_for_status()
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+  kill-switch:
+    build:
+      context: .
+      dockerfile: services/kill-switch/Dockerfile
+    image: polarisgate-kill-switch
+    ports:
+    - 10001:10001
+    env_file: .env
+    environment:
+    - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    - DATABASE_URL=${DATABASE_URL}
+    - SIDECAR_URL=http://sidecar-proxy:10000
+    - SIDECAR_AUTH_TOKEN=${SIDECAR_AUTH_TOKEN}
+    - KILL_METHOD=${KILL_METHOD:-sidecar}
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      sidecar-proxy:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:10001/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  budget-controller:
+    build:
+      context: .
+      dockerfile: services/budget-controller/Dockerfile
+    image: polarisgate-budget-controller
+    env_file: .env
+    environment:
+    - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    - DATABASE_URL=${DATABASE_URL}
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8007/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  semantic-cache:
+    build:
+      context: .
+      dockerfile: services/semantic-cache/Dockerfile
+    image: polarisgate-semantic-cache
+    env_file: .env
+    environment:
+    - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8010/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  hallucination-detector:
+    build:
+      context: .
+      dockerfile: services/hallucination-detector/Dockerfile
+    image: polarisgate-hallucination-detector
+    ports:
+    - 8008:8008
+    env_file: .env
+    environment:
+    - LLM_A_URL=http://ollama:11434/api/generate
+    - LLM_B_URL=http://ollama:11434/api/generate
+    - MODEL_A=llama3.2:1b
+    - MODEL_B=llama3.2:3b
+    - DATABASE_URL=${DATABASE_URL}
+    - THRESHOLDS_PATH=/app/policies/confidence_thresholds.yaml
+    volumes:
+    - polarisgate_default
+    networks: null
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8008/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  closed-loop:
+    build:
+      context: .
+      dockerfile: services/closed-loop/Dockerfile
+    image: polarisgate-closed-loop
+    env_file: .env
+    environment:
+    - DATABASE_URL=${DATABASE_URL}
+    networks: null
+    volumes:
+    - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8009/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    image: polarisgate-tests
+    depends_on:
+      gateway:
+        condition: service_healthy
+      guardrails:
+        condition: service_healthy
+      aida-bridge:
+        condition: service_healthy
+      collector:
+        condition: service_healthy
+      agent-sidecar:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+    - GATEWAY_URL=http://gateway:8000
+    - GUARDRAILS_URL=http://guardrails:8005
+    - AIDA_URL=http://aida-bridge:8001
+    - COLLECTOR_URL=http://collector:8006
+    - SIDECAR_URL=http://agent-sidecar:10000
+    - KILL_SWITCH_URL=http://kill-switch:10001
+    - DATABASE_URL=${DATABASE_URL}
+    - SKIP_SLOW_TESTS=1
+    networks: null
+    volumes:
+    - polarisgate_default
+  ai-ml-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-ml-test
+    image: polarisgate-ai-ml-test
+    depends_on:
+      gateway:
+        condition: service_healthy
+      guardrails:
+        condition: service_healthy
+      collector:
+        condition: service_healthy
+      aida-bridge:
+        condition: service_healthy
+      bias-monitor:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+    - GATEWAY_URL=http://gateway:8000
+    - GUARDRAILS_URL=http://guardrails:8005
+    - COLLECTOR_URL=http://collector:8006
+    - AIDA_URL=http://aida-bridge:8001
+    - BIAS_URL=http://bias-monitor:8000
+    - USE_MOCKS=false
+    networks: null
+    volumes:
+    - ./reports:/reports
+  playwire-e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    image: polarisgate-playwire-e2e
+    depends_on:
+      gateway:
+        condition: service_healthy
+      guardrails:
+        condition: service_healthy
+      aida-bridge:
+        condition: service_healthy
+      collector:
+        condition: service_healthy
+      agent-sidecar:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    env_file: .env
+    environment:
+    - RUNNING_IN_DOCKER=true
+    - BASE_URL=http://frontend:3000
+    - API_URL=http://gateway:8000
+    - NGINX_URL=http://nginx:80
+    - HALLUCINATION_URL=http://hallucination-detector:8008
+    - GUARDRAILS_URL=http://guardrails:8005
+    - AIDA_URL=http://aida-bridge:8001
+    - COLLECTOR_URL=http://collector:8006
+    - OPA_URL=http://opa:8181
+    - KILL_SWITCH_URL=http://kill-switch:10001
+    - SIDECAR_URL=http://agent-sidecar:10000
+    networks: null
+    volumes:
+    - ./test-results:/app/test-results
+    command: "bash -c \"\n  echo 'Running Playwire E2E test inside Docker...' &&\n  cd /app &&\n  npx playwright test full-ui-walkthrough.spec.js --config=playwright.config.js 2>&1\n\"\n"
+networks:
+  polarisgate_default:
+    driver: bridge
+volumes:
+  aida_chroma: null
+  aida_pdfs: null
+  pgdata: null
+  redis_data: null
+  ollama_data: null
+  mlflow_data: null
+  ca_certs: null
+  policy_data: {}

@@ -1,0 +1,81 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #0B1120; color: #E2E8F0; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; min-height: 100vh; }
+.hidden { display: none !important; }
+.screen { min-height: 100vh; }
+
+/* Login */
+#login-screen { display: flex; align-items: center; justify-content: center; }
+.login-card { background: #151F32; border: 1px solid rgba(79,142,247,0.12); border-radius: 24px; padding: 48px 40px; width: 400px; max-width: 90vw; text-align: center; }
+.login-card h1 { font-size: 28px; font-weight: 700; margin: 0 0 4px; }
+.subtitle { color: #94A3B8; font-size: 14px; margin: 0 0 32px; }
+.logo { display: flex; justify-content: center; margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; text-align: left; }
+.form-group label { display: block; color: #94A3B8; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.form-group input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(79,142,247,0.12); background: #0B1120; color: #E2E8F0; font-size: 14px; outline: none; }
+.form-group input:focus { border-color: rgba(79,142,247,0.35); }
+.btn-primary { width: 100%; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg,#4F8EF7,#7C8BB5); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 24px; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.error-msg { color: #ef4444; font-size: 13px; margin-top: 12px; min-height: 20px; }
+
+/* Header */
+.header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #0F172A; border-bottom: 1px solid rgba(79,142,247,0.1); }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.brand { font-weight: 700; font-size: 18px; }
+.tabs { display: flex; gap: 4px; }
+.tab { padding: 8px 16px; border-radius: 10px; border: none; background: transparent; color: #94A3B8; font-size: 14px; font-weight: 500; cursor: pointer; }
+.tab.active { background: rgba(79,142,247,0.15); color: #4F8EF7; }
+.btn-logout { padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.3); background: transparent; color: #ef4444; font-size: 14px; cursor: pointer; }
+
+/* Layout */
+.main-layout { display: flex; max-width: 1400px; margin: 0 auto; padding: 24px; }
+.sidebar { width: 200px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.sidebar-btn { padding: 8px 16px; border-radius: 10px; border: none; background: transparent; color: #94A3B8; font-size: 14px; text-align: left; cursor: pointer; }
+.sidebar-btn.active { background: rgba(79,142,247,0.15); color: #4F8EF7; }
+.content { flex: 1; min-width: 0; }
+
+/* Cards */
+.card { background: #151F32; border: 1px solid rgba(79,142,247,0.1); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+.card h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #E2E8F0; }
+.card h3 { font-size: 14px; color: #94A3B8; margin-bottom: 4px; }
+
+/* Summary Grid */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-card { background: #151F32; border: 1px solid rgba(79,142,247,0.1); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; }
+.summary-card:hover { border-color: rgba(79,142,247,0.3); }
+.summary-card .value { font-size: 28px; font-weight: 700; color: #4F8EF7; margin: 8px 0; }
+.summary-card .label { font-size: 13px; color: #94A3B8; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; color: #94A3B8; font-size: 13px; font-weight: 500; padding: 10px 12px; border-bottom: 1px solid rgba(79,142,247,0.1); }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(79,142,247,0.05); font-size: 14px; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.badge-toxic { background: rgba(239,68,68,0.15); color: #ef4444; }
+.badge-safe { background: rgba(34,197,94,0.15); color: #22c55e; }
+.badge-pii { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+/* Filter */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+.filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(79,142,247,0.12); background: transparent; color: #94A3B8; font-size: 13px; cursor: pointer; }
+.filter-btn.active { background: rgba(79,142,247,0.15); color: #4F8EF7; border-color: rgba(79,142,247,0.25); }
+
+/* Toast */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
+.toast { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 12px; padding: 12px 20px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 24px rgba(0,0,0,.4); animation: toastIn .3s ease-out; }
+.toast.success { border-left: 3px solid #22c55e; }
+.toast.error { border-left: 3px solid #ef4444; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: #94A3B8; }
+.spinner { width: 32px; height: 32px; border: 3px solid #334155; border-top-color: #4F8EF7; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toggle Switch */
+.toggle { position: relative; display: inline-block; width: 48px; height: 26px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #334155; border-radius: 26px; transition: .3s; }
+.toggle-slider:before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: #94A3B8; border-radius: 50%; transition: .3s; }
+.toggle input:checked + .toggle-slider { background: rgba(79,142,247,0.4); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(22px); background: #4F8EF7; }

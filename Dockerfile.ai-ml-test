@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tests
+
+COPY tests/requirements-ai-ml.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY tests/test_ai_ml_complete.py .
+
+CMD ["pytest", "test_ai_ml_complete.py", "-v", "--maxfail=0", "--junitxml=/reports/ai_ml_report.xml"]

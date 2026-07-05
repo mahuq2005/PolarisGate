@@ -1,0 +1,14 @@
+{
+  "name": "northguard-e2e",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "playwright test full-ui-walkthrough.spec.js --config=playwright.config.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  },
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

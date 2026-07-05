@@ -1,0 +1,76 @@
+# PolarisGate PII Detection — Per-Sector Context Configuration
+# Controls when person names are flagged as PII based on surrounding context.
+
+sectors:
+  financial:
+    person_context_words:
+      - account holder
+      - beneficiary
+      - client
+      - customer
+      - applicant
+      - insured
+      - borrower
+      - lender
+      - cardholder
+      - investor
+      - accountholder
+    financial_context_words:
+      - account
+      - transaction
+      - wire
+      - transfer
+      - SWIFT
+      - portfolio
+      - CUSIP
+      - ISIN
+      - routing
+      - transit
+    flag_person_without_context: false
+    description: Financial services compliance — names near account data, transactions, or financial codes are PII
+
+  healthcare:
+    person_context_words:
+      - patient
+      - client
+      - insured
+      - beneficiary
+      - claimant
+      - doctor
+      - physician
+      - surgeon
+    healthcare_context_words:
+      - prescribed
+      - diagnosed
+      - treated
+      - referred
+      - admitted
+      - discharged
+      - medication
+      - dosage
+      - prescription
+      - surgery
+    flag_person_without_context: false
+    description: Healthcare PHI compliance — names near medical context are PHI
+
+  government:
+    person_context_words:
+      - applicant
+      - claimant
+      - citizen
+      - resident
+      - requester
+      - beneficiary
+      - licensee
+      - permit holder
+    flag_person_without_context: false
+    description: Government citizen data protection — names near application/benefit context are PII
+
+  general:
+    person_context_words:
+      - customer
+      - client
+      - user
+      - account
+    flag_person_without_context: false
+    description: General privacy — flag names only when contextual evidence exists

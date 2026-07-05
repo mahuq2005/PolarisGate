@@ -1,0 +1,22 @@
+rules:
+  - id: no-open-redirect
+    patterns:
+      - pattern-either:
+          - pattern: |
+              RedirectResponse(url=$URL)
+          - pattern: |
+              redirect($URL)
+          - pattern: |
+              HTTPException(headers={"Location": $URL})
+      - metavariable-regex:
+          metavariable: $URL
+          regex: ^(?!["']/).*
+    message: >
+      Potential open redirect detected. Ensure redirect URLs are validated
+      against an allowlist and do not accept user-controlled URLs directly.
+    severity: WARNING
+    languages:
+      - python
+    paths:
+      exclude:
+        - tests/

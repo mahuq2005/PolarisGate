@@ -1,0 +1,177 @@
+# PolarisGate Training Pipeline Configuration
+# Per-sector data sources, model parameters, and hyperparameters
+
+models:
+  toxicity:
+    base_model: "unitary/toxic-bert"
+    type: "text-classification"
+    max_length: 512
+    batch_size: 16
+    epochs: 3
+    learning_rate: 0.00002
+    lora_r: 8
+    lora_alpha: 16
+    target_f1: 0.90
+
+  hallucination:
+    base_model: "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"
+    type: "text-classification"
+    max_length: 512
+    batch_size: 8
+    epochs: 3
+    learning_rate: 1e-5
+    lora_r: 8
+    lora_alpha: 16
+    target_f1: 0.80
+
+  bilingual:
+    base_model: "xlm-roberta-base"
+    type: "text-classification"
+    max_length: 512
+    batch_size: 16
+    epochs: 3
+    learning_rate: 2e-5
+    lora_r: 8
+    lora_alpha: 16
+    target_f1: 0.85
+
+sectors:
+  financial:
+    toxicity_sources:
+      - jigsaw_toxic_comments
+      - civil_comments
+      - canadian_hansard
+      - osc_enforcement
+    hallucination_sources:
+      - sedar_filings
+      - bank_of_canada
+      - tmx_data
+    pii_sources:
+      - synthetic_canadian_pii
+      - swift_codes
+      - cusip_isin
+
+  healthcare:
+    toxicity_sources:
+      - jigsaw_toxic_comments
+      - civil_comments
+      - synthetic_healthcare_dialogues
+    hallucination_sources:
+      - pubmed_abstracts
+      - cochrane_reviews
+      - drugbank
+      - clinical_trials_canada
+    pii_sources:
+      - mimic_iii
+      - synthetic_phi
+
+  government:
+    toxicity_sources:
+      - jigsaw_toxic_comments
+      - canadian_hansard
+      - quebec_national_assembly
+      - mlma_french
+    hallucination_sources:
+      - government_policy_docs
+      - canada_gazette
+    pii_sources:
+      - synthetic_canadian_pii
+      - statistics_canada
+
+data_sources:
+  jigsaw_toxic_comments:
+    type: huggingface
+    name: "OxAISH-AL-LLM/jigsaw_toxic_comments"
+    license: CC0
+    language: en
+    size: 159571
+
+  civil_comments:
+    type: huggingface
+    name: "google/civil_comments"
+    license: CC-BY
+    language: en
+    size: 448000
+
+  canadian_hansard:
+    type: api
+    url: "https://api.openparliament.ca/debates/"
+    license: "Open Government License - Canada"
+    languages: [en, fr]
+
+  quebec_national_assembly:
+    type: api
+    url: "https://data.assemblee-nationale.fr/"
+    license: "Creative Commons"
+    language: fr
+
+  mlma_french:
+    type: huggingface
+    name: "MLMA"
+    license: research
+    language: fr
+    size: 13000
+
+  oscar_french:
+    type: huggingface
+    name: "oscar"
+    subset: "unshuffled_deduplicated_fr"
+    license: CC0
+    language: fr
+
+  sedar_filings:
+    type: scrape
+    url: "https://www.sedarplus.ca/"
+    license: "Public Information"
+
+  bank_of_canada:
+    type: api
+    url: "https://www.bankofcanada.ca/valet/"
+    license: "Open Data"
+
+  pubmed_abstracts:
+    type: api
+    url: "https://eutils.ncbi.nlm.nih.gov/"
+    license: "Public Domain"
+    language: en
+
+  drugbank:
+    type: academic
+    license: "Academic License (free for research)"
+
+  clinical_trials_canada:
+    type: api
+    url: "https://clinicaltrials.gov/api/v2/"
+    filter: "location=Canada"
+
+  halu_eval:
+    type: huggingface
+    name: "pminervini/HaluEval"
+    license: MIT
+    size: 35000
+
+  truthful_qa:
+    type: huggingface
+    name: "truthfulqa/truthful_qa"
+    license: Apache-2.0
+    size: 817
+
+  synthetic_canadian_pii:
+    type: generator
+    generator: "generate_pii_samples()"
+    formats: [sin, health_card, credit_card, phone, email, postal_code, swift, cusip, isin]
+
+  synthetic_healthcare_dialogues:
+    type: generator
+    generator: "generate_healthcare_dialogues()"
+    language: en
+
+  synthetic_financial_scenarios:
+    type: generator
+    generator: "generate_financial_scenarios()"
+    language: en
+
+  osc_enforcement:
+    type: scrape
+    url: "https://www.osc.ca/en/proceedings"
+    license: "Public Information"
