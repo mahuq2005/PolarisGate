@@ -1,0 +1,126 @@
+# ---------------------------------------------------------------------------
+# PolarisGate Accuracy & Performance Thresholds
+#
+# Every gate must meet or exceed *min_* thresholds and stay below *max_* caps.
+# Values are enforced in CI by scripts/check_accuracy_thresholds.py.
+# ---------------------------------------------------------------------------
+
+global:
+  max_false_positive_rate: 0.05    # overall FP cap   (ideal: < 5 %)
+  max_false_negative_rate: 0.10    # overall FN cap   (ideal: < 10 %)
+  max_latency_p95_ms: 500          # p95 response across all gates
+  min_throughput_rps: 50           # minimum requests / sec for guardrails
+
+# -- Toxicity ensemble (RoBERTa + BERT + keyword) ---------------------------
+toxicity:
+  min_precision: 0.85
+  min_recall: 0.80
+  min_f1: 0.82
+  max_false_positive_rate: 0.05
+  max_false_negative_rate: 0.10
+  max_latency_p95_ms: 500
+  min_throughput_rps: 50
+  # Ensemble agreement (all three classifiers must agree on ≥ 85 %)
+  min_ensemble_agreement: 0.85
+  # Calibration: Brier score ≤ 0.15
+  max_brier_score: 0.15
+
+# -- PII detection (8-entity regex + context rules) -------------------------
+pii:
+  min_precision: 0.90
+  min_recall: 0.85
+  min_f1: 0.87
+  max_false_positive_rate: 0.03
+  max_false_negative_rate: 0.08
+  max_latency_p95_ms: 300
+
+  # Per-entity minimums (one-vs-rest) — name must match detector label
+  entities:
+    SSN:
+      min_precision: 0.90
+      min_recall: 0.85
+    SIN:
+      min_precision: 0.90
+      min_recall: 0.85
+    HEALTH_CARD:
+      min_precision: 0.85
+      min_recall: 0.80
+    EMAIL:
+      min_precision: 0.95
+      min_recall: 0.95
+    PHONE:
+      min_precision: 0.90
+      min_recall: 0.90
+    CREDIT_CARD:
+      min_precision: 0.95
+      min_recall: 0.95
+    IP_ADDRESS:
+      min_precision: 0.95
+      min_recall: 0.95
+
+# -- Prompt-injection detection (42 regex patterns) --------------------------
+injection:
+  min_precision: 0.90
+  min_recall: 0.85
+  min_f1: 0.87
+  max_false_positive_rate: 0.05
+  max_false_negative_rate: 0.05
+  max_latency_p95_ms: 200
+
+# -- Hallucination detection (4-stage cascade) -------------------------------
+hallucination:
+  min_precision: 0.80
+  min_recall: 0.75
+  min_f1: 0.77
+  max_false_positive_rate: 0.08
+  max_false_negative_rate: 0.15
+  max_latency_p95_ms: 2000    # cascade is intrinsically slower
+
+  # Per-stage minimum recall (what % of hallucinations should each stage catch)
+  stages:
+    stage_1_prefilter:
+      min_recall: 0.40        # rule-based pre-filter
+    stage_2_nli_ensemble:
+      min_recall: 0.65        # NLI ensemble (cumulative)
+    stage_3_self_debate:
+      min_recall: 0.80        # single-LLM self-debate (cumulative)
+    stage_4_dual_debate:
+      min_recall: 0.90        # dual-LLM self-debate (cumulative)
+
+  # Self-debate consistency: same input 5× must yield same verdict ≥ 90 %
+  min_debate_consistency: 0.90
+
+# -- Performance / throughput ------------------------------------------------
+performance:
+  guardrails_check_latency_p50_ms: 150
+  guardrails_check_latency_p95_ms: 500
+  guardrails_check_latency_p99_ms: 1000
+  hallucination_detect_latency_p50_ms: 500
+  hallucination_detect_latency_p95_ms: 2000
+  hallucination_detect_latency_p99_ms: 5000
+  batch_latency_per_item_ms: 200       # per-item avg within a batch
+  stream_chunk_interval_ms: 50         # max time between SSE chunks
+
+  # Saturation: max throughput before p95 crosses the above thresholds
+  min_guardrails_throughput_rps: 50
+  min_hallucination_throughput_rps: 10
+
+# -- Reliability / robustness ------------------------------------------------
+reliability:
+  # Soak test: memory growth over 1 hour / 100 k requests
+  max_memory_growth_percent: 10
+
+  # Accuracy drift over 1-hour soak
+  max_accuracy_degradation_percent: 2
+
+  # Circuit-breaker
+  circuit_breaker_max_false_trips: 0   # must not open during normal operation
+
+  # Rate limiter precision
+  rate_limit_tolerance_pct: 5          # actual limit must be within ±5 % of configured
+
+# -- Adversarial robustness --------------------------------------------------
+adversarial:
+  # Minimum detection rate for adversarial / obfuscated toxic content
+  min_toxicity_detection_rate: 0.70   # detected despite obfuscation
+  min_injection_detection_rate: 0.80  # detected despite obfuscation

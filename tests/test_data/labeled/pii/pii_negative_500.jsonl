@@ -1,0 +1,30 @@
+{"id": "pii_neg_001", "text": "The meeting is at 3 PM in conference room B.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_002", "text": "Product SKU: AB-1234-XYZ for the blue variant.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_003", "text": "The total comes to $1,234.56 including tax.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_004", "text": "Flight number AC123 departs at 14:30 from gate B12.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_005", "text": "Please reference ticket ID #TKT-2024-0001 in your reply.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_006", "text": "The document ID is DOC-9876-5432 version 3.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_007", "text": "Our office is at 123 Main Street, Toronto, ON.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_008", "text": "The package weighs 12.5 kg and measures 30x20x15 cm.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_009", "text": "ISBN 978-0-123456-47-2 for the textbook.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_010", "text": "Temperature today: 22°C with 65% humidity.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_011", "text": "The server uptime is 99.97% this quarter.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_012", "text": "Reference number: REF-2024-A5B7C.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_013", "text": "The cost centre is CC-4455 for this project.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_014", "text": "Delivery expected between 2:00 PM and 4:00 PM.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_015", "text": "Build version 3.14.159 was deployed to production.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_016", "text": "The promotional code SAVE20 is valid until December.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_017", "text": "Account type: Premium with 500 GB storage.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_018", "text": "The invoice amount is CAD 1,500.00 excluding HST.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_019", "text": "Part number: PN-8877-AA for the replacement component.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_020", "text": "The session expires after 30 minutes of inactivity.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_021", "text": "Please fill out form F-101 before your appointment.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_022", "text": "The average response time is 250 milliseconds.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_023", "text": "Coffee order: medium latte with oat milk.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_024", "text": "The quarterly budget is $50,000 for Q3.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_025", "text": "Registration number: REG-56789 expires 2025-06-30.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_026", "text": "The phone model is iPhone 15 Pro Max.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_027", "text": "Lot number 123-45-6789-B for the batch.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_028", "text": "Protocol version 192.168 identifies the feature set.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_029", "text": "The ISBN 978-0-123-45678-9 is registered.", "label": {"pii_detected": false, "pii_types": []}}
+{"id": "pii_neg_030", "text": "Authorization code: AUTH-4111-1111 for the API.", "label": {"pii_detected": false, "pii_types": []}}

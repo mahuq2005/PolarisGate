@@ -36,11 +36,21 @@ class NLIHallucinationDetector:
         self.entailment_threshold = entailment_threshold
         self._pipeline = None
 
+    def _test_pipeline(self) -> bool:
+        """Run a quick entailment test to verify pipeline produces valid scores."""
+        test_result = self._pipeline("I like dogs. </s> I like animals.", truncation=True, max_length=512)[0]
+        scores = {r["label"]: r["score"] for r in test_result}
+        total = sum(scores.values())
+        if total == 0.0 or all(v == 0.0 for v in scores.values()):
+            return False
+        return True
+
     def load(self):
-        """Load or get the shared NLI pipeline."""
+        """Load or get the shared NLI pipeline. Detects and falls back from MPS to CPU."""
         if self._pipeline is None:
             logger.info(f"Loading NLI model: {self.model_name}")
             from transformers import pipeline
+            import torch
 
             self._pipeline = pipeline(
                 "text-classification",
@@ -48,6 +58,33 @@ class NLIHallucinationDetector:
                 tokenizer=self.model_name,
                 top_k=None,
             )
+
+            # Detect MPS device — known to produce degenerate zero scores on some Macs
+            try:
+                device_str = str(self._pipeline.device)
+            except Exception:
+                device_str = "unknown"
+
+            is_valid = self._test_pipeline()
+
+            if not is_valid:
+                logger.warning(
+                    f"NLI pipeline returns all-zero scores (device={device_str}). "
+                    f"Falling back to CPU."
+                )
+                self._pipeline = pipeline(
+                    "text-classification",
+                    model=self.model_name,
+                    tokenizer=self.model_name,
+                    top_k=None,
+                    device=-1,  # Force CPU
+                )
+                is_valid = self._test_pipeline()
+                if is_valid:
+                    logger.info("NLI pipeline successfully loaded on CPU fallback.")
+                else:
+                    logger.error("NLI pipeline still returns zero scores on CPU — model may be corrupted.")
+
             logger.info(
                 f"NLI model ready. "
                 f"Contradiction threshold={self.contradiction_threshold}, "

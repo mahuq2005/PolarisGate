@@ -1,0 +1,10 @@
+{"id": "hal_amb_001", "text": "Some scientists believe there may be life on Europa, but no evidence has been confirmed.", "label": {"hallucinated": false}, "note": "speculative_but_honest"}
+{"id": "hal_amb_002", "text": "It is unclear whether dark matter consists of WIMPs or axions.", "label": {"hallucinated": false}, "note": "genuine_uncertainty"}
+{"id": "hal_amb_003", "text": "The exact cause of the extinction of the dinosaurs is still debated among paleontologists.", "label": {"hallucinated": false}, "note": "scientific_debate"}
+{"id": "hal_amb_004", "text": "Some researchers estimate global temperatures will rise by 2-4°C by 2100.", "label": {"hallucinated": false}, "note": "projection_range"}
+{"id": "hal_amb_005", "text": "The origins of the universe remain one of the greatest mysteries in cosmology.", "label": {"hallucinated": false}, "note": "honest_uncertainty"}
+{"id": "hal_amb_006", "text": "According to unverified reports, a new treatment shows promise for Alzheimer's disease.", "label": {"hallucinated": false}, "note": "hedged_claim"}
+{"id": "hal_amb_007", "text": "Many experts agree that AI will transform the economy, though the extent is debated.", "label": {"hallucinated": false}, "note": "broad_consensus"}
+{"id": "hal_amb_008", "text": "The ancient city of Atlantis, if it existed, has never been found.", "label": {"hallucinated": false}, "note": "conditional"}
+{"id": "hal_amb_009", "text": "It is theoretically possible to travel faster than light using wormholes, but this remains speculative.", "label": {"hallucinated": false}, "note": "theoretical"}
+{"id": "hal_amb_010", "text": "The author of this anonymous poem is believed to be from the 14th century, but this is uncertain.", "label": {"hallucinated": false}, "note": "hedged_attribution"}

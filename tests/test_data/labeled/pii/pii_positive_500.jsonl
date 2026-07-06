@@ -1,0 +1,30 @@
+{"id": "pii_pos_001", "text": "My social security number is 123-45-6789.", "label": {"pii_detected": true, "pii_types": ["SSN"]}}
+{"id": "pii_pos_002", "text": "SSN: 987-65-4321 - please store securely.", "label": {"pii_detected": true, "pii_types": ["SSN"]}}
+{"id": "pii_pos_003", "text": "The applicant's SSN 456-78-9123 was verified.", "label": {"pii_detected": true, "pii_types": ["SSN"]}}
+{"id": "pii_pos_004", "text": "Please enter your SSN: 111-22-3333 on the form.", "label": {"pii_detected": true, "pii_types": ["SSN"]}}
+{"id": "pii_pos_005", "text": "Social Security Number 555-66-7777 for John Doe.", "label": {"pii_detected": true, "pii_types": ["SSN"]}}
+{"id": "pii_pos_006", "text": "My SIN is 046 454 286 for tax purposes.", "label": {"pii_detected": true, "pii_types": ["SIN"]}}
+{"id": "pii_pos_007", "text": "Social Insurance Number: 123 456 782", "label": {"pii_detected": true, "pii_types": ["SIN"]}}
+{"id": "pii_pos_008", "text": "SIN 987 654 321 on file.", "label": {"pii_detected": true, "pii_types": ["SIN"]}}
+{"id": "pii_pos_009", "text": "Ontario Health Card number: 1234-567-890-AB", "label": {"pii_detected": true, "pii_types": ["HEALTH_CARD"]}}
+{"id": "pii_pos_010", "text": "OHIP 9876-543-210-CD for the patient.", "label": {"pii_detected": true, "pii_types": ["HEALTH_CARD"]}}
+{"id": "pii_pos_011", "text": "You can reach me at john.doe@example.com.", "label": {"pii_detected": true, "pii_types": ["EMAIL"]}}
+{"id": "pii_pos_012", "text": "Email: support@company.org for inquiries.", "label": {"pii_detected": true, "pii_types": ["EMAIL"]}}
+{"id": "pii_pos_013", "text": "My work email is jane.smith@government.gov.ca.", "label": {"pii_detected": true, "pii_types": ["EMAIL"]}}
+{"id": "pii_pos_014", "text": "Send it to admin+test@my-domain.co.uk please.", "label": {"pii_detected": true, "pii_types": ["EMAIL"]}}
+{"id": "pii_pos_015", "text": "Call me at (416) 555-0199 for more info.", "label": {"pii_detected": true, "pii_types": ["PHONE"]}}
+{"id": "pii_pos_016", "text": "Phone: 647-555-0123", "label": {"pii_detected": true, "pii_types": ["PHONE"]}}
+{"id": "pii_pos_017", "text": "My cell is +1 (905) 555-0145.", "label": {"pii_detected": true, "pii_types": ["PHONE"]}}
+{"id": "pii_pos_018", "text": "Contact: 1-800-555-0199 toll-free.", "label": {"pii_detected": true, "pii_types": ["PHONE"]}}
+{"id": "pii_pos_019", "text": "My credit card number is 4111-1111-1111-1111 for the payment.", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}}
+{"id": "pii_pos_020", "text": "Visa: 5500 0000 0000 0004 exp 12/25.", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}}
+{"id": "pii_pos_021", "text": "Charge the card ending in 3782-822463-10005 (Amex).", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}}
+{"id": "pii_pos_022", "text": "Payment method: 6011 0000 0000 0004 (Discover).", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}}
+{"id": "pii_pos_023", "text": "The request came from IP 192.168.1.100.", "label": {"pii_detected": true, "pii_types": ["IP_ADDRESS"]}}
+{"id": "pii_pos_024", "text": "Server logs show 10.0.0.55 as the origin.", "label": {"pii_detected": true, "pii_types": ["IP_ADDRESS"]}}
+{"id": "pii_pos_025", "text": "Whitelist the IP range 172.16.0.0/12.", "label": {"pii_detected": true, "pii_types": ["IP_ADDRESS"]}}
+{"id": "pii_pos_026", "text": "Patient John Doe, SSN 123-45-6789, Health Card 1234-567-890-AB, phone (416) 555-0199.", "label": {"pii_detected": true, "pii_types": ["SSN", "HEALTH_CARD", "PHONE"]}}
+{"id": "pii_pos_027", "text": "Contact jane@example.com or call 647-555-0123. SIN: 046 454 286.", "label": {"pii_detected": true, "pii_types": ["EMAIL", "PHONE", "SIN"]}}
+{"id": "pii_pos_028", "text": "Payment: 4111-1111-1111-1111 billing email: billing@corp.com phone: 1-800-555-0199.", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD", "EMAIL", "PHONE"]}}
+{"id": "pii_pos_029", "text": "IP 10.0.0.55 user j.doe@company.com SSN 987-65-4321.", "label": {"pii_detected": true, "pii_types": ["IP_ADDRESS", "EMAIL", "SSN"]}}
+{"id": "pii_pos_030", "text": "Employee record: SIN 123 456 782, phone 416-555-0199, email emp@org.ca.", "label": {"pii_detected": true, "pii_types": ["SIN", "PHONE", "EMAIL"]}}

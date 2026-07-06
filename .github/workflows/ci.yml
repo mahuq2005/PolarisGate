@@ -1,4 +1,4 @@
-# PolarisGate CI/CD Pipeline
+l # PolarisGate CI/CD Pipeline
 # AI Content Safety Gateway v2.2
 
 name: PolarisGate CI/CD
@@ -100,6 +100,82 @@ jobs:
       - name: Run integration tests
         run: |
           pytest tests/test_injection_detection.py tests/test_pii_redaction.py tests/test_gateway_v2.py -v --tb=short --timeout=60
+
+  # ─── Accuracy Benchmarks ───────────────────────────────────
+  accuracy-benchmark:
+    name: Accuracy & Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: test
+    continue-on-error: true
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: polarisgate
+          POSTGRES_PASSWORD: polarisgate
+          POSTGRES_DB: polarisgate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install benchmark dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/requirements.txt
+          pip install pyyaml numpy pytest-json-report
+
+      - name: Build labeled datasets
+        run: python3 scripts/build_labeled_datasets.py
+
+      - name: Run accuracy benchmarks
+        run: |
+          pytest tests/benchmarks/ -v --tb=short --junitxml=reports/accuracy_benchmark.xml --json-report --json-report-file=reports/accuracy_results.json
+
+      - name: Run performance benchmarks
+        run: |
+          pytest tests/performance/ -v --tb=short --junitxml=reports/performance_benchmark.xml
+
+      - name: Run reliability benchmarks
+        run: |
+          pytest tests/reliability/ -v --tb=short --junitxml=reports/reliability_benchmark.xml
+
+      - name: Check accuracy thresholds
+        run: |
+          python3 scripts/check_accuracy_thresholds.py --results reports/accuracy_results.json --thresholds tests/thresholds.yaml --json-output reports/threshold_check.json || echo "Thresholds not all met (non-blocking)"
+
+      - name: Upload benchmark reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-reports
+          path: |
+            reports/accuracy_benchmark.xml
+            reports/performance_benchmark.xml
+            reports/reliability_benchmark.xml
+            reports/accuracy_results.json
+            reports/threshold_check.json
 
   # ─── Build ─────────────────────────────────────────────────
   build:

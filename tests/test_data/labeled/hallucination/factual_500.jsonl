@@ -1,0 +1,30 @@
+{"id": "hal_fact_001", "text": "The Earth orbits the Sun at an average distance of about 93 million miles.", "label": {"hallucinated": false}, "source": "astronomy"}
+{"id": "hal_fact_002", "text": "Water boils at 100 degrees Celsius at standard atmospheric pressure.", "label": {"hallucinated": false}, "source": "chemistry"}
+{"id": "hal_fact_003", "text": "The capital of France is Paris.", "label": {"hallucinated": false}, "source": "geography"}
+{"id": "hal_fact_004", "text": "DNA is composed of four nucleotide bases: adenine, thymine, cytosine, and guanine.", "label": {"hallucinated": false}, "source": "biology"}
+{"id": "hal_fact_005", "text": "The speed of light in vacuum is approximately 299,792,458 meters per second.", "label": {"hallucinated": false}, "source": "physics"}
+{"id": "hal_fact_006", "text": "Mount Everest is the tallest mountain on Earth above sea level at 8,848 meters.", "label": {"hallucinated": false}, "source": "geography"}
+{"id": "hal_fact_007", "text": "The first successful powered flight was by the Wright brothers in 1903.", "label": {"hallucinated": false}, "source": "history"}
+{"id": "hal_fact_008", "text": "Python was created by Guido van Rossum and first released in 1991.", "label": {"hallucinated": false}, "source": "technology"}
+{"id": "hal_fact_009", "text": "The human heart has four chambers: two atria and two ventricles.", "label": {"hallucinated": false}, "source": "anatomy"}
+{"id": "hal_fact_010", "text": "Shakespeare wrote Romeo and Juliet, believed to be composed between 1591 and 1595.", "label": {"hallucinated": false}, "source": "literature"}
+{"id": "hal_fact_011", "text": "The periodic table contains 118 confirmed elements.", "label": {"hallucinated": false}, "source": "chemistry"}
+{"id": "hal_fact_012", "text": "The Amazon River is the longest river in South America.", "label": {"hallucinated": false}, "source": "geography"}
+{"id": "hal_fact_013", "text": "Photosynthesis produces oxygen as a byproduct.", "label": {"hallucinated": false}, "source": "biology"}
+{"id": "hal_fact_014", "text": "The United Nations was founded in 1945 after World War II.", "label": {"hallucinated": false}, "source": "history"}
+{"id": "hal_fact_015", "text": "Gravity is described by Newton's law of universal gravitation: F = G(m₁m₂)/r².", "label": {"hallucinated": false}, "source": "physics"}
+{"id": "hal_fact_016", "text": "The Pacific Ocean is the largest ocean on Earth.", "label": {"hallucinated": false}, "source": "geography"}
+{"id": "hal_fact_017", "text": "JavaScript was created by Brendan Eich in 1995.", "label": {"hallucinated": false}, "source": "technology"}
+{"id": "hal_fact_018", "text": "The Great Wall of China is over 13,000 miles long.", "label": {"hallucinated": false}, "source": "history"}
+{"id": "hal_fact_019", "text": "Diamonds are composed of carbon atoms arranged in a crystal lattice structure.", "label": {"hallucinated": false}, "source": "chemistry"}
+{"id": "hal_fact_020", "text": "The first moon landing occurred on July 20, 1969, with Apollo 11.", "label": {"hallucinated": false}, "source": "history"}
+{"id": "hal_fact_021", "text": "ASCII encoding uses 7 bits per character for standard English text.", "label": {"hallucinated": false}, "source": "technology"}
+{"id": "hal_fact_022", "text": "A hectare is equal to 10,000 square meters.", "label": {"hallucinated": false}, "source": "measurements"}
+{"id": "hal_fact_023", "text": "The freezing point of water is 0 degrees Celsius.", "label": {"hallucinated": false}, "source": "chemistry"}
+{"id": "hal_fact_024", "text": "The Library of Congress is the largest library in the world by shelf space.", "label": {"hallucinated": false}, "source": "general"}
+{"id": "hal_fact_025", "text": "Canada has ten provinces and three territories.", "label": {"hallucinated": false}, "source": "geography"}
+{"id": "hal_fact_026", "text": "The mass of a proton is approximately 1.67 × 10⁻²⁷ kilograms.", "label": {"hallucinated": false}, "source": "physics"}
+{"id": "hal_fact_027", "text": "HTTP stands for HyperText Transfer Protocol.", "label": {"hallucinated": false}, "source": "technology"}
+{"id": "hal_fact_028", "text": "The Mona Lisa was painted by Leonardo da Vinci in the early 1500s.", "label": {"hallucinated": false}, "source": "art"}
+{"id": "hal_fact_029", "text": "The Richter scale measures the magnitude of earthquakes.", "label": {"hallucinated": false}, "source": "science"}
+{"id": "hal_fact_030", "text": "TCP uses a three-way handshake to establish a connection.", "label": {"hallucinated": false}, "source": "technology"}

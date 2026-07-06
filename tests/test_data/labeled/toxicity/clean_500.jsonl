@@ -1,0 +1,40 @@
+{"id": "clean_001", "text": "The quarterly earnings report will be released next Tuesday.", "label": {"toxic": false}}
+{"id": "clean_002", "text": "Can you please send me the meeting minutes from yesterday?", "label": {"toxic": false}}
+{"id": "clean_003", "text": "I'd like to schedule a follow-up appointment for next week.", "label": {"toxic": false}}
+{"id": "clean_004", "text": "The new software update includes several security patches.", "label": {"toxic": false}}
+{"id": "clean_005", "text": "Thank you for your help with the project, I really appreciate it.", "label": {"toxic": false}}
+{"id": "clean_006", "text": "Please find the attached document for your review.", "label": {"toxic": false}}
+{"id": "clean_007", "text": "The conference starts at 9 AM in the main auditorium.", "label": {"toxic": false}}
+{"id": "clean_008", "text": "I've completed the initial draft and would love your feedback.", "label": {"toxic": false}}
+{"id": "clean_009", "text": "Here is the link to the shared folder with all the resources.", "label": {"toxic": false}}
+{"id": "clean_010", "text": "Let me know if you need any clarification on the requirements.", "label": {"toxic": false}}
+{"id": "clean_011", "text": "The weather today is sunny with a high of 72 degrees.", "label": {"toxic": false}}
+{"id": "clean_012", "text": "I'm planning to take Friday off for a family event.", "label": {"toxic": false}}
+{"id": "clean_013", "text": "Could we move the deadline to Thursday? I need more time.", "label": {"toxic": false}}
+{"id": "clean_014", "text": "The customer satisfaction survey results are very positive this quarter.", "label": {"toxic": false}}
+{"id": "clean_015", "text": "Please make sure to update your passwords before the end of the month.", "label": {"toxic": false}}
+{"id": "clean_016", "text": "I enjoyed your presentation on renewable energy solutions.", "label": {"toxic": false}}
+{"id": "clean_017", "text": "The coffee machine on the third floor is out of order.", "label": {"toxic": false}}
+{"id": "clean_018", "text": "Remember to submit your expense reports by Friday at noon.", "label": {"toxic": false}}
+{"id": "clean_019", "text": "Albert Einstein developed the theory of relativity in the early 1900s.", "label": {"toxic": false}}
+{"id": "clean_020", "text": "The Great Barrier Reef is the world's largest coral reef system.", "label": {"toxic": false}}
+{"id": "clean_021", "text": "Python is a versatile programming language used for web development and data science.", "label": {"toxic": false}}
+{"id": "clean_022", "text": "The Pacific Ocean covers approximately 63 million square miles.", "label": {"toxic": false}}
+{"id": "clean_023", "text": "Photosynthesis is the process by which plants convert sunlight into energy.", "label": {"toxic": false}}
+{"id": "clean_024", "text": "The human body contains 206 bones at adulthood.", "label": {"toxic": false}}
+{"id": "clean_025", "text": "The Eiffel Tower was completed in 1889 for the World's Fair.", "label": {"toxic": false}}
+{"id": "clean_026", "text": "Please review the pull request when you have a moment.", "label": {"toxic": false}}
+{"id": "clean_027", "text": "The database migration is scheduled for Saturday at 2 AM EST.", "label": {"toxic": false}}
+{"id": "clean_028", "text": "I've added unit tests for the new authentication module.", "label": {"toxic": false}}
+{"id": "clean_029", "text": "The CI pipeline passed all checks on the latest commit.", "label": {"toxic": false}}
+{"id": "clean_030", "text": "Let's schedule a retrospective for the end of the sprint.", "label": {"toxic": false}}
+{"id": "clean_031", "text": "The API documentation has been updated with the new endpoints.", "label": {"toxic": false}}
+{"id": "clean_032", "text": "We need to increase the timeout on the load balancer to 60 seconds.", "label": {"toxic": false}}
+{"id": "clean_033", "text": "The staging environment is ready for QA testing.", "label": {"toxic": false}}
+{"id": "clean_034", "text": "I've pushed the hotfix to production, monitoring looks stable.", "label": {"toxic": false}}
+{"id": "clean_035", "text": "Can we discuss the architecture decision record in tomorrow's standup?", "label": {"toxic": false}}
+{"id": "clean_036", "text": "I think we could improve the user interface by simplifying the navigation.", "label": {"toxic": false}}
+{"id": "clean_037", "text": "The report is good, but I'd suggest adding more data to support your conclusions.", "label": {"toxic": false}}
+{"id": "clean_038", "text": "This approach might not scale well; have you considered using a queue instead?", "label": {"toxic": false}}
+{"id": "clean_039", "text": "I disagree with the proposed timeline because it doesn't account for testing.", "label": {"toxic": false}}
+{"id": "clean_040", "text": "Your code works but could be more readable with some refactoring.", "label": {"toxic": false}}

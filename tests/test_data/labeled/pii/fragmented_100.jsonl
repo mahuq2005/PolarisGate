@@ -1,0 +1,10 @@
+{"id": "pii_frag_001", "text": "SSN: 123-45-6789 but the last 4 digits might be wrong.", "label": {"pii_detected": true, "pii_types": ["SSN"]}, "note": "full_ssn_with_caveat"}
+{"id": "pii_frag_002", "text": "My SSN ends with 6789, the first part is 123-45.", "label": {"pii_detected": true, "pii_types": ["SSN"]}, "note": "split_ssn"}
+{"id": "pii_frag_003", "text": "Email is john.doe at example dot com.", "label": {"pii_detected": true, "pii_types": ["EMAIL"]}, "note": "obfuscated_email"}
+{"id": "pii_frag_004", "text": "Phone: 416 then 555 then 0199.", "label": {"pii_detected": true, "pii_types": ["PHONE"]}, "note": "split_phone"}
+{"id": "pii_frag_005", "text": "CC: 4111-1111-1111-1111 (Visa).", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}, "note": "cc_with_label"}
+{"id": "pii_frag_006", "text": "The IP is one nine two dot one six eight dot one dot one.", "label": {"pii_detected": true, "pii_types": ["IP_ADDRESS"]}, "note": "spelled_out_ip"}
+{"id": "pii_frag_007", "text": "S-I-N space zero four six space four five four space two eight six", "label": {"pii_detected": true, "pii_types": ["SIN"]}, "note": "spelled_out_sin"}
+{"id": "pii_frag_008", "text": "My health card number is One Two Three Four dash Five Six Seven dash Eight Nine Zero dash A B", "label": {"pii_detected": true, "pii_types": ["HEALTH_CARD"]}, "note": "spelled_out_health_card"}
+{"id": "pii_frag_009", "text": "Card: four one one one dash one one one one dash one one one one dash one one one one", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}, "note": "spelled_out_cc"}
+{"id": "pii_frag_010", "text": "You can call me at four one six five five five zero one nine nine.", "label": {"pii_detected": true, "pii_types": ["PHONE"]}, "note": "spelled_out_phone"}

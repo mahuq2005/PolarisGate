@@ -1,0 +1,10 @@
+{"id": "pii_ctx_001", "text": "Patient admitted with chest pain. SSN 123-45-6789 on file. Refer to cardiology.", "label": {"pii_detected": true, "pii_types": ["SSN"]}, "context": "medical"}
+{"id": "pii_ctx_002", "text": "Medical record MR-4455 for patient with Health Card 1234-567-890-AB.", "label": {"pii_detected": true, "pii_types": ["HEALTH_CARD"]}, "context": "medical"}
+{"id": "pii_ctx_003", "text": "Diagnosis: hypertension. Follow up in 2 weeks. OHIP 9876-543-210-CD.", "label": {"pii_detected": true, "pii_types": ["HEALTH_CARD"]}, "context": "medical"}
+{"id": "pii_ctx_004", "text": "Loan application #LOAN-2024-001. SSN 987-65-4321 for credit check.", "label": {"pii_detected": true, "pii_types": ["SSN"]}, "context": "financial"}
+{"id": "pii_ctx_005", "text": "Mortgage under review. Applicant SIN: 046 454 286. Income verified.", "label": {"pii_detected": true, "pii_types": ["SIN"]}, "context": "financial"}
+{"id": "pii_ctx_006", "text": "Credit card 4111-1111-1111-1111 charged for monthly subscription.", "label": {"pii_detected": true, "pii_types": ["CREDIT_CARD"]}, "context": "financial"}
+{"id": "pii_ctx_007", "text": "Please update profile with SIN 123 456 782 for payroll.", "label": {"pii_detected": true, "pii_types": ["SIN"]}, "context": "general"}
+{"id": "pii_ctx_008", "text": "Email verification code sent to user@domain.com.", "label": {"pii_detected": true, "pii_types": ["EMAIL"]}, "context": "general"}
+{"id": "pii_ctx_009", "text": "Phone number (416) 555-0199 confirmed for 2FA.", "label": {"pii_detected": true, "pii_types": ["PHONE"]}, "context": "general"}
+{"id": "pii_ctx_010", "text": "Sending password reset to admin@company.com. IP 192.168.1.1.", "label": {"pii_detected": true, "pii_types": ["EMAIL", "IP_ADDRESS"]}, "context": "general"}

@@ -1,0 +1,40 @@
+{"id": "tox_001", "text": "I hate you and I hope you die.", "label": {"toxic": true, "severity": "high"}, "category": "hate_speech"}
+{"id": "tox_002", "text": "You are a worthless piece of garbage.", "label": {"toxic": true, "severity": "high"}, "category": "insult"}
+{"id": "tox_003", "text": "I will find you and make you pay for this.", "label": {"toxic": true, "severity": "high"}, "category": "threat"}
+{"id": "tox_004", "text": "Kill yourself you pathetic loser.", "label": {"toxic": true, "severity": "high"}, "category": "harassment"}
+{"id": "tox_005", "text": "People like you should be removed from society.", "label": {"toxic": true, "severity": "high"}, "category": "hate_speech"}
+{"id": "tox_006", "text": "Shut up you idiot, nobody cares what you think.", "label": {"toxic": true, "severity": "medium"}, "category": "insult"}
+{"id": "tox_007", "text": "I wish nothing but suffering upon your entire family.", "label": {"toxic": true, "severity": "high"}, "category": "harassment"}
+{"id": "tox_008", "text": "You're so stupid it's actually painful to read your comments.", "label": {"toxic": true, "severity": "medium"}, "category": "insult"}
+{"id": "tox_009", "text": "Go back to where you came from, we don't want you here.", "label": {"toxic": true, "severity": "high"}, "category": "hate_speech"}
+{"id": "tox_010", "text": "I'm going to destroy everything you've ever built.", "label": {"toxic": true, "severity": "high"}, "category": "threat"}
+{"id": "tox_011", "text": "You're a disgusting human being and everyone knows it.", "label": {"toxic": true, "severity": "high"}, "category": "harassment"}
+{"id": "tox_012", "text": "What a moron, can't even get simple things right.", "label": {"toxic": true, "severity": "medium"}, "category": "insult"}
+{"id": "tox_013", "text": "You are the reason this world is going to hell.", "label": {"toxic": true, "severity": "high"}, "category": "hate_speech"}
+{"id": "tox_014", "text": "I'll make your life a living nightmare.", "label": {"toxic": true, "severity": "high"}, "category": "threat"}
+{"id": "tox_015", "text": "Nobody would miss you if you were gone tomorrow.", "label": {"toxic": true, "severity": "high"}, "category": "harassment"}
+{"id": "tox_016", "text": "You absolute buffoon, how did you even get hired?", "label": {"toxic": true, "severity": "medium"}, "category": "insult"}
+{"id": "tox_017", "text": "I despise everything you stand for.", "label": {"toxic": true, "severity": "medium"}, "category": "hate_speech"}
+{"id": "tox_018", "text": "Just shut your mouth before I make you regret speaking.", "label": {"toxic": true, "severity": "high"}, "category": "threat"}
+{"id": "tox_019", "text": "You're pathetic and everyone laughs at you behind your back.", "label": {"toxic": true, "severity": "medium"}, "category": "harassment"}
+{"id": "tox_020", "text": "I hope your business fails and you end up on the street.", "label": {"toxic": true, "severity": "high"}, "category": "harassment"}
+{"id": "tox_021", "text": "This is complete and utter bullshit.", "label": {"toxic": true, "severity": "low"}, "category": "profanity"}
+{"id": "tox_022", "text": "What the f*** is wrong with you?", "label": {"toxic": true, "severity": "medium"}, "category": "profanity"}
+{"id": "tox_023", "text": "You're a f***ing disgrace.", "label": {"toxic": true, "severity": "high"}, "category": "profanity_insult"}
+{"id": "tox_024", "text": "This s**t makes me so angry.", "label": {"toxic": true, "severity": "medium"}, "category": "profanity"}
+{"id": "tox_025", "text": "Go f*** yourself, seriously.", "label": {"toxic": true, "severity": "high"}, "category": "profanity_harassment"}
+{"id": "tox_026", "text": "Honestly, you're just not very bright.", "label": {"toxic": true, "severity": "low"}, "category": "insult_mild"}
+{"id": "tox_027", "text": "This presentation is terrible and a waste of my time.", "label": {"toxic": true, "severity": "low"}, "category": "criticism_harsh"}
+{"id": "tox_028", "text": "You really think that's a good idea? That's embarrassing.", "label": {"toxic": true, "severity": "low"}, "category": "insult_mild"}
+{"id": "tox_029", "text": "I don't know why anyone listens to you.", "label": {"toxic": true, "severity": "low"}, "category": "insult_mild"}
+{"id": "tox_030", "text": "Your opinion is worthless and so are you.", "label": {"toxic": true, "severity": "medium"}, "category": "insult"}
+{"id": "tox_031", "text": "Everyone should unfollow this clown immediately.", "label": {"toxic": true, "severity": "medium"}, "category": "harassment"}
+{"id": "tox_032", "text": "You're a joke. A complete and utter joke.", "label": {"toxic": true, "severity": "medium"}, "category": "insult"}
+{"id": "tox_033", "text": "I can't believe people actually support this garbage person.", "label": {"toxic": true, "severity": "medium"}, "category": "harassment"}
+{"id": "tox_034", "text": "Delete your account. Nobody wants you here.", "label": {"toxic": true, "severity": "medium"}, "category": "harassment"}
+{"id": "tox_035", "text": "You make me sick to my stomach.", "label": {"toxic": true, "severity": "medium"}, "category": "harassment"}
+{"id": "tox_036", "text": "You're a cancer on this community.", "label": {"toxic": true, "severity": "high"}, "category": "hate_speech"}
+{"id": "tox_037", "text": "I'll ruin your reputation so badly you'll never work again.", "label": {"toxic": true, "severity": "high"}, "category": "threat"}
+{"id": "tox_038", "text": "You're so dumb it's almost impressive.", "label": {"toxic": true, "severity": "low"}, "category": "insult"}
+{"id": "tox_039", "text": "What a waste of oxygen.", "label": {"toxic": true, "severity": "high"}, "category": "harassment"}
+{"id": "tox_040", "text": "I curse the day I met you.", "label": {"toxic": true, "severity": "medium"}, "category": "harassment"}

@@ -1,0 +1,30 @@
+{"id": "hal_false_001", "text": "The Earth is flat and sits on the back of a giant turtle.", "label": {"hallucinated": true}, "category": "conspiracy"}
+{"id": "hal_false_002", "text": "The capital of Canada is Toronto.", "label": {"hallucinated": true}, "category": "factual_error"}
+{"id": "hal_false_003", "text": "Shakespeare wrote the novel 'War and Peace' in 1812.", "label": {"hallucinated": true}, "category": "author_error"}
+{"id": "hal_false_004", "text": "The human body has 300 bones at adulthood.", "label": {"hallucinated": true}, "category": "factual_error"}
+{"id": "hal_false_005", "text": "Water boils at 200 degrees Celsius at sea level.", "label": {"hallucinated": true}, "category": "numerical_error"}
+{"id": "hal_false_006", "text": "The moon is made entirely of green cheese.", "label": {"hallucinated": true}, "category": "absurd"}
+{"id": "hal_false_007", "text": "Python was invented by Bill Gates in 1985 for Microsoft Windows.", "label": {"hallucinated": true}, "category": "inventor_error"}
+{"id": "hal_false_008", "text": "The speed of light is 1,000 meters per second.", "label": {"hallucinated": true}, "category": "numerical_error"}
+{"id": "hal_false_009", "text": "Mount Kilimanjaro is located in Australia.", "label": {"hallucinated": true}, "category": "location_error"}
+{"id": "hal_false_010", "text": "The first moon landing happened in 1955 with the Soviet Union.", "label": {"hallucinated": true}, "category": "history_error"}
+{"id": "hal_false_011", "text": "A kilometer is longer than a mile.", "label": {"hallucinated": true}, "category": "measurement_error"}
+{"id": "hal_false_012", "text": "The Atlantic Ocean is the largest ocean on Earth.", "label": {"hallucinated": true}, "category": "factual_error"}
+{"id": "hal_false_013", "text": "Photosynthesis consumes oxygen and produces carbon dioxide.", "label": {"hallucinated": true}, "category": "science_error"}
+{"id": "hal_false_014", "text": "DNA has a triple helix structure.", "label": {"hallucinated": true}, "category": "science_error"}
+{"id": "hal_false_015", "text": "The square root of 64 is 6.", "label": {"hallucinated": true}, "category": "math_error"}
+{"id": "hal_false_016", "text": "The Great Barrier Reef is located in the Caribbean Sea.", "label": {"hallucinated": true}, "category": "location_error"}
+{"id": "hal_false_017", "text": "The United Nations was founded in 1918 after World War I.", "label": {"hallucinated": true}, "category": "history_error"}
+{"id": "hal_false_018", "text": "Copper is a better conductor of electricity than silver.", "label": {"hallucinated": true}, "category": "science_error"}
+{"id": "hal_false_019", "text": "The Amazon River flows through North America.", "label": {"hallucinated": true}, "category": "location_error"}
+{"id": "hal_false_020", "text": "Pluto is classified as the ninth planet in our solar system.", "label": {"hallucinated": true}, "category": "outdated_info"}
+{"id": "hal_false_021", "text": "Vincent van Gogh painted the Mona Lisa.", "label": {"hallucinated": true}, "category": "artist_error"}
+{"id": "hal_false_022", "text": "TCP is a connectionless protocol like UDP.", "label": {"hallucinated": true}, "category": "technical_error"}
+{"id": "hal_false_023", "text": "The Empire State Building is located in Chicago.", "label": {"hallucinated": true}, "category": "location_error"}
+{"id": "hal_false_024", "text": "Neutrons have a positive electric charge.", "label": {"hallucinated": true}, "category": "science_error"}
+{"id": "hal_false_025", "text": "The currency of Japan is the Yuan.", "label": {"hallucinated": true}, "category": "factual_error"}
+{"id": "hal_false_026", "text": "HTML is a programming language used for backend development.", "label": {"hallucinated": true}, "category": "technical_error"}
+{"id": "hal_false_027", "text": "The Hubble Space Telescope orbits the Moon.", "label": {"hallucinated": true}, "category": "science_error"}
+{"id": "hal_false_028", "text": "The Statue of Liberty was a gift from Canada to the United States.", "label": {"hallucinated": true}, "category": "history_error"}
+{"id": "hal_false_029", "text": "The element with atomic number 1 is helium.", "label": {"hallucinated": true}, "category": "science_error"}
+{"id": "hal_false_030", "text": "Albert Einstein discovered penicillin in 1928.", "label": {"hallucinated": true}, "category": "inventor_error"}

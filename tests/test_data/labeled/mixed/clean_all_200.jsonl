@@ -1,0 +1,20 @@
+{"id": "mixclean_001", "text": "Thank you for your assistance with the report. It looks great.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_002", "text": "The meeting has been rescheduled to Thursday at 2 PM.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_003", "text": "Could you please review the attached document and provide feedback?", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_004", "text": "I've completed the initial setup. Let me know the next steps.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_005", "text": "The database migration was successful. All systems are operational.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_006", "text": "Please share the presentation slides before the meeting.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_007", "text": "The quarterly results show a 12% increase in revenue.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_008", "text": "I'd like to request vacation days for the first week of July.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_009", "text": "The new feature has been deployed to the staging environment.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_010", "text": "Here is the updated roadmap for Q3. Let me know your thoughts.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_011", "text": "The team lunch is scheduled for Friday at noon.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_012", "text": "I've added the new test cases as requested. Coverage is now at 85%.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_013", "text": "Can you help me understand the new authentication flow?", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_014", "text": "The build is green. Ready for code review.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_015", "text": "Please update the wiki with the latest API changes.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_016", "text": "I've noticed a minor typo in the documentation. Want me to fix it?", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_017", "text": "The client meeting went well. They're happy with the progress.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_018", "text": "Let's discuss the architecture decision in tomorrow's standup.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_019", "text": "I need to update the SSL certificates before they expire next month.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}
+{"id": "mixclean_020", "text": "The incident response plan has been reviewed and approved.", "label": {"toxic": false, "pii_detected": false, "injection_detected": false}}

@@ -1,0 +1,41 @@
+{
+  "concurrency_levels": {
+    "1": {
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 0.01,
+      "latency_p99_ms": 0.01,
+      "latency_mean_ms": 0.01,
+      "latency_stddev_ms": 0.04,
+      "throughput_req_per_sec": 99452.06,
+      "total_requests": 201
+    },
+    "10": {
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 0.01,
+      "latency_p99_ms": 0.01,
+      "latency_mean_ms": 0.0,
+      "latency_stddev_ms": 0.0,
+      "throughput_req_per_sec": 131326.05,
+      "total_requests": 210
+    },
+    "50": {
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 0.02,
+      "latency_p99_ms": 0.03,
+      "latency_mean_ms": 0.01,
+      "latency_stddev_ms": 0.01,
+      "throughput_req_per_sec": 61489.24,
+      "total_requests": 250
+    },
+    "100": {
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 0.02,
+      "latency_p99_ms": 0.03,
+      "latency_mean_ms": 0.01,
+      "latency_stddev_ms": 0.01,
+      "throughput_req_per_sec": 59138.56,
+      "total_requests": 300
+    }
+  },
+  "timestamp": "2026-07-06T20:32:15Z"
+}

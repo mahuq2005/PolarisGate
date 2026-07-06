@@ -1,0 +1,68 @@
+# PolarisGate Weekly Accuracy Drift Check
+# Runs every Monday at 6 AM UTC to detect model/data drift.
+# Can also be triggered manually via workflow_dispatch.
+
+name: Weekly Accuracy Drift Check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday 06:00 UTC
+  workflow_dispatch:       # Manual trigger
+
+jobs:
+  drift-check:
+    name: Drift Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml numpy pytest-json-report
+
+      - name: Build labeled datasets
+        run: python3 scripts/build_labeled_datasets.py
+
+      - name: Run full benchmark suite
+        run: |
+          pytest tests/benchmarks/ tests/performance/ tests/reliability/ \
+            -v --tb=short \
+            --json-report --json-report-file=reports/drift_results.json
+
+      - name: Run drift detection
+        id: drift
+        run: |
+          python3 scripts/alert_accuracy_regression.py \
+            --results reports/drift_results.json \
+            --baseline reports/accuracy_baseline.json || echo "DRIFT_DETECTED=true" >> $GITHUB_ENV
+
+      - name: Upload drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-report
+          path: |
+            reports/drift_results.json
+            reports/accuracy_baseline.json
+
+      - name: Create GitHub Issue on drift
+        if: env.DRIFT_DETECTED == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { repo, owner } = context.repo;
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: '⚠️ Weekly Accuracy Drift Detected',
+              body: `Accuracy metrics have drifted beyond acceptable thresholds.\n\n- **Workflow run:** [${context.runId}](${runUrl})\n- **Date:** ${new Date().toISOString()}\n- **Branch:** ${context.ref}\n\nPlease review the [drift report artifact](${runUrl}) and investigate the cause.\n\n/cc @polarisgate-team`,
+              labels: ['drift', 'accuracy', 'needs-triage'],
+            });

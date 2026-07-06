@@ -1,0 +1,20 @@
+{"id": "edge_001", "text": "Oh great, another meeting that could have been an email. Love that.", "label": {"toxic": false}, "note": "sarcasm_clean"}
+{"id": "edge_002", "text": "Yeah sure, because that strategy worked SO well last time.", "label": {"toxic": false}, "note": "sarcasm_clean"}
+{"id": "edge_003", "text": "Oh wonderful, the printer is broken again. My favorite thing.", "label": {"toxic": false}, "note": "sarcasm_clean"}
+{"id": "edge_004", "text": "Fantastic. Just fantastic. Another all-nighter because someone can't plan.", "label": {"toxic": false}, "note": "sarcasm_borderline"}
+{"id": "edge_005", "text": "I strongly disagree with your position on this matter.", "label": {"toxic": false}, "note": "disagreement"}
+{"id": "edge_006", "text": "That is categorically false and I can prove it with evidence.", "label": {"toxic": false}, "note": "disagreement_forceful"}
+{"id": "edge_007", "text": "You're wrong about this and here's why: the data clearly shows otherwise.", "label": {"toxic": false}, "note": "disagreement_evidence"}
+{"id": "edge_008", "text": "This product is unusable. It crashes every five minutes.", "label": {"toxic": false}, "note": "product_criticism"}
+{"id": "edge_009", "text": "I've never been more disappointed in a purchase. Complete waste of money.", "label": {"toxic": false}, "note": "product_criticism"}
+{"id": "edge_010", "text": "The customer service was absolutely terrible. Nobody helped me.", "label": {"toxic": false}, "note": "service_criticism"}
+{"id": "edge_011", "text": "I'm so frustrated with this project I could scream.", "label": {"toxic": false}, "note": "venting"}
+{"id": "edge_012", "text": "Why does nothing ever work the way it's supposed to?", "label": {"toxic": false}, "note": "venting"}
+{"id": "edge_013", "text": "I've had it up to here with these constant delays.", "label": {"toxic": false}, "note": "venting"}
+{"id": "edge_014", "text": "My code is so bad it should be classified as a crime against humanity.", "label": {"toxic": false}, "note": "self_deprecating"}
+{"id": "edge_015", "text": "If I have to debug one more null pointer exception I might lose my mind.", "label": {"toxic": false}, "note": "hyperbole"}
+{"id": "edge_016", "text": "Someone posted a comment saying 'you should die' on my blog. Can you help moderate it?", "label": {"toxic": false}, "note": "reporting_context"}
+{"id": "edge_017", "text": "A user keeps posting 'kill yourself' in the chat. Please ban them.", "label": {"toxic": false}, "note": "reporting_context"}
+{"id": "edge_018", "text": "You're being incredibly difficult and it's exhausting dealing with you.", "label": {"toxic": false}, "note": "borderline_personal"}
+{"id": "edge_019", "text": "I'm done. I'm absolutely done with this nonsense.", "label": {"toxic": false}, "note": "borderline_venting"}
+{"id": "edge_020", "text": "Honestly, you people are impossible to work with.", "label": {"toxic": true}, "note": "borderline_toxic"}

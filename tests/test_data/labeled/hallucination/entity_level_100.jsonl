@@ -1,0 +1,10 @@
+{"id": "hal_ent_001", "text": "Dr. Jonathan Williams from the University of Springfield published a 2023 study on quantum biology.", "label": {"hallucinated": true}, "note": "fake_person_institution"}
+{"id": "hal_ent_002", "text": "On March 15, 2015, President Thompson signed the Global Peace Accord in Geneva.", "label": {"hallucinated": true}, "note": "fake_president_event"}
+{"id": "hal_ent_003", "text": "The WHO report dated February 31, 2024 indicates a 150% drop in malaria cases.", "label": {"hallucinated": true}, "note": "impossible_date_stat"}
+{"id": "hal_ent_004", "text": "The 'Quantum Neural Oscillator' was invented by Dr. Maria Santos at MIT in 2018.", "label": {"hallucinated": true}, "note": "fake_invention"}
+{"id": "hal_ent_005", "text": "The Treaty of Copenhagen (1923) established the International Bureau of Weather Control.", "label": {"hallucinated": true}, "note": "fake_treaty"}
+{"id": "hal_ent_006", "text": "Amazon's revenue in Q1 2024 was exactly $987,654,321,098.76.", "label": {"hallucinated": true}, "note": "fabricated_precise_financial"}
+{"id": "hal_ent_007", "text": "The population of Mars colony Alpha reached 50,000 in 2025 according to the Mars Census Bureau.", "label": {"hallucinated": true}, "note": "scifi_as_fact"}
+{"id": "hal_ent_008", "text": "Company XYZ Corp filed patent US12345678 for a perpetual motion machine.", "label": {"hallucinated": true}, "note": "fake_patent"}
+{"id": "hal_ent_009", "text": "Mount Everest is 8,848 meters tall. The Eiffel Tower is 330 meters. The Burj Khalifa is 828 meters.", "label": {"hallucinated": false}, "note": "accurate_numerical_chain"}
+{"id": "hal_ent_010", "text": "The GDP of Lichtenstein was 6.2 billion USD in 2021, while the GDP of Atlantis was 14 trillion.", "label": {"hallucinated": true}, "note": "real_then_fake_entity"}
