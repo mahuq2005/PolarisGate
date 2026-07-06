@@ -210,7 +210,7 @@ tbody td:first-child { font-weight: 600; }
   <p class="section-desc">54-second walkthrough of the PolarisGate dashboard — toxicity detection, PII redaction, and policy management.</p>
   <div class="demo-video">
     <video controls poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='500'%3E%3Crect fill='%230B1120' width='900' height='500'/%3E%3Ctext fill='%234F8EF7' x='450' y='260' text-anchor='middle' font-family='Arial' font-size='24'%3E▶ PolarisGate Demo%3C/text%3E%3C/svg%3E">
-      <source src="../demo/polarisgate_demo.mp4" type="video/mp4">
+      <source src="docs/demo_polarisgate.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
   </div>
@@ -223,21 +223,24 @@ tbody td:first-child { font-weight: 600; }
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Feature</th><th style="color:#4F8EF7">PolarisGate</th><th>Guardrails AI</th><th>NeMo</th><th>Lakera</th><th>Azure AI</th></tr>
+        <tr><th>Feature</th><th style="color:#4F8EF7">PolarisGate</th><th>Guardrails AI</th><th>NeMo</th><th>Lakera</th><th>Azure AI</th><th>MS Purview</th><th>AWS Bedrock</th><th>OpenAI Mod</th><th>Google DLP</th></tr>
       </thead>
       <tbody>
-        <tr class="highlight"><td>Toxicity Detection</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-        <tr class="highlight"><td>PII Detection</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-        <tr class="highlight"><td><strong>PII Redaction</strong></td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Prompt Injection Detection</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td><strong>Hallucination Detection</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td><strong>Dashboard / UI</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td></tr>
-        <tr class="highlight"><td><strong>Audit Trail</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Custom Policies</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td><strong>Batch Testing</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Self-Hosted</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Open Source</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Python SDK</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td>Toxicity Detection</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td>PII Detection</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross"><small>*</small></td><td class="check">✓</td></tr>
+        <tr class="highlight"><td><strong>PII Redaction</strong></td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td>Prompt Injection Detection</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>Hallucination Detection</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Dashboard / UI</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td><strong>Audit Trail</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Custom Policies</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>Batch Testing</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>Webhooks</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Self-Hosted</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Open Source</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Streaming SSE</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td>Python SDK</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td>Flat Cost / No Per-Request</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td></tr>
       </tbody>
     </table>
   </div>
