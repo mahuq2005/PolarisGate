@@ -313,16 +313,20 @@ def detect_toxicity_ensemble(text: str) -> tuple:
                         if bert_result and bert_result.get("flagged"):
                             # Both agree toxic
                             ensemble_source_counter.labels(source="ensemble_roberta_bert").inc()
-                            # Merge label details from both models
                             merged_labels = dict(label_details)
                             merged_labels.update(bert_result.get("label_details", {}))
                             return (True, max(roberta_score, bert_result.get("toxic_score", 0.0)),
                                     f"Ensemble (RoBERTa={roberta_score:.2f} + BERT)", "ensemble_roberta_bert", merged_labels)
-                        elif bert_result and not bert_result.get("flagged") and roberta_flagged:
-                            # RoBERTa says toxic, BERT says clean — be conservative
+                        elif bert_result and not bert_result.get("flagged"):
+                            # RoBERTa medium, BERT says clean — trust BERT (proven 0% FP)
+                            # Fall through to BERT as primary, preserving precision
+                            ensemble_source_counter.labels(source="roberta_deferred_to_bert").inc()
+                            # Do NOT return here — let BERT (Step 2) make the final decision
+                        elif roberta_flagged:
+                            # BERT unavailable but RoBERTa flags — be conservative
                             ensemble_source_counter.labels(source="roberta_conservative").inc()
                             return (True, roberta_score,
-                                    f"RoBERTa flagged (BERT disagreed, score={roberta_score:.2f})", "roberta_conservative", label_details)
+                                    f"RoBERTa flagged (BERT unavailable, score={roberta_score:.2f})", "roberta_conservative", label_details)
         except Exception as e:
             logger.warning(f"RoBERTa detection failed: {e}")
     

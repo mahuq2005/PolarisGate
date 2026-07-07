@@ -29,7 +29,7 @@ import asyncpg
 
 # ─── Configuration ──────────────────────────────────────────────────────────
 
-GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
+GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8002")
 COLLECTOR_URL = os.getenv("COLLECTOR_URL", "http://localhost:8006")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -37,7 +37,7 @@ DATABASE_URL = os.getenv(
 )
 
 ADMIN_EMAIL = "admin@polarisgate.ai"
-ADMIN_PASSWORD = "PolarisGateDemo2024!"
+ADMIN_PASSWORD = "Admin@123"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -378,7 +378,8 @@ async def setup_admin(client: httpx.AsyncClient) -> str:
     # Try setup first
     resp = await client.post(
         f"{GATEWAY_URL}/auth/setup",
-        data={"username": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+        content=f"username={ADMIN_EMAIL}&password={ADMIN_PASSWORD}",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     if resp.status_code == 200:
         logger.info("  ✓ Admin account created")
@@ -387,7 +388,8 @@ async def setup_admin(client: httpx.AsyncClient) -> str:
     # If already configured, login
     resp = await client.post(
         f"{GATEWAY_URL}/auth/token",
-        data={"username": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+        content=f"username={ADMIN_EMAIL}&password={ADMIN_PASSWORD}",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     if resp.status_code == 200:
         logger.info("  ✓ Admin already configured — logged in")

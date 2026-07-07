@@ -1,0 +1,18 @@
+[run]
+source = services
+omit = 
+    services/*/tests/*
+    tests/*
+    scripts/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    def __repr__
+    pass
+
+fail_under = 50
+show_missing = True
+precision = 2

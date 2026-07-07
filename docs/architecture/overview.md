@@ -240,6 +240,17 @@ make airgap-build
 
 ## Key Design Decisions
 
+### Why FastAPI + Flask?
+
+PolarisGate intentionally uses two Python frameworks:
+
+- **Gateway → FastAPI** — Chosen for its async/await performance under high concurrency (handles thousands of simultaneous connections for auth, routing, rate-limiting). Native OpenAPI docs, Pydantic validation, and built-in dependency injection make it ideal for API gateway workloads.
+
+- **Guardrails ML Service → Flask** — Chosen because ML model inference is CPU/GPU-bound, not I/O-bound. Async provides no benefit when BERT/RoBERTa/Presidio models are running synchronously on the main thread. Flask's simplicity and the mature ecosystem of ML libraries (transformers, Presidio) that assume synchronous execution make it the pragmatic choice.
+
+This is an intentional, documented architectural decision — not inconsistency. Each framework is optimal for its workload profile.
+
+
 ### Why OPA for Policy?
 
 Open Policy Agent (OPA) provides:
