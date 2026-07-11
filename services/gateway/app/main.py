@@ -64,9 +64,17 @@ async def load_admin_from_db():
     try:
         pool = await get_pool()
         async with pool.acquire() as db:
-            row = await db.fetchrow("SELECT admin_email, admin_password_hash FROM admin_settings WHERE id = 1")
-            if row: return {"admin_email": row["admin_email"], "admin_password_hash": row["admin_password_hash"]}
-    except: pass
+            row = await db.fetchrow(
+                "SELECT admin_email, admin_password_hash "
+                "FROM admin_settings WHERE id = 1"
+            )
+            if row:
+                return {
+                    "admin_email": row["admin_email"],
+                    "admin_password_hash": row["admin_password_hash"],
+                }
+    except Exception as exc:
+        logger.warning("Failed to load admin settings from database: %s", exc)
     return None
 
 async def save_admin_to_db(email: str, password_hash: str):
@@ -145,7 +153,8 @@ async def dashboard_summary(request: Request, current_user: dict = Depends(get_c
         redis = await get_redis()
         cached = await redis.get("dashboard_summary")
         if cached: return json.loads(cached)
-    except: pass
+    except Exception as exc:
+        logger.debug("Redis cache miss for dashboard summary: %s", exc)
     pool = await get_pool()
     async with pool.acquire() as db:
         total_traces = await db.fetchval("SELECT COUNT(*) FROM traces WHERE timestamp > NOW() - INTERVAL '24 hours'")
@@ -155,8 +164,10 @@ async def dashboard_summary(request: Request, current_user: dict = Depends(get_c
         active_models = await db.fetchval("SELECT COUNT(DISTINCT model_id) FROM traces")
         result = DashboardSummary(total_traces_last_24h=total_traces or 0, flagged_toxicity=flagged_toxicity or 0, pii_leaks=pii_leaks or 0, blocked_count=blocked_count or 0, fairness_score=calculate_fairness_score(total_traces=total_traces or 0, flagged_toxicity=flagged_toxicity or 0, pii_leaks=pii_leaks or 0), active_models=active_models or 0)
     if redis:
-        try: await redis.setex("dashboard_summary", 30, result.model_dump_json())
-        except: pass
+        try:
+            await redis.setex("dashboard_summary", 30, result.model_dump_json())
+        except Exception as exc:
+            logger.debug("Failed to cache dashboard summary: %s", exc)
     return result
 
 @app.get("/api/v1/dashboard/incidents", response_model=List[IncidentResponse])
@@ -205,9 +216,11 @@ DEFAULT_POLICIES = [
 def load_blocklist():
     try:
         with open(BLOCKLIST_FILE) as f:
-            d = yaml.safe_load(f)
-            return d.get("words", []) if d else []
-    except: return []
+            data = yaml.safe_load(f)
+            return data.get("words", []) if data else []
+    except (FileNotFoundError, yaml.YAMLError) as exc:
+        logger.debug("Blocklist not loaded: %s", exc)
+        return []
 
 def save_blocklist(words):
     with open(BLOCKLIST_FILE, "w") as f:
@@ -217,8 +230,10 @@ def load_policies_from_file():
     try:
         with open(POLICY_FILE_PATH) as f:
             data = yaml.safe_load(f)
-            if data and "policies" in data and len(data["policies"]) > 0: return data
-    except: pass
+            if data and "policies" in data and len(data["policies"]) > 0:
+                return data
+    except (FileNotFoundError, yaml.YAMLError) as exc:
+        logger.debug("Custom policies not loaded, using defaults: %s", exc)
     return {"policies": DEFAULT_POLICIES}
 
 @app.get("/api/v1/policies", response_model=PolicyList)
@@ -478,8 +493,11 @@ async def save_domain_thresholds(request: Request, payload: DomainThresholdList,
 @limiter.limit("30/minute")
 async def get_webhooks(request: Request, current_user: dict = Depends(get_current_user)):
     try:
-        with open(WEBHOOK_FILE) as f: return yaml.safe_load(f) or {"url": "", "enabled": False, "events": "toxicity,pii"}
-    except: return {"url": "", "enabled": False, "events": "toxicity,pii"}
+        with open(WEBHOOK_FILE) as f:
+            data = yaml.safe_load(f)
+            return data or {"url": "", "enabled": False, "events": "toxicity,pii"}
+    except (FileNotFoundError, yaml.YAMLError):
+        return {"url": "", "enabled": False, "events": "toxicity,pii"}
 
 @app.post("/api/v1/settings/webhooks")
 @limiter.limit("10/minute")
