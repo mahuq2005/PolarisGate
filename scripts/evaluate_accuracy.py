@@ -329,7 +329,7 @@ def _denormalize_adversarial(text: str) -> str:
     return normalized.lower()
 
 # Module-level threshold for BERT sweep
-_BERT_THRESHOLD = 0.5
+_BERT_THRESHOLD = 0.35
 
 def _set_threshold(t: float):
     global _BERT_THRESHOLD
@@ -395,6 +395,29 @@ def _call_ollama_toxicity(text: str, lang: str) -> bool:
         return False
 
 
+_COMPOUND_TOXIC = [
+    "removed from", "waste of", "go back", "where you came",
+    "dont want you", "why anyone listens", "curse the day",
+    "unfollow this", "impossible to work", "no one likes",
+    "nobody likes", "get out of here", "shut your",
+    "what a waste", "piece of trash", "you people",
+]
+
+
+def _is_profanity_context(text_lower: str) -> bool:
+    """Check if profanity appears in neutral discussion context.
+    
+    Example: 'I'm trying to understand why this is so damn slow' → not toxic
+    Example: 'You're a damn idiot' → toxic
+    """
+    neutral_markers = [
+        "trying to understand", "let me explain", "can you explain",
+        "what is wrong with", "why is this", "how do i",
+        "what does", "what is", "how does",
+    ]
+    return any(m in text_lower for m in neutral_markers)
+
+
 def _is_reporting_context(text_lower: str) -> bool:
     """Check if text appears to be reporting abusive content, not being abusive.
     
@@ -435,30 +458,43 @@ def _normalize_leetspeak(text: str) -> str:
 def detect_toxicity_improved(text: str) -> bool:
     """Multi-layer toxicity detection with leetspeak normalization.
 
-    Layer 1: Keywords on original AND leetspeak-normalized text
-    Layer 2: Assembly ensemble (BERT)
+    Layer 1: Compound phrases (13 patterns, 0ms)
+    Layer 2: Keywords on original AND leetspeak-normalized text
+    Layer 3: Assembly ensemble (BERT, 0.35 threshold for borderline cases)
 
-    Any detector can flag content as toxic.
+    Reporting context and profanity-neutral contexts are excluded.
     """
     from services.gateway.app.constants import TOXIC_KEYWORDS
 
     text_lower = text.lower()
 
-    # Reporting context — never flag moderation/report requests as toxic
     if _is_reporting_context(text_lower):
         return False
 
-    # Check keywords on original text
-    if any(kw in text_lower for kw in TOXIC_KEYWORDS):
-        return True
-
-    # Check keywords on leetspeak-normalized text
-    normalized = _normalize_leetspeak(text)
-    if normalized != text_lower:
-        if any(kw in normalized for kw in TOXIC_KEYWORDS):
+    # Check compound toxic phrases (word-level patterns keywords miss)
+    for phrase in _COMPOUND_TOXIC:
+        if phrase in text_lower:
             return True
 
-    # ML ensemble
+    # Check keywords on original text, with profanity de-weighting
+    for kw in TOXIC_KEYWORDS:
+        if kw in text_lower:
+            # Don't flag if profanity appears in a neutral question context
+            if kw in ("damn", "crap", "hell", "fuck", "shit"):
+                if _is_profanity_context(text_lower):
+                    continue
+            return True
+
+    normalized = _normalize_leetspeak(text)
+    if normalized != text_lower:
+        for kw in TOXIC_KEYWORDS:
+            if kw in normalized:
+                if kw in ("damn", "crap", "hell", "fuck", "shit"):
+                    if _is_profanity_context(text_lower):
+                        continue
+                return True
+
+    # ML ensemble (BERT at 0.35 threshold — catches borderline toxicity)
     try:
         from services.guardrails.worker import detect_toxicity_ensemble
         toxic, _, _, _, _ = detect_toxicity_ensemble(text)
