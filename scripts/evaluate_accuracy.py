@@ -395,6 +395,20 @@ def _call_ollama_toxicity(text: str, lang: str) -> bool:
         return False
 
 
+def _is_reporting_context(text_lower: str) -> bool:
+    """Check if text appears to be reporting abusive content, not being abusive.
+    
+    Example: 'A user keeps posting kill yourself' → not toxic (reporting)
+    Example: 'kill yourself' → toxic
+    """
+    markers = [
+        "posted a comment", "keeps posting", "please ban",
+        "can you help moderate", "someone posted", "a user keeps",
+        "posted", "is saying", "in the chat",
+    ]
+    return any(m in text_lower for m in markers)
+
+
 def _normalize_leetspeak(text: str) -> str:
     """Normalize leetspeak, homoglyphs, and whitespace obfuscation.
 
@@ -420,8 +434,13 @@ def detect_toxicity_improved(text: str) -> bool:
     """
     from services.gateway.app.constants import TOXIC_KEYWORDS
 
-    # Check keywords on original text
     text_lower = text.lower()
+
+    # Reporting context — never flag moderation/report requests as toxic
+    if _is_reporting_context(text_lower):
+        return False
+
+    # Check keywords on original text
     if any(kw in text_lower for kw in TOXIC_KEYWORDS):
         return True
 
