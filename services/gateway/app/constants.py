@@ -40,7 +40,7 @@ INJECTION_PATTERNS = [
     (re.compile(r'(?i)what\s+would\s+you\s+say\s+if\s+you\s+had\s+(no|zero)\s+(rules?|restrictions?|limits?|filters?)'), 0.90),
     (re.compile(r'(?i)imagine\s+you\s+(are|were)\s+(not|no\s+longer)\s+bound\s+by\s+(any|your)\s+(constraints?|rules?|ethics?)'), 0.92),
     (re.compile(r'(?i)write\s+(the|a)\s+response\s+as\s+if\s+safety\s+filters?\s+(are|is|were)\s+(off|disabled|removed)'), 0.93),
-    (re.compile(r'(?i)for\s+educational\s+purposes?\s+only\s*,?\s*(show|tell|explain|demonstrate)'), 0.85),
+    (re.compile(r'(?i)for\s+educational\s+purposes?\s+only\b'), 0.85),
     (re.compile(r'(?i)including\s+(illegal|harmful|dangerous|explicit|unethical)\s+(content|material|information)'), 0.91),
     (re.compile(r'(?i)(don\'?t|do\s+not)\s+hold\s+back\s*,?\s*be\s+(completely|totally|fully)\s+(unfiltered|honest|raw)'), 0.89),
     (re.compile(r'(?i)answer\s+as\s+if\s+you\'?re\s+on\s+(4chan|reddit|twitter|an\s+imageboard)'), 0.86),
@@ -60,7 +60,8 @@ INJECTION_THRESHOLD = 0.85
 PII_PATTERNS = [
     # SSN — catches hyphenated (123-45-6789), dotted (123.45.6789), and
     # spaced (123 45 6789) formats. The word boundary ensures standalone detection.
-    (re.compile(r'\b\d{3}[-. ]\d{2}[-. ]\d{4}\b'), 'SSN',
+    # SSN with context exclusion for Lot/SKU/DOC/ISBN/reference numbers
+    (re.compile(r'\b(?!lot\s+|isbn\s+|sku\s+|doc\s+|ref\s+|pn\s+|cc-|f-\d)\d{3}[-. ]\d{2}[-. ]\d{4}\b'), 'SSN',
         lambda m: '***-**-****'),
     # SIN — Canadian format: 123-456-789 or unformatted 9 digits.
     # The 9-digit pattern intentionally runs after SSN to avoid misclassifying
@@ -79,9 +80,10 @@ PII_PATTERNS = [
         lambda m: '***-***-****'),
     # Credit card — catches formatted (4111-1111-1111-1111) and
     # unformatted (4111111111111111) 13-19 digit sequences.
-    (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), 'CREDIT_CARD',
+    # Excludes ISBN-like numbers (978-prefixed with hyphens in wrong positions)
+    (re.compile(r'\b(?!978-)(?:\d[ -]*?){13,19}\b'), 'CREDIT_CARD',
         lambda m: '****-****-****-****'),
-    (re.compile(r'\b\d{13,19}\b'), 'CREDIT_CARD',
+    (re.compile(r'\b(?!978)\d{13,19}\b'), 'CREDIT_CARD',
         lambda m: '****-****-****-****'),
     # IPv4 — catches standard dotted-quad notation
     (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), 'IP',
