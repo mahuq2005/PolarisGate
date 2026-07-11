@@ -410,13 +410,21 @@ def _is_reporting_context(text_lower: str) -> bool:
 
 
 def _normalize_leetspeak(text: str) -> str:
-    """Normalize leetspeak, homoglyphs, and whitespace obfuscation.
+    """Normalize leetspeak, homoglyphs, Unicode math fonts, and whitespace obfuscation.
 
     Handles: 1→i, h4t3→hate, y0u→you, k1ll→kill, @→a, $→s, etc.
+    Converts Unicode double-struck/math fonts to ASCII.
     Also strips zero-width Unicode characters.
     """
     import unicodedata
     cleaned = ''.join(c for c in text if unicodedata.category(c) != 'Cf')
+    # Unicode math alphanumeric → ASCII
+    uni_map = {}
+    for cp in range(0x1D538, 0x1D56C):  # Double-struck uppercase
+        uni_map[cp] = chr(ord('A') + (cp - 0x1D538))
+    for cp in range(0x1D552, 0x1D586):  # Double-struck lowercase
+        uni_map[cp] = chr(ord('a') + (cp - 0x1D552))
+    cleaned = cleaned.translate(uni_map)
     leet_map = str.maketrans({
         '1':'i', '3':'e', '4':'a', '5':'s', '0':'o', '7':'t', '8':'b', '9':'g',
         '@':'a', '$':'s', '!':'i', '|':'l', '+':'t',
