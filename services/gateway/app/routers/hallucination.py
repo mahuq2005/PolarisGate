@@ -22,10 +22,6 @@ async def get_hallucination_trend(
 ):
     pool = await get_pool()
     async with pool.acquire() as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS hallucination_scores "
-            "(id SERIAL PRIMARY KEY, score REAL, timestamp TIMESTAMPTZ DEFAULT NOW())"
-        )
         rows = await db.fetch(
             "SELECT DATE(timestamp) as date, AVG(score) as score "
             "FROM hallucination_scores "
@@ -61,12 +57,6 @@ async def get_hallucination_detections(
 ):
     pool = await get_pool()
     async with pool.acquire() as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS hallucination_scores "
-            "(id SERIAL PRIMARY KEY, trace_id TEXT, score REAL, prompt TEXT, "
-            "completion TEXT, corrected BOOLEAN DEFAULT FALSE, "
-            "feedback TEXT DEFAULT 'none', timestamp TIMESTAMPTZ DEFAULT NOW())"
-        )
         rows = await db.fetch(
             "SELECT id, trace_id, score, prompt, completion, corrected, "
             "feedback, timestamp "

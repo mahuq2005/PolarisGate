@@ -57,35 +57,13 @@ setup_otel(app, service_name="polarisgate-gateway")
 # ── Startup / Shutdown ────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
+    logger.info("Gateway starting — verifying database connection")
     try:
         pool = await get_pool()
         async with pool.acquire() as db:
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS admin_settings "
-                "(id INTEGER PRIMARY KEY DEFAULT 1, admin_email TEXT NOT NULL, "
-                "admin_password_hash TEXT NOT NULL, "
-                "created_at TIMESTAMPTZ DEFAULT NOW(), "
-                "updated_at TIMESTAMPTZ DEFAULT NOW())"
-            )
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS api_keys "
-                "(key_id TEXT PRIMARY KEY, name TEXT NOT NULL, key_hash TEXT NOT NULL, "
-                "role TEXT DEFAULT 'viewer', created_by TEXT, "
-                "expires_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT NOW())"
-            )
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS webhook_config "
-                "(id INTEGER PRIMARY KEY DEFAULT 1, url TEXT, "
-                "enabled BOOLEAN DEFAULT TRUE, events TEXT DEFAULT 'toxicity,pii')"
-            )
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS users "
-                "(email TEXT PRIMARY KEY, password_hash TEXT NOT NULL, "
-                "role TEXT DEFAULT 'safety_officer', "
-                "created_at TIMESTAMPTZ DEFAULT NOW(), active BOOLEAN DEFAULT TRUE)"
-            )
+            await db.execute("SELECT 1")
     except Exception as e:
-        logger.warning("Startup tables: %s", e)
+        logger.warning("Database connection check failed: %s", e)
 
 
 @app.on_event("shutdown")

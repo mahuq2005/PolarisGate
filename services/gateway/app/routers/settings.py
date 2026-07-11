@@ -142,12 +142,6 @@ async def get_domain_thresholds(
 ):
     pool = await get_pool()
     async with pool.acquire() as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS domain_thresholds "
-            "(id SERIAL PRIMARY KEY, domain TEXT NOT NULL UNIQUE, "
-            "severity TEXT DEFAULT 'medium', toxicity_action TEXT DEFAULT 'flag', "
-            "pii_action TEXT DEFAULT 'mask')"
-        )
         rows = await db.fetch(
             "SELECT domain, severity, toxicity_action, pii_action "
             "FROM domain_thresholds ORDER BY domain"
@@ -194,12 +188,6 @@ async def save_domain_thresholds(
 ):
     pool = await get_pool()
     async with pool.acquire() as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS domain_thresholds "
-            "(id SERIAL PRIMARY KEY, domain TEXT NOT NULL UNIQUE, "
-            "severity TEXT DEFAULT 'medium', toxicity_action TEXT DEFAULT 'flag', "
-            "pii_action TEXT DEFAULT 'mask')"
-        )
         for t in payload.thresholds:
             await db.execute(
                 "INSERT INTO domain_thresholds (domain, severity, toxicity_action, pii_action) "

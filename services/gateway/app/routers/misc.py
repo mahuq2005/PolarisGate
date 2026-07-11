@@ -30,12 +30,6 @@ async def get_audit_logs(
 ):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        await conn.execute(
-            "CREATE TABLE IF NOT EXISTS audit_logs "
-            "(id SERIAL PRIMARY KEY, user_email TEXT, action TEXT, "
-            "resource_type TEXT, resource_id TEXT, details TEXT, "
-            "ip_address TEXT, timestamp TIMESTAMPTZ DEFAULT NOW())"
-        )
         rows = await conn.fetch(
             "SELECT id, user_email, action, resource_type, resource_id, "
             "details, ip_address, timestamp FROM audit_logs "
@@ -54,11 +48,6 @@ async def submit_feedback(
 ):
     pool = await get_pool()
     async with pool.acquire() as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS feedback "
-            "(id SERIAL PRIMARY KEY, trace_id TEXT, model_verdict BOOLEAN, "
-            "client_label BOOLEAN, created_at TIMESTAMPTZ DEFAULT NOW())"
-        )
         await db.execute(
             "INSERT INTO feedback (trace_id, model_verdict, client_label) "
             "VALUES ($1, $2, $3)",

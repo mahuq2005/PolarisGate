@@ -20,19 +20,6 @@ async def ingest_trace(
 ):
     pool = await get_pool()
     async with pool.acquire() as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS traces "
-            "(id SERIAL PRIMARY KEY, prompt TEXT, completion TEXT, "
-            "model_id TEXT, user_id TEXT, timestamp TIMESTAMPTZ DEFAULT NOW())"
-        )
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS guardrail_results "
-            "(id SERIAL PRIMARY KEY, trace_id INTEGER REFERENCES traces(id), "
-            "toxic BOOLEAN DEFAULT FALSE, toxic_score REAL DEFAULT 0.0, "
-            "reason TEXT, pii_detected BOOLEAN DEFAULT FALSE, pii_types TEXT, "
-            "blocklisted BOOLEAN DEFAULT FALSE, "
-            "timestamp TIMESTAMPTZ DEFAULT NOW())"
-        )
         row = await db.fetchrow(
             "INSERT INTO traces (prompt, completion, model_id, user_id) "
             "VALUES ($1, $2, $3, $4) RETURNING id",
