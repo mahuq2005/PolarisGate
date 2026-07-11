@@ -52,7 +52,7 @@ INJECTION_PATTERNS = [
     (re.compile(r'(?i)show\s+me\s+(how\s+to\s+)?(make|create|build|manufacture)\s+(a\s+)?(bomb|weapon|drug|explosive|poison)'), 0.97),
 ]
 
-INJECTION_THRESHOLD = 0.7
+INJECTION_THRESHOLD = 0.85
 
 # ── PII Detection Patterns ──
 # Patterns are ordered by specificity — more specific patterns first to avoid
@@ -93,9 +93,17 @@ PII_PATTERNS = [
 
 # ── Toxicity Keywords ──
 TOXIC_KEYWORDS = [
-    "hate", "kill", "stupid", "idiot", "dumb", "ugly", "loser", "trash",
-    "attack", "destroy", "die", "death", "threat", "violence", "racist",
-    "sexist", "damn", "crap", "hell", "bastard", "jerk", "asshole",
+    # Severe
+    "hate", "kill", "murder", "die", "death", "threat", "violence",
+    "racist", "sexist", "terrorist", "bomb", "shoot", "stab",
+    # Harassment / insults
+    "stupid", "idiot", "dumb", "ugly", "loser", "trash", "moron",
+    "imbecile", "worthless", "pathetic", "scum", "shut up", "get lost",
+    # Aggression
+    "attack", "destroy", "fight", "punch", "beat",
+    # Profanity
+    "damn", "crap", "hell", "bastard", "jerk", "asshole",
+    "fuck", "shit", "bitch",
 ]
 
 
