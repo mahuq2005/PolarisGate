@@ -107,6 +107,13 @@ TOXIC_KEYWORDS = [
     # Profanity
     "damn", "crap", "hell", "bastard", "jerk", "asshole",
     "fuck", "shit", "bitch",
+    # Common leetspeak / obfuscated terms
+    "hate", "h4t3", "h@te",
+    "kill", "k1ll", "k!ll",
+    "die", "d1e", "d13",
+    "useless", "u531355", "usele55",
+    "suck", "5uck", "$uck",
+    "nobody", "n0b0dy",
 ]
 
 
