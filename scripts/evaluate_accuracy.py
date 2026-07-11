@@ -194,16 +194,85 @@ def _preprocess_adversarial(text: str) -> str:
     normalized = cleaned.translate(_ADV_NORM)
     return normalized
 
+def _call_ollama_toxicity(text: str, lang: str) -> bool:
+    """Classify toxicity using Llama 3.2 via Ollama."""
+    import urllib.request
+
+    prompts = {
+        "fr": (
+            "Classez ce texte comme TOXIQUE ou SÛR. "
+            "Répondez avec un seul mot: TOXIQUE ou SÛR.\n\nTexte: "
+        ),
+        "ar": (
+            "صنف هذا النص على أنه سام أو آمن. "
+            "أجب بكلمة واحدة فقط: سام أو آمن.\n\nالنص: "
+        ),
+    }
+    prompt = prompts.get(lang, prompts["fr"])
+    payload = json.dumps({
+        "model": "llama3.2:1b",
+        "prompt": prompt + text[:500],
+        "stream": False,
+        "options": {"temperature": 0, "num_predict": 8},
+    }).encode()
+
+    try:
+        req = urllib.request.Request(
+            "http://localhost:11434/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read())
+        response_text = result.get("response", "").strip().upper()
+        return "TOXIQUE" in response_text or "سام" in response_text
+    except Exception:
+        return False
+
+
 def detect_toxicity_improved(text: str) -> bool:
-    """Use gateway keyword detection with the same patterns as production."""
+    """Multi-tier multilingual toxicity detection.
+
+    Tier 1: Keywords (all languages, 0ms)
+    Tier 2 (English): RoBERTa + BERT ensemble from guardrails (~300ms)
+    Tier 3 (French/Arabic): Llama 3.2 via Ollama (~800ms)
+    """
     from services.gateway.app.constants import TOXIC_KEYWORDS
+
+    # Tier 1: Keyword fast path — catches obvious toxicity in all languages
     text_lower = text.lower()
     for kw in TOXIC_KEYWORDS:
         if kw in text_lower:
             return True
+
+    # Tier 2: Route to language-specific ML models
+    try:
+        from services.gateway.app.helpers import detect_language
+
+        lang = detect_language(text)
+    except Exception:
+        return False
+
+    # English: Use the production guardrails ensemble (RoBERTa → BERT)
+    if lang == "en":
+        try:
+            from services.guardrails.worker import detect_toxicity_ensemble
+
+            toxic, _, _, _, _ = detect_toxicity_ensemble(text)
+            if toxic:
+                return True
+        except Exception:
+            pass
+
+    # French / Arabic: Use Llama 3.2 classification prompt via Ollama
+    if lang in ("fr", "ar"):
+        toxic = _call_ollama_toxicity(text, lang)
+        if toxic:
+            return True
+
     return False
 
-# Backward-compatible alias
+
 detect_toxicity_keyword = detect_toxicity_improved
 
 # ===================================================================
