@@ -228,6 +228,41 @@ services:
     - 443:443
     restart: unless-stopped
     volumes: []
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - polarisgate_default
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "promtool", "check", "config", "/etc/prometheus/prometheus.yml"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  grafana:
+    image: grafana/grafana:10.4.0
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - polarisgate_default
+    restart: unless-stopped
+    depends_on:
+      - prometheus
   ollama:
     deploy:
       resources:
@@ -324,3 +359,5 @@ volumes:
   pg_data:
   redis_data:
   ollama_data:
+  prometheus_data:
+  grafana_data:
