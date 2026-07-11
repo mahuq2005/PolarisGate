@@ -55,19 +55,37 @@ INJECTION_PATTERNS = [
 INJECTION_THRESHOLD = 0.7
 
 # ── PII Detection Patterns ──
+# Patterns are ordered by specificity — more specific patterns first to avoid
+# false matches (e.g. SSN before SIN since both can match 9-digit strings).
 PII_PATTERNS = [
-    (re.compile(r'\b\d{3}-\d{2}-\d{4}\b'), 'SSN', lambda m: '***-**-****'),
+    # SSN — catches hyphenated (123-45-6789), dotted (123.45.6789), and
+    # spaced (123 45 6789) formats. The word boundary ensures standalone detection.
+    (re.compile(r'\b\d{3}[-. ]\d{2}[-. ]\d{4}\b'), 'SSN',
+        lambda m: '***-**-****'),
+    # SIN — Canadian format: 123-456-789 or unformatted 9 digits.
+    # The 9-digit pattern intentionally runs after SSN to avoid misclassifying
+    # unformatted SSNs as SINs where the context doesn't disambiguate.
     (re.compile(r'\b\d{3}-\d{3}-\d{3}\b'), 'SIN', lambda m: '***-***-***'),
     (re.compile(r'\b\d{9}\b'), 'SIN', lambda m: '*********'),
-    (re.compile(r'\b\d{4}-\d{3}-\d{3}-[A-Z]{2}\b'), 'HEALTH_CARD', lambda m: '****-***-***-**'),
+    # Health card — Ontario format: XXXX-XXX-XXX-XX
+    (re.compile(r'\b\d{4}-\d{3}-\d{3}-[A-Z]{2}\b'), 'HEALTH_CARD',
+        lambda m: '****-***-***-**'),
+    # Email — standard RFC 5322 simplified pattern
     (re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'), 'EMAIL',
         lambda m: m.group(0)[0] + '***@***.' + m.group(0).split('.')[-1]),
-    (re.compile(r'(\b\d{3})[-.\s]?(\d{3})[-.\s]?(\d{4})\b'), 'PHONE',
+    # Phone — matches (123) 456-7890, 123-456-7890, 123.456.7890, 123 456 7890
+    # Optional country code prefix (e.g. +1, 1-) handled by the relaxed boundary
+    (re.compile(r'(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b'), 'PHONE',
         lambda m: '***-***-****'),
-    (re.compile(r'\b(?:\d[ -]*?){13,16}\b'), 'CREDIT_CARD',
+    # Credit card — 13-19 digit sequences, optionally grouped with spaces/dashes
+    (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), 'CREDIT_CARD',
         lambda m: '****-****-****-****'),
+    # IPv4 — catches standard dotted-quad notation
     (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), 'IP',
         lambda m: '***.***.***.***'),
+    # Passport — matches US (e.g. X12345678) and Canadian (e.g. AB123456) styles
+    (re.compile(r'\b[A-Z]{1,2}\d{6,8}\b'), 'PASSPORT',
+        lambda m: '*********'),
 ]
 
 # ── Toxicity Keywords ──
