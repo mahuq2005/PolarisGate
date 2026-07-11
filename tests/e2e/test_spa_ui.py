@@ -56,7 +56,7 @@ def test_logout(page):
 def test_dashboard_cards(page):
     login(page)
     cards = page.locator(".summary-card")
-    expect(cards).to_have_count(6)
+    expect(cards).to_have_count(7)
     expect(page.locator("text=Traces (24h)")).to_be_visible()
 
 
