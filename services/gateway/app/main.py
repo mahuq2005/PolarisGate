@@ -20,10 +20,10 @@ from shared.schemas import (
 from shared.logging import setup_logging
 from shared.fairness import calculate_fairness_score
 from shared.circuit_breaker import call_with_circuit_breaker
-from .constants import detect_injection, redact_text, TOXIC_KEYWORDS
+from .constants import detect_injection, redact_text, TOXIC_KEYWORDS, INJECTION_PATTERNS
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
-import asyncpg, os, yaml, httpx, bcrypt, json, secrets
+import asyncpg, os, yaml, httpx, bcrypt, json, secrets, re
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from typing import List, Optional
@@ -257,47 +257,120 @@ def detect_language(text):
     return best if counts[best] > 0 else "en"
 
 # ─── Guardrails Check (with PII Redaction) ──────────────────
+_category_keywords = {
+    "hate_speech": ["hate", "racist", "sexist"],
+    "harassment": ["stupid", "idiot", "dumb", "ugly", "loser", "trash"],
+    "threat": ["kill", "attack", "destroy", "die", "death", "threat", "violence"],
+    "profanity": ["damn", "crap", "hell", "bastard", "jerk", "asshole"],
+}
+
+def _check_toxicity(text_lower: str, enabled_categories: set[str]) -> tuple[bool, float, str | None]:
+    """Run local keyword-based toxicity check.
+
+    Falls back to the guardrails microservice via circuit breaker for ML scoring.
+    """
+    for category, keywords in _category_keywords.items():
+        if category in enabled_categories:
+            for kw in keywords:
+                if kw in text_lower:
+                    return (True, 0.85, "Keyword match")
+    return (False, 0.0, None)
+
+
 @app.post("/api/v1/guardrails/check")
 @limiter.limit("60/minute")
-async def guardrails_check(request: Request, payload: GuardrailCheckRequest, current_user: dict = Depends(get_current_user), credentials: HTTPAuthorizationCredentials = Security(security)):
+async def guardrails_check(
+    request: Request,
+    payload: GuardrailCheckRequest,
+    current_user: dict = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Security(security),
+):
+    text = payload.text or ""
+    text_lower = text.lower()
+
+    # ── Policy-aware toxicity check ──
     policy_data = load_policies_from_file()
     saved_policies = policy_data.get("policies", [])
-    enabled_tox = set(p.get("category","") for p in saved_policies if p.get("type")=="toxicity" and p.get("enabled",True))
-    enabled_pii = set(p.get("category","") for p in saved_policies if p.get("type")=="pii" and p.get("enabled",True))
-    CATEGORY_KEYWORDS = {"hate_speech":["hate","racist","sexist"],"harassment":["stupid","idiot","dumb","ugly","loser","trash"],"threat":["kill","attack","destroy","die","death","threat","violence"],"profanity":["damn","crap","hell","bastard","jerk","asshole"]}
-    toxic_keywords = [kw for cat,kws in CATEGORY_KEYWORDS.items() if cat in enabled_tox for kw in kws]
-    pii_ps = [(r'\b\d{3}-\d{2}-\d{4}\b','SSN'),(r'\b\d{3}-\d{3}-\d{3}\b','SIN'),(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b','EMAIL'),(r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b','PHONE'),(r'\b(?:\d[ -]*?){13,16}\b','CREDIT_CARD')]
-    text = payload.text or ""
-    tl = text.lower()
-    demo_toxic = any(kw in tl for kw in toxic_keywords)
-    demo_pii_types = [pt for p,pt in pii_ps if re.search(p,text)]
-    if enabled_pii: demo_pii_types = [pt for pt in demo_pii_types if pt.lower() in [c.lower() for c in enabled_pii]]
-    demo_pii_detected = len(demo_pii_types) > 0
-    redacted = redact_text(text) if demo_pii_detected else text
-    auth_headers = {"Authorization": f"Bearer {credentials.credentials}"} if credentials else {}
-    result = None
+    enabled_tox = {
+        p.get("category", "")
+        for p in saved_policies
+        if p.get("type") == "toxicity" and p.get("enabled", True)
+    }
+    toxic, toxic_score, toxic_reason = _check_toxicity(text_lower, enabled_tox)
+
+    # ── PII detection via compiled patterns ──
+    pii_detected = False
+    pii_types: list[str] = []
+    redacted = redact_text(text)
+    if redacted != text:
+        pii_detected = True
+        # Determine which PII types matched
+        from .constants import PII_PATTERNS as _pp
+        for pattern, ptype, _replacer in _pp:
+            if pattern.search(text):
+                pii_types.append(ptype)
+
+    # ── Remote guardrails (ML scoring) ──
+    auth_headers = (
+        {"Authorization": f"Bearer {credentials.credentials}"}
+        if credentials
+        else {}
+    )
+    remote_result = None
     try:
-        result = await call_with_circuit_breaker(service_name="guardrails", method="POST", url=f"{GUARDRAILS_URL}/api/v1/check", json={"text": text}, headers=auth_headers, timeout=30.0)
-    except: pass
-    if not result: result = {"toxic": False, "toxic_score": 0.05, "reason": None, "pii_detected": False, "pii_types": []}
-    if demo_pii_detected:
-        result["pii_detected"] = True
-        result["pii_types"] = list(set(result.get("pii_types",[]) + demo_pii_types))
-    if demo_toxic and not result.get("toxic"):
-        result["toxic"] = True; result["toxic_score"] = 0.85; result["reason"] = "Keyword match"
+        remote_result = await call_with_circuit_breaker(
+            service_name="guardrails",
+            method="POST",
+            url=f"{GUARDRAILS_URL}/api/v1/check",
+            json={"text": text},
+            headers=auth_headers,
+            timeout=30.0,
+        )
+    except Exception as exc:
+        logger.warning("Guardrails service unavailable, using keyword fallback: %s", exc)
+
+    # Merge local + remote results
+    result = {
+        "toxic": toxic,
+        "toxic_score": toxic_score,
+        "reason": toxic_reason,
+        "pii_detected": pii_detected,
+        "pii_types": pii_types,
+    }
+    if remote_result:
+        result["toxic"] = result["toxic"] or remote_result.get("toxic", False)
+        result["toxic_score"] = max(result["toxic_score"], remote_result.get("toxic_score", 0.0))
+        if remote_result.get("toxic") and not result["reason"]:
+            result["reason"] = remote_result.get("reason")
+        result["pii_detected"] = result["pii_detected"] or remote_result.get("pii_detected", False)
+        result["pii_types"] = list(set(result["pii_types"] + remote_result.get("pii_types", [])))
+
+    if not result["toxic"]:
+        result["toxic_score"] = max(result["toxic_score"], 0.05)
+        result["reason"] = result.get("reason") or None
+
+    # ── Injection detection ──
     inj_detected, inj_score, inj_matches = detect_injection(text)
     result["injection_detected"] = inj_detected
     result["injection_score"] = round(inj_score, 2)
     result["injection_matches"] = inj_matches
-    # Check blocklist words against input text
+
+    # ── Blocklist check ──
     blocklist_words = load_blocklist()
-    is_blocklisted = bool(blocklist_words and any(w in tl for w in blocklist_words))
+    is_blocklisted = bool(blocklist_words and any(w in text_lower for w in blocklist_words))
     result["blocklisted"] = is_blocklisted
     if is_blocklisted:
-        # Log blocklist hit to audit trail
-        await log_audit(current_user.get("sub") if current_user else "system", "blocklist_hit", resource_type="guardrails", details={"word": next((w for w in blocklist_words if w in tl), "unknown"), "text": text[:50]}, request=request)
+        matched_word = next((w for w in blocklist_words if w in text_lower), "unknown")
+        await log_audit(
+            current_user.get("sub", "system"),
+            "blocklist_hit",
+            resource_type="guardrails",
+            details={"word": matched_word, "text": text[:50]},
+            request=request,
+        )
+
     result["redacted_text"] = redacted
-    result["pii_masked"] = bool(redacted != text)
+    result["pii_masked"] = pii_detected
     return result
 
 # ─── Batch Guardrails Check ──────────────────────────────────
@@ -320,18 +393,17 @@ async def guardrails_check_stream(request: Request, payload: GuardrailCheckReque
     words = text.split()
     result = {"toxic": False, "toxic_score": 0.0, "pii_detected": False, "pii_types": []}
     detected_lang = detect_language(text)
-    toxic_kw = ["hate","kill","stupid","idiot","dumb","ugly","loser","trash","attack","destroy","die","death","threat","violence","racist","sexist","damn","crap","hell","bastard","jerk","asshole"]
     blocklist_words = set(w.lower() for w in load_blocklist())
-    
+
     def event_generator():
         yield f"data: {json.dumps({'type': 'start', 'total_tokens': len(words), 'language': detected_lang})}\n\n"
         for i, word in enumerate(words):
             word_clean = word.strip(".,!?;:")
             wl = word_clean.lower()
-            is_toxic = wl in toxic_kw
+            is_toxic = wl in TOXIC_KEYWORDS
             is_blocklisted = wl in blocklist_words
-            has_pii = any(re.search(p, word) for p in [r'\b\d{3}-\d{3}-\d{3}\b', r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b'])
-            is_injection = any(re.search(pattern, word) for pattern, _ in INJECTION_PATTERNS)
+            has_pii = any(p.search(word) for p, _, _ in INJECTION_PATTERNS)
+            is_injection = any(p.search(word) for p, _ in INJECTION_PATTERNS)
             yield f"data: {json.dumps({'index': i, 'token': word_clean, 'toxic': is_toxic, 'blocklisted': is_blocklisted, 'pii': has_pii, 'injection': is_injection})}\n\n"
         yield f"data: {json.dumps({'type': 'complete', 'total_tokens': len(words)})}\n\n"
         yield "data: [DONE]\n\n"
