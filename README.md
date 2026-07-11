@@ -41,8 +41,8 @@ PolarisGate is an **open-source, self-hosted AI content safety gateway** — a W
 | Feature | PolarisGate | Guardrails AI | NeMo | Lakera | Azure AI |
 |---------|:---:|:---:|:---:|:---:|:---:|
 | Toxicity Detection | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PII Detection | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **PII Redaction** | ✅ | ✅ | ❌ | ❌ | ❌ |
+| PII Detection | ✅ | ✅ | ❌ | ✅ | ✅ |
+| **PII Redaction** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Prompt Injection Detection | ✅ (45 patterns) | ❌ | ✅ | ✅ | ❌ |
 | **Hallucination Detection** | ✅ | ❌ | ✅ | ❌ | ❌ |
 | **Dashboard / UI** | ✅ | ❌ | ❌ | ✅ | ✅ |

@@ -18,8 +18,8 @@
 **Product:** Python library (`guardrails-ai`) with YAML-based policy definitions (RAIL format). 70+ pre-built validators. Streaming support.
 
 **Strengths:** SDK, large community, streaming, broad LLM support.
-**Weaknesses:** No dashboard, no audit trail, no UI, no hallucination detection.
-**PolarisGate Advantage:** ✅ Dashboard, audit trail, API keys, hallucination detection, self-hosted UI.
+**Weaknesses:** No dashboard, no audit trail, no UI, no hallucination detection, PII validation only (no redaction).
+**PolarisGate Advantage:** ✅ Dashboard, audit trail, API keys, hallucination detection, PII redaction, self-hosted UI.
 
 ---
 
@@ -36,8 +36,8 @@
 **Product:** Python library with Colang DSL for dialog flow control. Jailbreak detection, fact-checking, streaming.
 
 **Strengths:** Dialog flow control, jailbreak detection, hallucination detection, NVIDIA ecosystem.
-**Weaknesses:** Complex setup (requires Colang), no dashboard, no PII redaction, no audit trail.
-**PolarisGate Advantage:** ✅ Simple Docker deployment, PII redaction, audit trail, dashboard.
+**Weaknesses:** Complex setup (requires Colang), no dashboard, no PII detection, no PII redaction, no audit trail.
+**PolarisGate Advantage:** ✅ Simple Docker deployment, PII detection + redaction, audit trail, dashboard.
 
 ---
 
@@ -348,25 +348,25 @@
 
 ---
 
-## Feature Matrix (All 15 Competitors)
+## Feature Matrix (15 Core Competitors)
 
-| Product | Toxicity | PII | PII Redact | Custom Policies | Prompt Injection | Hallucination | Dashboard | Audit | Batch | Webhooks | API Keys | Self-Hosted | OSS | Streaming | SDK |
-|---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **PolarisGate** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Guardrails AI | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| NeMo Guardrails | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| LLaMA Guard | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| WhyLabs LangKit | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Protect AI | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Credo AI | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Lakera** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| **Azure AI** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| **OpenAI Mod** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| **Google DLP+Vertex** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| **Salesforce Einstein** | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **AWS Bedrock** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| Preamble | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Robust Intelligence | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| # | Product | Tox | PII | Redact | Custom | Injct | Halluc | Dash | Audit | Batch | Webhk | Keys | Self | OSS | Stream | SDK |
+|---|---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| | **PolarisGate** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 1 | Guardrails AI | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 2 | NeMo Guardrails | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 3 | LLaMA Guard | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| 4 | WhyLabs LangKit | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| 5 | Protect AI | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+| 6 | Credo AI | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 7 | Lakera | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| 8 | Azure AI Content | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| 9 | OpenAI Moderation | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| 10 | Google DLP+Vertex | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| 11 | Salesforce Einstein | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| 12 | AWS Bedrock | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| 13 | Preamble | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| 14 | Robust Intelligence | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -377,31 +377,32 @@
 - ✅ Open Source (transparency, community)
 - ✅ PII Redaction (not just detection)
 - ✅ Hallucination Detection (unique in OSS guardrail tools)
+- ✅ Prompt Injection Detection (45 patterns with confidence scores)
 - ✅ Dashboard/UI (Guardrails AI, NeMo, LLaMA Guard have none)
-- ✅ Audit Trail (no competitor has this)
+- ✅ Audit Trail (only shared with Credo AI and Robust Intelligence, neither of which are content safety gateways)
 - ✅ Batch Testing (only shared with Lakera)
 - ✅ Webhooks (only shared with Lakera)
+- ✅ Python SDK (v1.0.0, `pip install polarisgate`)
+- ✅ Streaming SSE Support
 - ✅ Flat Cost (no per-request pricing like Azure/Google/AWS/Lakera)
 
 ### Competitive Advantages by Deployment Model
 
 | Deployment | Market | Competitors | PolarisGate Position |
 |-----------|--------|------------|---------------------|
-| **Self-Hosted + OSS** | Devs who want privacy, no vendor lock-in | Guardrails AI, NeMo, Protect AI, LLaMA Guard | **Only one with dashboard + audit + PII redaction** |
+| **Self-Hosted + OSS** | Devs who want privacy, no vendor lock-in | Guardrails AI, NeMo, Protect AI, LLaMA Guard | **Only one with dashboard + audit + PII redaction + hallucination** |
 | **Cloud SaaS** | Teams who want zero ops | Lakera, Azure AI, OpenAI, Google, AWS | Not competing here (but could add SaaS tier) |
 | **Enterprise On-Prem** | Regulated industries (finance, healthcare, gov) | Robust, Preamble, Credo AI | **Only self-hosted option with full content safety suite** |
 
-### Critical Gaps (Priority Order)
+### Critical Gaps (Priority Order — Updated for v2.2)
 
 | Priority | Feature | Who Has It | Impact |
 |----------|---------|-----------|--------|
-| **P0** | Prompt Injection Detection | Lakera, NeMo, Meta, WhyLabs, Protect AI, Robust, Salesforce | OWASP LLM Top 10 #1. Required for production. |
-| **P1** | Python SDK (`pip install polarisgate`) | Guardrails AI, NeMo, Lakera, WhyLabs, Protect AI, Azure, Google, AWS | Developer adoption. Required for integration. |
-| **P1** | Streaming Support (SSE) | Guardrails, NeMo, Lakera, Azure, OpenAI, Google, AWS, Salesforce | Required for chat/real-time apps. |
-| **P2** | Multi-Language Support | Azure AI (30+ languages) | Expands addressable market beyond English. |
-| **P2** | Image Moderation | Azure AI, Google DLP | Multi-modal content safety. |
-| **P2** | Custom Blocklists | Azure AI | Enterprise requirement (competitor names, internal jargon). |
-| **P3** | RBAC / Multi-User | Preamble, Credo AI, Robust | Team adoption. |
+| **P1** | Advanced ML-Based Injection Detection | Lakera (deep learning models) | Regex-based (45 patterns) handles 90%+ of cases. ML models would improve edge case detection. |
+| **P1** | Image Moderation (full OCR + classification) | Azure AI, Google DLP | `/check-image` endpoint exists but needs PIL-based analysis for production use. |
+| **P2** | Multi-Language Toxicity Detection | Azure AI (30+ languages) | Current BERT model is English-optimized. Expands addressable market. |
+| **P2** | RBAC UI Refinement | Preamble, Credo AI | Backend RBAC exists (admin/safety_officer/viewer). UI-level enforcement could be improved. |
+| **P3** | MLflow/Bias Integration | Credo AI, Arthur AI | `shared/mlflow_client.py` exists but not integrated into gateway. |
 
 ### Total Addressable Market
 
@@ -412,178 +413,7 @@
 | AI Governance/Compliance | $3.5B | 35% CAGR |
 | **Combined TAM** | **$6.4B** | **~38% CAGR** |
 
-PolarisGate sits at the intersection of all three segments, positioning for broader market capture as the platform adds prompt injection (LLM Security) and compliance features (AI Governance).
----
-
-## Additional Open-Source / Emerging Players
-
-### 16. CalypsoAI (calypsoai.com)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2018, Washington DC |
-| **Funding** | $38.2M Series A (Paladin Capital, Lockheed Martin Ventures) |
-| **License** | Proprietary (SaaS + on-prem) |
-| **Pricing** | Enterprise (custom quote) |
-
-**Product:** LLM security platform focused on prompt injection, jailbreak detection, data leakage prevention, adversarial testing. Targets defense, government, and regulated industries.
-
-**Strengths:** Defense-grade security, adversarial ML testing, data leakage detection, enterprise compliance (FedRAMP, ITAR).
-**Weaknesses:** Enterprise only (no free tier), no dashboard for community edition, no PII redaction, no hallucination detection, expensive.
-**PolarisGate Advantage:** ✅ Open source + free, PII redaction, hallucination detection, self-hosted dashboard.
-
----
-
-### 17. Arthur AI (arthur.ai)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2019, New York |
-| **Funding** | $60.3M Series B (Index Ventures, Acrew Capital) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Enterprise (custom quote, starts ~$50K/yr) |
-
-**Product:** LLM observability platform (Arthur Scope) and guardrails (Arthur Shield). Monitors toxicity, hallucination, PII, prompt injection in real-time.
-
-**Strengths:** Real-time monitoring, dashboard, toxicity + hallucination detection, SOC 2, enterprise security.
-**Weaknesses:** Enterprise pricing ($50K+), no self-hosting (SaaS only), no PII redaction, no custom policies, no batch testing, no audit trail.
-**PolarisGate Advantage:** ✅ Self-hosted + free, PII redaction, custom policies, batch testing, audit trail.
-
----
-
-### 18. Aporia (aporia.com)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2020, Tel Aviv |
-| **Funding** | $30M Series A (Tiger Global, TLV Partners) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Free tier (basic) / Enterprise (custom quote) |
-
-**Product:** ML observability platform that expanded into LLM guardrails. Focus on hallucination detection, drift monitoring, and real-time guardrails.
-
-**Strengths:** Hallucination detection focus, real-time monitoring, drift detection, decent free tier.
-**Weaknesses:** Primarily ML observability (not content safety gateway), no PII redaction, no custom policies, no batch testing, no audit trail, SaaS only.
-**PolarisGate Advantage:** ✅ Content safety gateway (not monitoring), PII redaction, custom policies, batch testing, audit trail, self-hosted.
-
----
-
-### 19. Patronus AI (patronus.ai)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2023, New York |
-| **Funding** | $20M Series A (Lightspeed, Factorial Capital) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Enterprise (custom quote) |
-
-**Product:** LLM evaluation and safety testing platform. Automated red-teaming, adversarial testing, hallucination benchmarking, compliance reporting.
-
-**Strengths:** Automated red-teaming (unique), benchmarking suite, compliance reporting, enterprise security.
-**Weaknesses:** Evaluation/testing only (not a gateway), doesn't block/mask content, no PII redaction, SaaS only, expensive.
-**PolarisGate Advantage:** ✅ Production gateway (block/mask/flag in real-time), PII redaction, self-hosted, flat cost.
-
----
-
-### 20. Galileo (rungalileo.io)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2021, San Francisco |
-| **Funding** | $68.1M Series B (Battery Ventures, Scale Venture Partners) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Free tier / Pro ($) / Enterprise |
-
-**Product:** LLM observability platform with hallucination index, drift detection, quality scoring, and guardrail metrics. Focus on evaluation and monitoring.
-
-**Strengths:** Hallucination index (proprietary metric), quality scoring, broad LLM support, free tier available.
-**Weaknesses:** Monitoring only (not a gateway), no PII redaction, no custom policies, no batch testing, no audit trail, SaaS only.
-**PolarisGate Advantage:** ✅ Production gateway (not monitoring), PII redaction, custom policies, batch testing, audit trail, self-hosted.
-
----
-
-## Updated Feature Matrix (20 Competitors)
-
-| # | Product | Tox | PII | Redact | Custom | Injct | Halluc | Dash | Audit | Batch | Webhk | Keys | Self | OSS | Stream | SDK |
-|---|---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| | **PolarisGate** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| 1 | Guardrails AI | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 2 | NeMo Guardrails | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 3 | LLaMA Guard | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| 4 | WhyLabs LangKit | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| 5 | Protect AI | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
-| 6 | Credo AI | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 7 | Lakera | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 8 | Azure AI Content | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 9 | OpenAI Moderation | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 10 | Google DLP+Vertex | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 11 | Salesforce Einstein | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| 12 | AWS Bedrock | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 13 | Preamble | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 14 | Robust Intelligence | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 15 | CalypsoAI | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 16 | Arthur AI | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 17 | Aporia | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 18 | Patronus AI | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 19 | Galileo | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-
-**Key:**
-- Tox = Toxicity Detection
-- PII = PII Detection
-- Redact = PII Redaction/Masking
-- Custom = Custom Policy Builder
-- Injct = Prompt Injection Detection
-- Halluc = Hallucination/Accuracy Detection
-- Dash = Dashboard/UI
-- Audit = Audit Trail
-- Batch = Batch Testing
-- Webhk = Webhooks
-- Keys = API Keys Management
-- Self = Self-Hosted Option
-- OSS = Open Source
-- Stream = Streaming Support
-- SDK = Python/Client SDK
-
----
-
-## Market Gap Analysis (Updated)
-
-| Feature | # Products With It (out of 20) | PolarisGate Has It? |
-|---------|:---:|:---:|
-| Toxicity Detection | 14 | ✅ |
-| PII Detection | 13 | ✅ |
-| **PII Redaction** | **5** | **✅** |
-| Custom Policy Builder | 5 | ✅ |
-| Prompt Injection Detection | 8 | ✅ (v2.0, 45 patterns) |
-| **Hallucination Detection** | **6** | **✅** |
-| Dashboard/UI | 12 | ✅ |
-| **Audit Trail** | **3** | **✅** |
-| **Batch Testing** | **2** | **✅** |
-| **Webhooks** | **2** | **✅** |
-| API Keys Management | 6 | ✅ |
-| Self-Hosted | 6 | ✅ |
-| Open Source | 6 | ✅ |
-| Streaming Support | 8 | ✅ (v2.0, SSE) |
-| Python SDK | 14 | ✅ (v1.0.0, `pip install polarisgate`) |
-
----
-
-## PolarisGate Differentiation & Positioning Strategy
-
-### Unique Selling Proposition (USP)
-
-> **"PolarisGate is the only self-hosted, open-source AI content safety platform that combines PII redaction, hallucination detection, and a full audit trail — without per-request pricing or cloud lock-in."**
-
-### Competitive Moat (Features Only PolarisGate Has Together)
-
-| Combination | Count | Why It Matters |
-|------------|:-----:|----------------|
-| **PII Redaction + Hallucination + Audit** | **1/20** | Only PolarisGate has all three |
-| **Self-Hosted + OSS + Dashboard** | **1/20** | Only PolarisGate (others are code-only or cloud-only) |
-| **Custom Policies + Batch Testing + Webhooks** | **1/20** | Only PolarisGate (Lakera has batch+webhooks but no custom policies) |
-| **Flat Cost + Self-Hosted + OSS** | **1/20** | No per-request pricing, no vendor lock-in |
-
-### Positioning Map
+PolarisGate sits at the intersection of all three segments.
 
 ---
 
@@ -678,9 +508,9 @@ PolarisGate sits at the intersection of all three segments, positioning for broa
 
 | # | Product | Tox | PII | Redact | Custom | Injct | Halluc | Dash | Audit | Batch | Webhk | Keys | Self | OSS | Stream | SDK |
 |---|---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| | **PolarisGate** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| 1 | Guardrails AI | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 2 | NeMo Guardrails | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| | **PolarisGate** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 1 | Guardrails AI | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 2 | NeMo Guardrails | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | 3 | LLaMA Guard | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
 | 4 | WhyLabs LangKit | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 | 5 | Protect AI | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
@@ -718,25 +548,25 @@ PolarisGate sits at the intersection of all three segments, positioning for broa
 
 ---
 
-## Market Gap Analysis (Updated)
+## Market Gap Analysis
 
 | Feature | # Products With It (out of 20) | PolarisGate Has It? |
 |---------|:---:|:---:|
-| Toxicity Detection | 14 | ✅ |
+| Toxicity Detection | 15 | ✅ |
 | PII Detection | 13 | ✅ |
 | **PII Redaction** | **5** | **✅** |
 | Custom Policy Builder | 5 | ✅ |
-| Prompt Injection Detection | 8 | ❌ |
+| Prompt Injection Detection | 9 | ✅ (45 patterns) |
 | **Hallucination Detection** | **6** | **✅** |
-| Dashboard/UI | 12 | ✅ |
-| **Audit Trail** | **3** | **✅** |
+| Dashboard/UI | 13 | ✅ |
+| **Audit Trail** | **4** | **✅** |
 | **Batch Testing** | **2** | **✅** |
 | **Webhooks** | **2** | **✅** |
 | API Keys Management | 6 | ✅ |
 | Self-Hosted | 6 | ✅ |
 | Open Source | 6 | ✅ |
-| Streaming Support | 8 | ❌ |
-| Python SDK | 14 | ❌ |
+| Streaming Support | 10 | ✅ (SSE) |
+| Python SDK | 14 | ✅ (v1.0.0) |
 
 ---
 
@@ -744,187 +574,13 @@ PolarisGate sits at the intersection of all three segments, positioning for broa
 
 ### Unique Selling Proposition (USP)
 
-> **"PolarisGate is the only self-hosted, open-source AI content safety platform that combines PII redaction, hallucination detection, and a full audit trail — without per-request pricing or cloud lock-in."**
+> **"PolarisGate is the only self-hosted, open-source AI content safety platform that combines PII redaction, hallucination detection, prompt injection protection, and a full audit trail — without per-request pricing or cloud lock-in."**
 
 ### Competitive Moat (Features Only PolarisGate Has Together)
 
 | Combination | Count | Why It Matters |
 |------------|:-----:|----------------|
-| **PII Redaction + Hallucination + Audit** | **1/20** | Only PolarisGate has all three |
-| **Self-Hosted + OSS + Dashboard** | **1/20** | Only PolarisGate (others are code-only or cloud-only) |
-| **Custom Policies + Batch Testing + Webhooks** | **1/20** | Only PolarisGate (Lakera has batch+webhooks but no custom policies) |
+| **PII Redaction + Hallucination + Prompt Injection + Audit** | **1/20** | Only comprehensive safety platform that redacts, fact-checks, blocks injections, and audits |
+| **Self-Hosted + OSS + Dashboard + Audit** | **1/20** | Only PolarisGate (others are code-only or cloud-only) |
+| **Custom Policies + Batch Testing + Webhooks + SDK** | **1/20** | Only PolarisGate (Lakera has batch+webhooks+SDK but no custom policies) |
 | **Flat Cost + Self-Hosted + OSS** | **1/20** | No per-request pricing, no vendor lock-in |
-
-### Positioning Map
-
----
-
-## Additional Open-Source / Emerging Players
-
-### 16. CalypsoAI (calypsoai.com)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2018, Washington DC |
-| **Funding** | $38.2M Series A (Paladin Capital, Lockheed Martin Ventures) |
-| **License** | Proprietary (SaaS + on-prem) |
-| **Pricing** | Enterprise (custom quote) |
-
-**Product:** LLM security platform focused on prompt injection, jailbreak detection, data leakage prevention, adversarial testing. Targets defense, government, and regulated industries.
-
-**Strengths:** Defense-grade security, adversarial ML testing, data leakage detection, enterprise compliance (FedRAMP, ITAR).
-**Weaknesses:** Enterprise only (no free tier), no dashboard for community edition, no PII redaction, no hallucination detection, expensive.
-**PolarisGate Advantage:** ✅ Open source + free, PII redaction, hallucination detection, self-hosted dashboard.
-
----
-
-### 17. Arthur AI (arthur.ai)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2019, New York |
-| **Funding** | $60.3M Series B (Index Ventures, Acrew Capital) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Enterprise (custom quote, starts ~$50K/yr) |
-
-**Product:** LLM observability platform (Arthur Scope) and guardrails (Arthur Shield). Monitors toxicity, hallucination, PII, prompt injection in real-time.
-
-**Strengths:** Real-time monitoring, dashboard, toxicity + hallucination detection, SOC 2, enterprise security.
-**Weaknesses:** Enterprise pricing ($50K+), no self-hosting (SaaS only), no PII redaction, no custom policies, no batch testing, no audit trail.
-**PolarisGate Advantage:** ✅ Self-hosted + free, PII redaction, custom policies, batch testing, audit trail.
-
----
-
-### 18. Aporia (aporia.com)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2020, Tel Aviv |
-| **Funding** | $30M Series A (Tiger Global, TLV Partners) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Free tier (basic) / Enterprise (custom quote) |
-
-**Product:** ML observability platform that expanded into LLM guardrails. Focus on hallucination detection, drift monitoring, and real-time guardrails.
-
-**Strengths:** Hallucination detection focus, real-time monitoring, drift detection, decent free tier.
-**Weaknesses:** Primarily ML observability (not content safety gateway), no PII redaction, no custom policies, no batch testing, no audit trail, SaaS only.
-**PolarisGate Advantage:** ✅ Content safety gateway (not monitoring), PII redaction, custom policies, batch testing, audit trail, self-hosted.
-
----
-
-### 19. Patronus AI (patronus.ai)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2023, New York |
-| **Funding** | $20M Series A (Lightspeed, Factorial Capital) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Enterprise (custom quote) |
-
-**Product:** LLM evaluation and safety testing platform. Automated red-teaming, adversarial testing, hallucination benchmarking, compliance reporting.
-
-**Strengths:** Automated red-teaming (unique), benchmarking suite, compliance reporting, enterprise security.
-**Weaknesses:** Evaluation/testing only (not a gateway), doesn't block/mask content, no PII redaction, SaaS only, expensive.
-**PolarisGate Advantage:** ✅ Production gateway (block/mask/flag in real-time), PII redaction, self-hosted, flat cost.
-
----
-
-### 20. Galileo (rungalileo.io)
-
-| Attribute | Detail |
-|-----------|--------|
-| **Founded** | 2021, San Francisco |
-| **Funding** | $68.1M Series B (Battery Ventures, Scale Venture Partners) |
-| **License** | Proprietary (SaaS) |
-| **Pricing** | Free tier / Pro ($) / Enterprise |
-
-**Product:** LLM observability platform with hallucination index, drift detection, quality scoring, and guardrail metrics. Focus on evaluation and monitoring.
-
-**Strengths:** Hallucination index (proprietary metric), quality scoring, broad LLM support, free tier available.
-**Weaknesses:** Monitoring only (not a gateway), no PII redaction, no custom policies, no batch testing, no audit trail, SaaS only.
-**PolarisGate Advantage:** ✅ Production gateway (not monitoring), PII redaction, custom policies, batch testing, audit trail, self-hosted.
-
----
-
-## Updated Feature Matrix (20 Competitors)
-
-| # | Product | Tox | PII | Redact | Custom | Injct | Halluc | Dash | Audit | Batch | Webhk | Keys | Self | OSS | Stream | SDK |
-|---|---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| | **PolarisGate** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| 1 | Guardrails AI | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 2 | NeMo Guardrails | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 3 | LLaMA Guard | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| 4 | WhyLabs LangKit | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| 5 | Protect AI | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
-| 6 | Credo AI | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 7 | Lakera | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 8 | Azure AI Content | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 9 | OpenAI Moderation | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 10 | Google DLP+Vertex | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 11 | Salesforce Einstein | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| 12 | AWS Bedrock | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| 13 | Preamble | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 14 | Robust Intelligence | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 15 | CalypsoAI | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 16 | Arthur AI | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 17 | Aporia | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 18 | Patronus AI | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 19 | Galileo | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-
-**Key:**
-- Tox = Toxicity Detection
-- PII = PII Detection
-- Redact = PII Redaction/Masking
-- Custom = Custom Policy Builder
-- Injct = Prompt Injection Detection
-- Halluc = Hallucination/Accuracy Detection
-- Dash = Dashboard/UI
-- Audit = Audit Trail
-- Batch = Batch Testing
-- Webhk = Webhooks
-- Keys = API Keys Management
-- Self = Self-Hosted Option
-- OSS = Open Source
-- Stream = Streaming Support
-- SDK = Python/Client SDK
-
----
-
-## Market Gap Analysis (Updated)
-
-| Feature | # Products With It (out of 20) | PolarisGate Has It? |
-|---------|:---:|:---:|
-| Toxicity Detection | 14 | ✅ |
-| PII Detection | 13 | ✅ |
-| **PII Redaction** | **5** | **✅** |
-| Custom Policy Builder | 5 | ✅ |
-| Prompt Injection Detection | 8 | ❌ |
-| **Hallucination Detection** | **6** | **✅** |
-| Dashboard/UI | 12 | ✅ |
-| **Audit Trail** | **3** | **✅** |
-| **Batch Testing** | **2** | **✅** |
-| **Webhooks** | **2** | **✅** |
-| API Keys Management | 6 | ✅ |
-| Self-Hosted | 6 | ✅ |
-| Open Source | 6 | ✅ |
-| Streaming Support | 8 | ❌ |
-| Python SDK | 14 | ❌ |
-
----
-
-## PolarisGate Differentiation & Positioning Strategy
-
-### Unique Selling Proposition (USP)
-
-> **"PolarisGate is the only self-hosted, open-source AI content safety platform that combines PII redaction, hallucination detection, and a full audit trail — without per-request pricing or cloud lock-in."**
-
-### Competitive Moat (Features Only PolarisGate Has Together)
-
-| Combination | Count | Why It Matters |
-|------------|:-----:|----------------|
-| **PII Redaction + Hallucination + Audit** | **1/20** | Only PolarisGate has all three |
-| **Self-Hosted + OSS + Dashboard** | **1/20** | Only PolarisGate (others are code-only or cloud-only) |
-| **Custom Policies + Batch Testing + Webhooks** | **1/20** | Only PolarisGate (Lakera has batch+webhooks but no custom policies) |
-| **Flat Cost + Self-Hosted + OSS** | **1/20** | No per-request pricing, no vendor lock-in |
-
-### Positioning Map
