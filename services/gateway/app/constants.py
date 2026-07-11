@@ -67,6 +67,7 @@ PII_PATTERNS = [
     # The 9-digit pattern intentionally runs after SSN to avoid misclassifying
     # unformatted SSNs as SINs where the context doesn't disambiguate.
     (re.compile(r'\b\d{3}-\d{3}-\d{3}\b'), 'SIN', lambda m: '***-***-***'),
+    (re.compile(r'\b\d{3}\s\d{3}\s\d{3}\b'), 'SIN', lambda m: '***-***-***'),
     (re.compile(r'\b\d{9}\b'), 'SIN', lambda m: '*********'),
     # Health card — Ontario format: XXXX-XXX-XXX-XX
     (re.compile(r'\b\d{4}-\d{3}-\d{3}-[A-Z]{2}\b'), 'HEALTH_CARD',
