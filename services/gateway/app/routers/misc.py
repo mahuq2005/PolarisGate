@@ -1,5 +1,6 @@
 """Miscellaneous endpoints — audit, feedback, explain, image moderation."""
 import logging
+import os
 import re
 from typing import List
 
@@ -17,7 +18,7 @@ from ..helpers import load_blocklist
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Misc"])
 
-GUARDRAILS_URL = __import__("os").getenv("GUARDRAILS_URL", "http://guardrails:8005")
+GUARDRAILS_URL = os.getenv("GUARDRAILS_URL", "http://guardrails:8005")
 
 
 # ── Audit ────────────────────────────────────────────────────

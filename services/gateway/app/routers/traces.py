@@ -36,7 +36,8 @@ async def ingest_trace(
         )
 
         try:
-            from ..routers.guardrails import guardrails_check
+            # Use deferred import to avoid circular dependency between routers
+            from ..routers.guardrails import guardrails_check as _gc
 
             check_result = await guardrails_check(
                 request,

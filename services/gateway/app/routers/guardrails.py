@@ -1,6 +1,7 @@
 """Guardrails endpoints — toxicity/PII/injection check, batch, streaming."""
 import json
 import logging
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Security
@@ -16,6 +17,7 @@ from ..constants import (
     redact_text,
     TOXIC_KEYWORDS,
     INJECTION_PATTERNS,
+    PII_PATTERNS,
 )
 from ..helpers import (
     load_blocklist,
@@ -28,7 +30,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/guardrails", tags=["Guardrails"])
 security = HTTPBearer(auto_error=False)
 
-GUARDRAILS_URL = __import__("os").getenv("GUARDRAILS_URL", "http://guardrails:8005")
+GUARDRAILS_URL = os.getenv("GUARDRAILS_URL", "http://guardrails:8005")
 
 _category_keywords = {
     "hate_speech": ["hate", "racist", "sexist"],
@@ -73,9 +75,7 @@ async def guardrails_check(
     redacted = redact_text(text)
     if redacted != text:
         pii_detected = True
-        from ..constants import PII_PATTERNS as _pp
-
-        for pattern, ptype, _ in _pp:
+        for pattern, ptype, _ in PII_PATTERNS:
             if pattern.search(text):
                 pii_types.append(ptype)
 
@@ -177,9 +177,7 @@ async def guardrails_check_stream(
             wl = word_clean.lower()
             is_toxic = wl in TOXIC_KEYWORDS
             is_blocklisted = wl in blocklist_words
-            from ..constants import PII_PATTERNS as _pp
-
-            has_pii = any(p.search(word) for p, _, _ in _pp)
+            has_pii = any(p.search(word) for p, _, _ in PII_PATTERNS)
             is_injection = any(p.search(word) for p, _ in INJECTION_PATTERNS)
             yield f"data: {json.dumps({'index': i, 'token': word_clean, 'toxic': is_toxic, 'blocklisted': is_blocklisted, 'pii': has_pii, 'injection': is_injection})}\n\n"
         yield f"data: {json.dumps({'type': 'complete', 'total_tokens': len(words)})}\n\n"

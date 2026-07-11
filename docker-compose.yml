@@ -280,7 +280,7 @@ services:
       - CMD-SHELL
       - ollama list 2>/dev/null || exit 1
       timeout: 10s
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.4.0
     networks:
     - polarisgate_default
     restart: unless-stopped

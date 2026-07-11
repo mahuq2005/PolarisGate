@@ -35,12 +35,15 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="PolarisGate Content Safety Gateway", version="2.2.0")
 
 # ── CORS ──────────────────────────────────────────────────────
+_cors_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:3001,http://localhost:3002,"
+    "http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3002",
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", "http://localhost:3001", "http://localhost:3002",
-        "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3002",
-    ],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
