@@ -30,8 +30,6 @@ services:
     image: polarisgate-aida-bridge
     networks:
     - polarisgate_default
-    ports:
-    - 8001:8001
     restart: unless-stopped
     volumes:
     - aida_chroma:/app/chroma_db
@@ -194,8 +192,6 @@ services:
     image: polarisgate-guardrails
     networks:
     - polarisgate_default
-    ports:
-    - 8005:8005
     restart: unless-stopped
     volumes:
     - ./policies:/app/policies
@@ -229,8 +225,6 @@ services:
     image: polarisgate-hallucination-detector
     networks:
     - polarisgate_default
-    ports:
-    - 8008:8008
     restart: unless-stopped
     volumes: []
   nginx:
@@ -350,8 +344,6 @@ services:
     image: openpolicyagent/opa:0.68.0-static
     networks:
     - polarisgate_default
-    ports:
-    - 8181:8181
     restart: unless-stopped
     volumes: []
   postgres:
