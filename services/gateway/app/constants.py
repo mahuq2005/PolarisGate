@@ -77,8 +77,11 @@ PII_PATTERNS = [
     # Optional country code prefix (e.g. +1, 1-) handled by the relaxed boundary
     (re.compile(r'(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b'), 'PHONE',
         lambda m: '***-***-****'),
-    # Credit card — 13-19 digit sequences, optionally grouped with spaces/dashes
+    # Credit card — catches formatted (4111-1111-1111-1111) and
+    # unformatted (4111111111111111) 13-19 digit sequences.
     (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), 'CREDIT_CARD',
+        lambda m: '****-****-****-****'),
+    (re.compile(r'\b\d{13,19}\b'), 'CREDIT_CARD',
         lambda m: '****-****-****-****'),
     # IPv4 — catches standard dotted-quad notation
     (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), 'IP',
