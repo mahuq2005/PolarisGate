@@ -109,7 +109,7 @@ def test_frontend_tab_count():
     with open("frontend/public/js/app.js") as f:
         js = f.read()
     # Match the top-level tabs array: const tabs = [{ k: 'dashboard', l: 'Dashboard' }, ...]
-    m = re.search(r"const tabs = \[(.*?)\]", js)
+    m = re.search(r"(?:const|var|let) tabs = \[(.*?)\]", js, re.DOTALL)
     assert m, "Could not find top-level tabs definition"
     tab_keys = re.findall(r"k:\s*'(\w+)'", m.group(1))
     assert len(tab_keys) == 4, f"Expected 4 top-level tabs, got {len(tab_keys)}: {tab_keys}"
@@ -132,16 +132,21 @@ def test_gateway_code_size():
     """Strategy: Gateway should be lean (~500-600 lines), not bloated (2700+ lines)."""
     with open("services/gateway/app/main.py") as f:
         line_count = len(f.readlines())
-    assert line_count < 800, f"Gateway is {line_count} lines — exceeding 800 line target. Possible feature creep."
+    assert line_count < 150, f"Gateway main.py is {line_count} lines — app factory should be lean. Possible feature creep."
 
 
 def test_pii_redaction_present():
     """Strategy: PII redaction is a core differentiator. Must exist."""
-    with open("services/gateway/app/main.py") as f:
+    with open("services/gateway/app/constants.py") as f:
         content = f.read()
-    assert "redact_text" in content, "PII redaction function missing — core strategy feature"
-    assert "PII_PATTERNS" in content, "PII patterns missing"
-    assert "injection_detected" in content, "Injection detection missing"
+    assert "redact_text" in content, "PII redaction function missing in constants.py"
+    assert "PII_PATTERNS" in content, "PII patterns missing in constants.py"
+
+    with open("services/gateway/app/routers/guardrails.py") as f:
+        guardrails_content = f.read()
+    assert "redact_text" in guardrails_content or "PII_PATTERNS" in guardrails_content, \
+        "Guardrails router must import redaction logic from constants"
+    assert "injection_detected" in guardrails_content, "Injection detection missing in guardrails router"
 
 
 def test_python_sdk_exists():
