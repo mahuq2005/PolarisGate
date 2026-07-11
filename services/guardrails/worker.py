@@ -1,6 +1,8 @@
 """Guardrails worker — toxicity/PII detection with adaptive model selection.
 Enterprise-grade: Pydantic validation, structured logging, async auth, connection pooling.
 """
+from __future__ import annotations
+
 import asyncio, json, os, logging, re, time, hashlib
 from datetime import datetime, timezone
 from redis.asyncio import Redis
