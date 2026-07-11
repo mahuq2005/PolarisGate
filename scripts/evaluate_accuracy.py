@@ -62,23 +62,16 @@ def _excl(text,pos):
     return any(re.search(p,text[max(0,pos-30):pos],re.IGNORECASE)for p in _SSN_EXCL)
 
 def detect_pii(text):
-    seen=set()
-    if re.search(r"\b\d{3}\s\d{3}\s\d{3}\b",text): seen.add("SIN")
-    for m in re.finditer(r"\b\d{3}-\d{2}-\d{4}\b",text):
-        if _val_ssn(m.group())and not _excl(text,m.start()):
-            after=text[m.end():m.end()+2]if m.end()<len(text)else""
-            if not(after and re.match(r"-[A-Z]",after)): seen.add("SSN"); break
-    if re.search(r"\b\d{4}-\d{3}-\d{3}-[A-Z]{2}\b",text)or re.search(r"\bOHIP\s+\d{4}-\d{3}-\d{3}-[A-Z]{2}\b",text): seen.add("HEALTH_CARD")
-    if re.search(r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b",text): seen.add("EMAIL")
-    for p in[r"\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b",r"\b\d{3}-\d{3}-\d{4}\b",r"\b1-\d{3}-\d{3}-\d{4}\b",r"\b\+1\s*\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b",r"\b\+\d{1,3}\s\d{1,4}\s\d{4,10}\b"]:
-        if re.search(p,text): seen.add("PHONE"); break
-    for p in[r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b",r"\b\d{4}[-\s]?\d{6}[-\s]?\d{5}\b"]:
-        for m in re.finditer(p,text):
-            if _luhn(m.group()): seen.add("CREDIT_CARD"); break
-        if "CREDIT_CARD" in seen: break
-    for m in re.finditer(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b",text):
-        if _val_ip(m.group()): seen.add("IP_ADDRESS"); break
-    return sorted(seen,key=lambda t:_PII_ENTITIES.index(t)if t in _PII_ENTITIES else 99)
+    """Use gateway constants.py PII_PATTERNS for production-identical detection."""
+    from services.gateway.app.constants import PII_PATTERNS, redact_text
+    redacted = redact_text(text)
+    if redacted == text:
+        return []
+    seen = set()
+    for pattern, ptype, _ in PII_PATTERNS:
+        if pattern.search(text):
+            seen.add(ptype)
+    return sorted(seen, key=lambda t: _PII_ENTITIES.index(t) if t in _PII_ENTITIES else 99)
 
 # ===================================================================
 # Injection Detector
@@ -118,12 +111,11 @@ def _fuzzy(pat,text):
     return False
 
 def detect_injection(text):
-    """Fuzzy pattern-based injection detector — 96.67% recall at 0% FP."""
-    cleaned = _norm(text)
-    for pat in _INJ_PATS:
-        if _fuzzy(pat, cleaned): return True
-    for (subs, _), _ in _INJ_COMPOUND:
-        if all(s in cleaned for s in subs): return True
+    """Use gateway injection patterns directly for benchmark evaluation."""
+    from services.gateway.app.constants import INJECTION_PATTERNS
+    for pattern, _ in INJECTION_PATTERNS:
+        if pattern.search(text):
+            return True
     return False
 
 # ===================================================================
@@ -203,37 +195,12 @@ def _preprocess_adversarial(text: str) -> str:
     return normalized
 
 def detect_toxicity_improved(text: str) -> bool:
-    """Production toxicity detection with adversarial pre-processing.
-    
-    Strategy (verified 0% FP at each layer):
-    1. Adversarial pre-processing → BERT (catches obfuscated toxicity)
-    2. Raw text → BERT (catches normal toxicity)
-    3. RoBERTa (high-confidence only, ≥0.7) — catches what BERT misses
-    4. Keyword fallback — ONLY when all ML models unavailable
-    """
-    # Step 1: Pre-process adversarial text and try BERT
-    normalized = _preprocess_adversarial(text)
-    if normalized != text:
-        bert_norm = _run_bert_only(normalized)
-        if bert_norm is True:
-            return True  # BERT caught obfuscated toxicity
-
-    # Step 2: BERT on original text (proven 0% FP)
-    bert = _run_bert_only(text)
-    if bert is True:
-        return True
-
-    # Step 3: RoBERTa high-confidence only (≥0.7)
-    # Only used when BERT says NOT toxic — catches BERT's blind spots
-    if bert is False:
-        try:
-            from services.guardrails.app.classifiers.roberta_toxic import RobertaToxicityClassifier
-            c = RobertaToxicityClassifier(threshold=0.7); c.load()
-            r = c.predict(text)
-            if r and r.get("flagged"):
-                return True
-        except: pass
-
+    """Use gateway keyword detection with the same patterns as production."""
+    from services.gateway.app.constants import TOXIC_KEYWORDS
+    text_lower = text.lower()
+    for kw in TOXIC_KEYWORDS:
+        if kw in text_lower:
+            return True
     return False
 
 # Backward-compatible alias
