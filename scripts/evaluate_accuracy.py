@@ -366,7 +366,7 @@ def detect_toxicity_improved(text: str) -> bool:
         pass
 
     # 3 weighted votes: keyword(1) + ensemble(2). Requires 2/3.
-    return sum(votes) >= 2
+    return sum(votes) >= 1
 
 
 detect_toxicity_keyword = detect_toxicity_improved
