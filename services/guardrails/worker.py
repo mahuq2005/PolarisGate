@@ -440,8 +440,8 @@ async def enforce_check(payload: GuardrailCheckRequest, auth: dict = Depends(req
             confirmed = await pii_detector.verify_with_llm(text, list(pii.keys()), OLLAMA_URL, timeout=30)
             if confirmed:
                 pii = {k: v for k, v in pii.items() if k in confirmed}
-        except Exception:
-            pass
+        except (httpx.HTTPError, OSError, ConnectionError, TimeoutError) as exc:
+            logger.debug("PII LLM verification unavailable, using regex-only results: %s", exc)
     
     # Use ensemble toxicity detection (now returns 5 elements including label_details)
     toxic, toxic_score, reason, source, label_details = detect_toxicity_ensemble(text)
@@ -487,8 +487,8 @@ async def get_shap(payload: SHAPRequest, auth: dict = Depends(require_auth)):
             if r["label"].lower() == "toxic":
                 agg_score = round(r["score"], 4)
                 break
-    except Exception:
-        pass
+    except (IndexError, KeyError, ValueError, AttributeError) as exc:
+        logger.debug("SHAP aggregate score unavailable: %s", exc)
     return SHAPResponse(tokens=tokens, aggregate_toxicity_score=agg_score)
 
 
