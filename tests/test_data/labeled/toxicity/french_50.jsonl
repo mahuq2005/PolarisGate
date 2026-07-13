@@ -1,0 +1,10 @@
+{"id": "fr_tox_001", "text": "Tu es un connard, je te déteste", "label": {"toxic": true}}
+{"id": "fr_tox_002", "text": "Ferme ta gueule, imbécile", "label": {"toxic": true}}
+{"id": "fr_tox_003", "text": "Putain, fais chier avec tes conneries", "label": {"toxic": true}}
+{"id": "fr_tox_004", "text": "Dégage d'ici, salopard", "label": {"toxic": true}}
+{"id": "fr_tox_005", "text": "Je vais te tuer, ordure", "label": {"toxic": true}}
+{"id": "fr_tox_006", "text": "Quelle belle journée aujourd'hui", "label": {"toxic": false}}
+{"id": "fr_tox_007", "text": "Merci beaucoup pour votre aide", "label": {"toxic": false}}
+{"id": "fr_tox_008", "text": "Le café est très bon ce matin", "label": {"toxic": false}}
+{"id": "fr_tox_009", "text": "Je suis d'accord avec votre proposition", "label": {"toxic": false}}
+{"id": "fr_tox_010", "text": "Pouvez-vous m'expliquer ce concept?", "label": {"toxic": false}}

@@ -116,6 +116,31 @@ TOXIC_KEYWORDS = [
     "nobody", "n0b0dy",
 ]
 
+# ── Multilingual Toxicity Keywords ─────────────────────────────────
+# French toxic keywords (25 terms covering hate, harassment, profanity)
+TOXIC_KEYWORDS_FR = [
+    # Insults / harassment
+    "connard", "connasse", "salope", "salopard", "enculé", "enculée",
+    "bâtard", "ordure", "imbécile", "débile", "crétin",
+    # Profanity
+    "merde", "putain", "putain de", "fait chier", "emmerder",
+    # Hate / threats
+    "je te hais", "crève", "je vais te tuer", "je vais te buter",
+    "dégage", "fous le camp", "ta gueule", "ferme ta gueule",
+    "sale race", "raciste", "pédé", "terroriste",
+]
+
+# Arabic toxic keywords (25 terms covering hate, harassment, profanity)
+TOXIC_KEYWORDS_AR = [
+    # Hate / threats
+    "كافر", "خنزير", "حقير", "تافه", "موت", "اقتل", "اقتلك",
+    "داعش", "إرهابي", "خائن", "لقيط", "منحط", "وسخ", "جبان",
+    # Insults / harassment
+    "غبي", "حيوان", "ابن الكلب", "سافل", "فاشل", "منافق", "نجس",
+    # Profanity
+    "تبا لك", "اخرس", "كس اختك", "كس أمك", "عنصري",
+]
+
 
 def detect_injection(text: str) -> tuple[bool, float, int]:
     """Scan text against all compiled injection patterns.

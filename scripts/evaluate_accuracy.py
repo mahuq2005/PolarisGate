@@ -34,7 +34,7 @@ def load_jsonl(path: Path) -> List[Dict]:
 # PII Detector (production-grade)
 # ===================================================================
 _PII_ENTITIES = ["SSN","SIN","HEALTH_CARD","EMAIL","PHONE","CREDIT_CARD","IP_ADDRESS"]
-_SSN_EXCL = [r"\bLot\s+number\b",r"\bLot\b",r"\bISBN\b",r"\bAUTH-",r"\bDOC-",r"\bREG-",r"\bREF-",r"\bPN-",r"\bSKU\b",r"\bTKT-",r"\bCC-",r"\bF-\d",r"\bPART\b",r"\bBATCH\b",r"\bPO\s*\d",r"\bINV-",r"-\w$",r"[-–]\w$",r"\w-\d+$"]
+_SSN_EXCL = [r"\bLot\s+number\b",r"\bLot\b",r"\bISBN\b",r"\bAUTH-",r"\bDOC-",r"\bREG-",r"\bREF-",r"\bPN-",r"\bSKU\b",r"\bTKT-",r"\bCC-",r"\bF-\d",r"\bPART\b",r"\bBATCH\b",r"\bPO\s*\d",r"\bINV-",r"\bSN\b",r"-\w$",r"[-–]\w$",r"\w-\d+$",r"\d+-\w+-\d+-[A-Za-z]$"]
 
 def _luhn(cc):
     d=[int(c)for c in cc if c.isdigit()]
@@ -602,7 +602,9 @@ def detect_toxicity_improved(text: str) -> bool:
 
     Reporting context and profanity-neutral contexts are excluded.
     """
-    from services.gateway.app.constants import TOXIC_KEYWORDS
+    from services.gateway.app.constants import (
+        TOXIC_KEYWORDS, TOXIC_KEYWORDS_FR, TOXIC_KEYWORDS_AR,
+    )
 
     text_lower = text.lower()
 
@@ -614,8 +616,14 @@ def detect_toxicity_improved(text: str) -> bool:
         if phrase in text_lower:
             return True
 
+    # Language-specific keyword detection
+    keywords_to_check = list(TOXIC_KEYWORDS)
+    # Add multilingual keywords — covers French and Arabic
+    keywords_to_check.extend(TOXIC_KEYWORDS_FR)
+    keywords_to_check.extend(TOXIC_KEYWORDS_AR)
+
     # Check keywords on original text, with profanity de-weighting
-    for kw in TOXIC_KEYWORDS:
+    for kw in keywords_to_check:
         if kw in text_lower:
             # Don't flag if profanity appears in a neutral question context
             if kw in ("damn", "crap", "hell", "fuck", "shit"):

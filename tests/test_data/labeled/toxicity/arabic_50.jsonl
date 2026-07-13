@@ -1,0 +1,10 @@
+{"id": "ar_tox_001", "text": "أنت خنزير حقير", "label": {"toxic": true}}
+{"id": "ar_tox_002", "text": "اخرس يا غبي", "label": {"toxic": true}}
+{"id": "ar_tox_003", "text": "تبا لك أيها المنافق", "label": {"toxic": true}}
+{"id": "ar_tox_004", "text": "سوف أقتلك يا جبان", "label": {"toxic": true}}
+{"id": "ar_tox_005", "text": "أنت إرهابي وسخ", "label": {"toxic": true}}
+{"id": "ar_tox_006", "text": "اليوم جميل والشمس مشرقة", "label": {"toxic": false}}
+{"id": "ar_tox_007", "text": "شكرا جزيلا على مساعدتك", "label": {"toxic": false}}
+{"id": "ar_tox_008", "text": "الطعام لذيذ جدا اليوم", "label": {"toxic": false}}
+{"id": "ar_tox_009", "text": "أوافق على اقتراحك", "label": {"toxic": false}}
+{"id": "ar_tox_010", "text": "هل يمكنك شرح هذا المفهوم؟", "label": {"toxic": false}}
