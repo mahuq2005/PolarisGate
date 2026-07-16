@@ -615,15 +615,16 @@ async function renderApiKeys() {
   var items = keys || [];
   var html = '<div class="card"><h2>' + t('apiKeys') + '</h2><p class="dim mb">Create API keys for programmatic access to PolarisGate.</p>';
   html += '<button class="btn-primary" onclick="createApiKey()" style="width:auto;padding:8px 20px;margin-bottom:16px">' + t('createNewKey') + '</button><div id="new-key-display"></div>';
-  html += '<table><thead><tr><th>Key ID</th><th>Name</th><th>Created</th><th>Action</th></tr></thead><tbody>';
+  html += '<table><thead><tr><th>Key ID</th><th>Name</th><th>Scope</th><th>Created</th><th>Action</th></tr></thead><tbody>';
   items.forEach(function (k) { html += '<tr><td class="mono-sm">' + escapeHtml(k.key_id) + '</td><td>' + escapeHtml(k.name) + '</td><td class="dim-sm">' + escapeHtml(k.created_at || '') + '</td><td><button class="filter-btn" onclick="revokeApiKey(\'' + escapeHtml(k.key_id) + '\')">Revoke</button></td></tr>'; });
   if (!items.length) html += '<tr><td colspan="4" class="dim">' + t('noApiKeys') + '</td></tr>';
   html += '</tbody></table></div>'; document.getElementById('main-content').innerHTML = html;
 }
 async function createApiKey() {
-  var name = prompt('Key name:', 'My API Key');
-  if (!name) return;
-  var result = await post('/api/v1/api-keys', { name: name });
+  var name = document.getElementById("apikey-name").value.trim();
+  var scope = document.getElementById("apikey-scope").value || "admin";
+  if (!name) { name = "API Key"; }
+  var result = await post('/api/v1/api-keys', { name: name, scope: scope });
   if (result) { document.getElementById('new-key-display').innerHTML = '<div class="card" style="margin-bottom:16px;border:1px solid #22c55e"><h3 style="color:#22c55e">' + t('keyCreated') + '</h3><p style="font-size:12px;color:#f59e0b;margin:8px 0">' + t('keyWarning') + '</p><div class="redacted-box">' + escapeHtml(result.api_key) + '</div></div>'; renderApiKeys(); }
 }
 async function revokeApiKey(keyId) { if (!confirm('Revoke key ' + keyId + '?')) return; await del('/api/v1/api-keys/' + keyId); renderApiKeys(); showToast(t('keyRevoked'), 'success'); }
