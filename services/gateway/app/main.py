@@ -28,12 +28,13 @@ from .routers import (
     traces,
     misc,
     canary,
+    cohere_routes,
 )
 
 setup_logging(service_name="polarisgate-gateway")
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="PolarisGate Content Safety Gateway", version="2.3.0")
+app = FastAPI(title="PolarisGate Content Safety Gateway", version="2.4.0")
 
 # ── CORS ──────────────────────────────────────────────────────
 _cors_origins = os.getenv(
@@ -103,6 +104,7 @@ app.include_router(hallucination.router)
 app.include_router(traces.router)
 app.include_router(misc.router)
 app.include_router(canary.router)
+app.include_router(cohere_routes.router)
 
 
 if __name__ == "__main__":
