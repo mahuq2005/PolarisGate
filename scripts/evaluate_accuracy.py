@@ -273,7 +273,7 @@ _setfit_model = None
 _setfit_classifier = None
 
 def _train_setfit():
-    global _setfit_model, _setfit_classifier
+    global _setfit_model, _setfit_classifier, _setfit_model_ar, _setfit_classifier_ar
     if _setfit_classifier is not None:
         return
     from sentence_transformers import SentenceTransformer
@@ -342,12 +342,39 @@ def _train_setfit():
     ])
 
     from sklearn.linear_model import LogisticRegression
+
     _inj_clf = LogisticRegression(max_iter=1000)
     _inj_clf.fit(inj_data[:, :-1], inj_data[:, -1])
     _tox_clf = LogisticRegression(max_iter=1000)
     _tox_clf.fit(tox_data[:, :-1], tox_data[:, -1])
-
     _setfit_classifier = (_inj_clf, _tox_clf)
+
+    # Train Arabic SetFit classifier on 50-example dataset
+    ar_toxic = []
+    ar_clean = []
+    ar_path = LABELED / 'toxicity' / 'arabic_50.jsonl'
+    if ar_path.exists():
+        for row in load_jsonl(ar_path):
+            text = row.get('text', '').strip()
+            if not text:
+                continue
+            if row.get('label', {}).get('toxic', False):
+                ar_toxic.append(text)
+            else:
+                ar_clean.append(text)
+    if len(ar_toxic) >= 5 and len(ar_clean) >= 5:
+        n_ar = min(len(ar_toxic), len(ar_clean))
+        random.shuffle(ar_toxic)
+        random.shuffle(ar_clean)
+        ar_train = ar_toxic[:n_ar] + ar_clean[:n_ar]
+        ar_labels = np.array([1] * n_ar + [0] * n_ar)
+        _setfit_model_ar = SentenceTransformer(
+            'paraphrase-multilingual-MiniLM-L12-v2')
+        ar_embs = _setfit_model_ar.encode(ar_train, convert_to_numpy=True)
+        ar_data = np.column_stack([ar_embs, ar_labels])
+        _setfit_classifier_ar = LogisticRegression(max_iter=1000)
+        _setfit_classifier_ar.fit(ar_data[:, :-1], ar_data[:, -1])
+        print(f"  Arabic SetFit trained: {n_ar} tox / {n_ar} safe", flush=True)
 
 
 def _detect_injection_semantic(text: str) -> bool:

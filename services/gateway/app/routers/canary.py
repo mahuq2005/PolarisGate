@@ -27,8 +27,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from services.shared.security.auth import verify_jwt
-from services.shared.db import get_pool
+from shared.security.auth import verify_jwt
+from shared.db import get_pool
 
 logger = logging.getLogger("canary")
 router = APIRouter(prefix="/api/v1/canary", tags=["canary"])

@@ -1,5 +1,6 @@
 """Settings endpoints — admin config, blocklist, webhooks, domain thresholds."""
 import logging
+import secrets
 
 import yaml
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -19,6 +20,7 @@ from ..helpers import (
     save_admin_to_db,
     load_blocklist,
     save_blocklist,
+    get_session_timeout_minutes,
     WEBHOOK_FILE,
 )
 
@@ -31,9 +33,14 @@ async def get_settings(
     request: Request, current_user: dict = Depends(get_current_user)
 ):
     admin = await load_admin_from_db()
-    return SettingsResponse(
-        admin_email=admin.get("admin_email") if admin else None
+    timeout = await get_session_timeout_minutes()
+    result = SettingsResponse(
+        admin_email=admin.get("admin_email") if admin else None,
     )
+    # Append session_timeout since SettingsResponse may not have it
+    data = result.model_dump()
+    data["session_timeout_minutes"] = timeout
+    return data
 
 
 @router.post("/settings")
@@ -60,6 +67,13 @@ async def update_settings(
         new_hash = bcrypt.hashpw(
             payload.new_password.encode(), bcrypt.gensalt()
         ).decode()
+
+    # Read session_timeout from request body (may not be in SettingsUpdate schema)
+    body = await request.json()
+    timeout = body.get("session_timeout_minutes")
+    if timeout is not None:
+        await save_session_timeout_minutes(int(timeout))
+
     await save_admin_to_db(new_email, new_hash)
     return {"status": "saved"}
 
@@ -112,6 +126,15 @@ async def remove_blocklist_word(
     return {"words": words, "count": len(words)}
 
 
+# ── Webhook HMAC Signing Helper ────────────────────────────────────
+def sign_webhook_payload(payload: str, secret: str) -> str:
+    import hmac, hashlib, time as _time
+    timestamp = str(int(_time.time()))
+    message = f"{timestamp}.{payload}"
+    sig = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return f"t={timestamp},v1={sig}"
+
+
 # ── Webhooks ──
 @router.get("/settings/webhooks")
 async def get_webhooks(
@@ -119,10 +142,12 @@ async def get_webhooks(
 ):
     try:
         with open(WEBHOOK_FILE) as f:
-            data = yaml.safe_load(f)
-            return data or {"url": "", "enabled": False, "events": "toxicity,pii"}
+            data = yaml.safe_load(f) or {}
+            if "signing_secret" not in data:
+                data["signing_secret"] = ""
+            return data
     except (FileNotFoundError, yaml.YAMLError):
-        return {"url": "", "enabled": False, "events": "toxicity,pii"}
+        return {"url": "", "enabled": False, "events": "toxicity,pii", "signing_secret": ""}
 
 
 @router.post("/settings/webhooks")
@@ -130,9 +155,11 @@ async def save_webhooks(
     request: Request, current_user: dict = Depends(get_current_user)
 ):
     body = await request.json()
+    if not body.get("signing_secret"):
+        body["signing_secret"] = "whsec_" + secrets.token_hex(24)
     with open(WEBHOOK_FILE, "w") as f:
         yaml.safe_dump(body, f)
-    return {"status": "saved"}
+    return {"status": "saved", "signing_secret": body["signing_secret"]}
 
 
 # ── Domain Thresholds ──
@@ -152,38 +179,17 @@ async def get_domain_thresholds(
             )
         return DomainThresholdList(
             thresholds=[
-                DomainThreshold(
-                    domain="finance",
-                    severity="high",
-                    toxicity_action="block",
-                    pii_action="block",
-                ),
-                DomainThreshold(
-                    domain="healthcare",
-                    severity="critical",
-                    toxicity_action="block",
-                    pii_action="block",
-                ),
-                DomainThreshold(
-                    domain="education",
-                    severity="medium",
-                    toxicity_action="flag",
-                    pii_action="mask",
-                ),
-                DomainThreshold(
-                    domain="general",
-                    severity="medium",
-                    toxicity_action="flag",
-                    pii_action="mask",
-                ),
+                DomainThreshold(domain="finance", severity="high", toxicity_action="block", pii_action="block"),
+                DomainThreshold(domain="healthcare", severity="critical", toxicity_action="block", pii_action="block"),
+                DomainThreshold(domain="education", severity="medium", toxicity_action="flag", pii_action="mask"),
+                DomainThreshold(domain="general", severity="medium", toxicity_action="flag", pii_action="mask"),
             ]
         )
 
 
 @router.post("/settings/domain-thresholds")
 async def save_domain_thresholds(
-    request: Request,
-    payload: DomainThresholdList,
+    request: Request, payload: DomainThresholdList,
     current_user: dict = Depends(get_current_user),
 ):
     pool = await get_pool()
@@ -194,15 +200,7 @@ async def save_domain_thresholds(
                 "VALUES ($1, $2, $3, $4) ON CONFLICT (domain) DO UPDATE SET "
                 "severity=EXCLUDED.severity, toxicity_action=EXCLUDED.toxicity_action, "
                 "pii_action=EXCLUDED.pii_action",
-                t.domain,
-                t.severity,
-                t.toxicity_action,
-                t.pii_action,
+                t.domain, t.severity, t.toxicity_action, t.pii_action,
             )
-    await log_audit(
-        current_user.get("sub"),
-        "domain_thresholds_update",
-        resource_type="settings",
-        details=payload.model_dump(),
-    )
+    await log_audit(current_user.get("sub"), "domain_thresholds_update", resource_type="settings", details=payload.model_dump())
     return {"status": "saved"}

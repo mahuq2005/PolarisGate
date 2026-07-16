@@ -33,11 +33,10 @@ sys.path.insert(0, str(_PROJECT / "services" / "guardrails"))
 from scripts.evaluate_accuracy import (
     LABELED,
     _train_setfit,
-    _setfit_model,
-    _setfit_classifier,
     load_jsonl,
     _run_bert_only,
 )
+import scripts.evaluate_accuracy as ea
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import brier_score_loss
 
@@ -45,10 +44,10 @@ from sklearn.metrics import brier_score_loss
 def _get_setfit_probabilities(texts: List[str]) -> np.ndarray:
     """Get SetFit probability scores for a list of texts."""
     _train_setfit()
-    # Use injection classifier or toxicity based on gate
-    # For calibration, we test toxicity classifier
-    embs = _setfit_model.encode(texts, convert_to_numpy=True)
-    proba = _setfit_classifier[1].predict_proba(embs)
+    model = ea._setfit_model
+    clf = ea._setfit_classifier
+    embs = model.encode(texts, convert_to_numpy=True)
+    proba = clf[1].predict_proba(embs)
     return proba[:, 1]  # Probability of class 1 (toxic)
 
 

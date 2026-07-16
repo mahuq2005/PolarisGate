@@ -56,15 +56,52 @@ async def load_admin_from_db():
     return None
 
 
-async def save_admin_to_db(email: str, password_hash: str):
+async def save_admin_to_db(email: str, password_hash: str, session_timeout_minutes: int = None):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if session_timeout_minutes is not None:
+            await db.execute(
+                "INSERT INTO admin_settings (id, admin_email, admin_password_hash, session_timeout_minutes) "
+                "VALUES (1, $1, $2, $3) ON CONFLICT (id) DO UPDATE SET "
+                "admin_email=EXCLUDED.admin_email, "
+                "admin_password_hash=EXCLUDED.admin_password_hash, "
+                "session_timeout_minutes=EXCLUDED.session_timeout_minutes, "
+                "updated_at=NOW()",
+                email, password_hash, session_timeout_minutes,
+            )
+        else:
+            await db.execute(
+                "INSERT INTO admin_settings (id, admin_email, admin_password_hash) "
+                "VALUES (1, $1, $2) ON CONFLICT (id) DO UPDATE SET "
+                "admin_email=EXCLUDED.admin_email, "
+                "admin_password_hash=EXCLUDED.admin_password_hash, updated_at=NOW()",
+                email, password_hash,
+            )
+
+
+async def get_session_timeout_minutes() -> int:
+    """Return the session timeout in minutes, defaulting to 30."""
+    try:
+        pool = await get_pool()
+        async with pool.acquire() as db:
+            row = await db.fetchrow(
+                "SELECT session_timeout_minutes FROM admin_settings WHERE id = 1"
+            )
+            if row and row["session_timeout_minutes"] is not None:
+                return row["session_timeout_minutes"]
+    except Exception as exc:
+        logger.debug("Failed to load session timeout: %s", exc)
+    return 30
+
+
+async def save_session_timeout_minutes(minutes: int) -> None:
     pool = await get_pool()
     async with pool.acquire() as db:
         await db.execute(
-            "INSERT INTO admin_settings (id, admin_email, admin_password_hash) "
-            "VALUES (1, $1, $2) ON CONFLICT (id) DO UPDATE SET "
-            "admin_email=EXCLUDED.admin_email, "
-            "admin_password_hash=EXCLUDED.admin_password_hash, updated_at=NOW()",
-            email, password_hash,
+            "INSERT INTO admin_settings (id, session_timeout_minutes) "
+            "VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET "
+            "session_timeout_minutes=EXCLUDED.session_timeout_minutes, updated_at=NOW()",
+            minutes,
         )
 
 

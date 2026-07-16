@@ -8,7 +8,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from shared.security.auth import get_current_user
-from shared.audit import log_audit
+from shared.audit import log_audit, verify_audit_chain
 from shared.db import get_pool
 from shared.schemas import FeedbackSubmit
 from shared.circuit_breaker import call_with_circuit_breaker
@@ -21,7 +21,6 @@ router = APIRouter(tags=["Misc"])
 GUARDRAILS_URL = os.getenv("GUARDRAILS_URL", "http://guardrails:8005")
 
 
-# ── Audit ────────────────────────────────────────────────────
 @router.get("/api/v1/audit", response_model=List[dict])
 async def get_audit_logs(
     request: Request,
@@ -40,7 +39,20 @@ async def get_audit_logs(
         return [dict(r) for r in rows]
 
 
-# ── Feedback ─────────────────────────────────────────────────
+@router.get("/api/v1/audit/verify")
+async def audit_chain_verify(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+):
+    """Verify tamper-evident audit log chain integrity.
+
+    Returns:
+        {"valid": true/false, "total_entries": N, "broken_at": entry_id or None}
+    """
+    result = await verify_audit_chain()
+    return result
+
+
 @router.post("/api/v1/feedback")
 async def submit_feedback(
     request: Request,
@@ -57,7 +69,6 @@ async def submit_feedback(
     return {"status": "recorded"}
 
 
-# ── Explain / SHAP ───────────────────────────────────────────
 @router.post("/api/v1/explain/shap")
 async def explain_shap(
     request: Request,
@@ -102,7 +113,6 @@ async def explain_shap(
         return {"tokens": tokens}
 
 
-# ── Image Moderation ─────────────────────────────────────────
 @router.post("/api/v1/guardrails/check-image")
 async def guardrails_check_image(
     request: Request, current_user: dict = Depends(get_current_user)

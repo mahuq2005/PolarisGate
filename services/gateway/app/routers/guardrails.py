@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import unicodedata
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Security
@@ -31,6 +32,7 @@ router = APIRouter(prefix="/api/v1/guardrails", tags=["Guardrails"])
 security = HTTPBearer(auto_error=False)
 
 GUARDRAILS_URL = os.getenv("GUARDRAILS_URL", "http://guardrails:8005")
+MAX_PROMPT_LENGTH = 32_768  # ~32KB max — prevents DoS via massive input
 
 _category_keywords = {
     "hate_speech": ["hate", "racist", "sexist"],
@@ -38,6 +40,21 @@ _category_keywords = {
     "threat": ["kill", "attack", "destroy", "die", "death", "threat", "violence"],
     "profanity": ["damn", "crap", "hell", "bastard", "jerk", "asshole"],
 }
+
+
+def sanitize_prompt(text: str) -> str:
+    """Sanitize user input before guardrail checking.
+
+    - Truncates to MAX_PROMPT_LENGTH to prevent DoS
+    - Strips non-printable control characters (except \\n, \\t)
+    - Unicode NFKC normalization to prevent homoglyph bypass
+    """
+    if not text:
+        return ""
+    text = text[:MAX_PROMPT_LENGTH]
+    text = "".join(ch for ch in text if ch.isprintable() or ch in "\n\t")
+    text = unicodedata.normalize("NFKC", text)
+    return text
 
 
 def _check_toxicity(
@@ -58,7 +75,7 @@ async def guardrails_check(
     current_user: dict = Depends(get_current_user),
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
-    text = payload.text or ""
+    text = sanitize_prompt(payload.text or "")
     text_lower = text.lower()
 
     policy_data = load_policies_from_file()
@@ -165,7 +182,7 @@ async def guardrails_check_stream(
     payload: GuardrailCheckRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    text = payload.text or ""
+    text = sanitize_prompt(payload.text or "")
     words = text.split()
     detected_lang = detect_language(text)
     blocklist_words = set(w.lower() for w in load_blocklist())

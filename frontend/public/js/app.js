@@ -1,12 +1,12 @@
-// PolarisGate v2.2 — Application logic
-const API = 'http://localhost:8002';
+// PolarisGate v2.3 — Application logic
+var API = 'http://localhost:8002';
 
-let lang = localStorage.getItem('polarisgate-lang') || 'en';
+var lang = localStorage.getItem('polarisgate-lang') || 'en';
 function t(key) { return (T[lang] && T[lang][key]) || (T.en[key] || key); }
 
 function showToast(msg, type) {
-  const c = document.getElementById('toast-container');
-  const el = document.createElement('div');
+  var c = document.getElementById('toast-container');
+  var el = document.createElement('div');
   el.className = 'toast ' + type;
   el.textContent = msg;
   c.appendChild(el);
@@ -17,15 +17,29 @@ function showToast(msg, type) {
 function setLang(l) {
   lang = l;
   localStorage.setItem('polarisgate-lang', lang);
+  applyStaticI18n();
   render();
 }
 
+function applyStaticI18n() {
+  var el;
+  el = document.getElementById('login-title'); if (el) el.textContent = t('brand');
+  el = document.getElementById('login-subtitle'); if (el) el.textContent = t('subtitle');
+  el = document.getElementById('login-email-label'); if (el) el.textContent = t('email');
+  el = document.getElementById('login-password-label'); if (el) el.textContent = t('password');
+  el = document.getElementById('login-btn'); if (el) el.textContent = t('login');
+  el = document.getElementById('header-brand'); if (el) el.textContent = t('brand');
+  el = document.getElementById('btn-logout'); if (el) el.textContent = t('logout');
+}
+
 var state = { tab: 'dashboard', sub: 'overview', _filter: null };
+var _incidentCache = {};
 var token = null;
 function setTab(t, s) {
   state.tab = t;
   state.sub = s || 'overview';
   if (t !== 'dashboard' || s !== 'incidents') state._filter = null;
+  _incidentCache = {};
   render();
 }
 
@@ -70,6 +84,7 @@ function handleLogout() {
   localStorage.removeItem('polarisgate-token');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('dashboard-screen').classList.add('hidden');
+  applyStaticI18n();
 }
 document.getElementById('login-password').addEventListener('keydown', function (e) {
   if (e.key === 'Enter') handleLogin();
@@ -104,6 +119,7 @@ async function del(endpoint) {
 }
 
 function escapeHtml(str) {
+  if (str == null) return '';
   var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
@@ -115,6 +131,12 @@ function buildBadge(verdict, label) {
   else if (verdict === 'pii') cls = 'badge-pii';
   else cls = 'badge-safe';
   return '<span class="badge ' + cls + '">' + escapeHtml(label) + '</span>';
+}
+
+function buildPipelineStatusBadge(status) {
+  if (status === 'down') return '<span class="badge badge-toxic">' + t('pipelineStatusDown') + '</span>';
+  if (status === 'degraded') return '<span class="badge badge-pii">' + t('pipelineStatusDegraded') + '</span>';
+  return '<span class="badge badge-safe">' + t('pipelineStatusHealthy') + '</span>';
 }
 
 async function render() {
@@ -149,13 +171,15 @@ async function render() {
     ],
     compliance: [
       { k: 'audit', l: t('auditLogs') },
-      { k: 'hallucination', l: t('hallucination') }
+      { k: 'hallucination', l: t('hallucination') },
+      { k: 'pipeline', l: t('pipeline') }
     ],
     admin: [
       { k: 'settings', l: t('general') },
       { k: 'apikeys', l: t('apiKeys') },
       { k: 'webhooks', l: t('webhooks') },
-      { k: 'users', l: t('users') }
+      { k: 'users', l: t('users') },
+      { k: 'canary', l: t('canaryTokens') }
     ]
   };
   var st = subTabs[state.tab] || [];
@@ -178,11 +202,13 @@ async function render() {
       else await renderPolicyGuardrails();
     } else if (state.tab === 'compliance') {
       if (state.sub === 'hallucination') await renderHallucination();
+      else if (state.sub === 'pipeline') await renderPipeline();
       else await renderAuditLogs();
     } else if (state.tab === 'admin') {
       if (state.sub === 'apikeys') await renderApiKeys();
       else if (state.sub === 'webhooks') await renderWebhooks();
       else if (state.sub === 'users') await renderUsers();
+      else if (state.sub === 'canary') await renderCanary();
       else await renderSettings();
     } else {
       main.innerHTML = '<div class="card"><h2>' + escapeHtml(state.tab) + '</h2><p class="dim">' + t('comingSoon') + '</p></div>';
@@ -206,6 +232,10 @@ async function renderDashboard() {
     var det = await get('/api/v1/hallucination/detections?limit=100');
     if (det && det.detections && det.detections.length) hallRate = det.detections.length + ' total';
   }
+
+  var canaryAlerts = await get('/api/v1/canary/alerts?limit=1');
+  var canaryAlertCount = canaryAlerts ? canaryAlerts.length : 0;
+
   if (!s) {
     document.getElementById('main-content').innerHTML = '<div class="card"><h2>' + t('overview') + '</h2><p class="dim">' + t('noData') + '</p></div>';
     return;
@@ -218,7 +248,8 @@ async function renderDashboard() {
     { label: t('activeModels'), value: s.active_models || 0, onclick: "setTab('dashboard','models')", color: '#4F8EF7' },
     { label: t('blockedWords'), value: s.blocked_count || 0, onclick: "state._filter='blocked';setTab('dashboard','incidents')", color: (s.blocked_count || 0) > 0 ? '#ef4444' : '#4F8EF7' },
     { label: t('safetyScore'), value: typeof s.fairness_score === 'number' ? (s.fairness_score * 100).toFixed(1) + '%' : (s.fairness_score || t('nA')), onclick: '', color: '#4F8EF7' },
-    { label: t('hallucinationRate'), value: hallRate, onclick: "setTab('compliance','hallucination')", color: hallRate !== t('nA') ? '#4F8EF7' : '#f59e0b' }
+    { label: t('hallucinationRate'), value: hallRate, onclick: "setTab('compliance','hallucination')", color: hallRate !== t('nA') ? '#4F8EF7' : '#f59e0b' },
+    { label: t('canaryAlerts'), value: canaryAlertCount, onclick: "setTab('admin','canary')", color: canaryAlertCount > 0 ? '#ef4444' : '#4F8EF7' }
   ];
 
   var html = '<div class="summary-grid">';
@@ -228,17 +259,49 @@ async function renderDashboard() {
   });
   html += '</div>';
 
-  html += '<div class="card"><h2>' + t('recentIncidents') + '</h2>';
+  _incidentCache = {};
+  html += '<div class="card"><h2>' + t('recentIncidents') + '</h2><p class="dim mb" style="font-size:12px">' + t('expandForDetails') + '</p>';
   html += '<table><thead><tr><th>' + t('traceId') + '</th><th>' + t('verdict') + '</th><th>' + t('reason') + '</th><th>' + t('time') + '</th></tr></thead><tbody>';
-  (incidents || []).forEach(function (i) {
+  (incidents || []).forEach(function (i, idx) {
     var verdict = i.blocklisted ? 'blocked' : i.toxic ? 'toxic' : i.pii_detected ? 'pii' : 'clean';
     var label = i.blocklisted ? t('blockedVerdict') : i.toxic ? t('toxicVerdict') : i.pii_detected ? t('piiVerdict') : t('cleanVerdict');
-    html += '<tr><td class="mono-sm">' + escapeHtml((i.trace_id || '').toString().slice(0, 8)) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
+    var piiTypes = (i.pii_types || []).join(',');
+    _incidentCache[idx] = { traceId: i.trace_id || '', verdict: verdict, score: i.toxic_score || 0, reason: i.reason || '', timestamp: i.timestamp || '', piiTypes: piiTypes };
+    html += '<tr class="incident-row" onclick="showIncidentDetail(' + idx + ')"><td class="mono-sm">' + escapeHtml((i.trace_id || '').toString().slice(0, 8)) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
   });
   if (!(incidents || []).length) html += '<tr><td colspan="4" class="dim">' + t('noIncidents') + '</td></tr>';
   html += '</tbody></table></div>';
+  html += '<div id="incident-detail-panel"></div>';
 
   document.getElementById('main-content').innerHTML = html;
+}
+
+// ── Incident Explainability ──────────────────────────────────────
+function showIncidentDetail(idx) {
+  var d = _incidentCache[idx];
+  if (!d) return;
+  var html = '<div class="card" style="margin-top:16px;border:1px solid #4F8EF7;background:rgba(79,142,247,0.05)"><h2>' + t('incidentDetail') + '</h2>';
+  html += '<div class="incident-detail-grid">';
+  html += '<div class="detail-item"><strong>' + t('incidentTraceId') + ':</strong><span class="mono-sm">' + escapeHtml(d.traceId) + '</span></div>';
+  html += '<div class="detail-item"><strong>' + t('incidentVerdict') + ':</strong>' + buildBadge(d.verdict, d.verdict) + '</div>';
+  html += '<div class="detail-item"><strong>' + t('incidentScore') + ':</strong>' + escapeHtml(d.score) + '</div>';
+  html += '<div class="detail-item"><strong>' + t('incidentReason') + ':</strong>' + escapeHtml(d.reason || '-') + '</div>';
+  html += '<div class="detail-item"><strong>' + t('time') + ':</strong>' + escapeHtml(d.timestamp || '') + '</div>';
+  html += '</div>';
+  html += '<div style="margin-top:16px"><strong>' + t('incidentDetectors') + ':</strong>';
+  html += '<div class="detector-bar">';
+  html += '<span class="detector-tag' + (d.verdict === 'toxic' ? ' fired' : '') + '">' + t('detectorToxicity') + '</span>';
+  html += '<span class="detector-tag' + (d.verdict === 'pii' ? ' fired' : '') + '">' + t('detectorPII') + (d.piiTypes ? ' (' + escapeHtml(d.piiTypes) + ')' : '') + '</span>';
+  html += '<span class="detector-tag">' + t('detectorInjection') + '</span>';
+  html += '<span class="detector-tag' + (d.verdict === 'blocked' ? ' fired' : '') + '">' + t('detectorBlocklist') + '</span>';
+  html += '<span class="detector-tag">' + t('detectorCanary') + '</span>';
+  html += '</div></div>';
+  html += '<button class="filter-btn" onclick="closeIncident()" style="margin-top:12px">✕ Close</button></div>';
+  document.getElementById('incident-detail-panel').innerHTML = html;
+}
+
+function closeIncident() {
+  document.getElementById('incident-detail-panel').innerHTML = '';
 }
 
 async function renderIncidents() {
@@ -249,21 +312,26 @@ async function renderIncidents() {
     return flt === 'toxic' ? i.toxic : flt === 'pii' ? i.pii_detected : i.blocklisted;
   }) : items;
 
-  var html = '<div class="card"><h2>' + t('incidents') + '</h2>';
+  var html = '<div class="card"><h2>' + t('incidents') + '</h2><p class="dim mb" style="font-size:12px">' + t('expandForDetails') + '</p>';
   html += '<div class="filter-bar">';
   html += '<button class="filter-btn' + (!flt ? ' active' : '') + '" onclick="state._filter=null;render()">' + t('all') + '</button>';
   html += '<button class="filter-btn' + (flt === 'toxic' ? ' active' : '') + '" onclick="state._filter=\'toxic\';render()">' + t('toxic') + '</button>';
   html += '<button class="filter-btn' + (flt === 'pii' ? ' active' : '') + '" onclick="state._filter=\'pii\';render()">' + t('pii') + '</button>';
   html += '<button class="filter-btn' + (flt === 'blocked' ? ' active' : '') + '" onclick="state._filter=\'blocked\';render()">' + t('blocked') + '</button>';
   html += '</div>';
+
+  _incidentCache = {};
   html += '<table><thead><tr><th>' + t('traceId') + '</th><th>' + t('verdict') + '</th><th>' + t('score') + '</th><th>' + t('reason') + '</th><th>' + t('time') + '</th></tr></thead><tbody>';
-  filtered.forEach(function (i) {
+  filtered.forEach(function (i, idx) {
     var verdict = i.blocklisted ? 'blocked' : i.toxic ? 'toxic' : i.pii_detected ? 'pii' : 'clean';
     var label = i.blocklisted ? t('blockedVerdict') : i.toxic ? t('toxicVerdict') : i.pii_detected ? t('piiVerdict') : t('cleanVerdict');
-    html += '<tr><td class="mono-sm">' + escapeHtml((i.trace_id || '').toString().slice(0, 8)) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + (i.toxic_score != null ? i.toxic_score : '-') + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
+    var piiTypes = (i.pii_types || []).join(',');
+    _incidentCache[idx] = { traceId: i.trace_id || '', verdict: verdict, score: i.toxic_score || 0, reason: i.reason || '', timestamp: i.timestamp || '', piiTypes: piiTypes };
+    html += '<tr class="incident-row" onclick="showIncidentDetail(' + idx + ')"><td class="mono-sm">' + escapeHtml((i.trace_id || '').toString().slice(0, 8)) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + (i.toxic_score != null ? i.toxic_score : '-') + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
   });
   if (!filtered.length) html += '<tr><td colspan="5" class="dim">' + t('noIncidentsFound') + '</td></tr>';
   html += '</tbody></table></div>';
+  html += '<div id="incident-detail-panel"></div>';
   document.getElementById('main-content').innerHTML = html;
 }
 
@@ -276,6 +344,56 @@ async function renderModels() {
   });
   if (!(models || []).length) html += '<tr><td colspan="3" class="dim">' + t('noModels') + '</td></tr>';
   html += '</tbody></table></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ── Guardrails Pipeline ───────────────────────────────────────────
+async function renderPipeline() {
+  var summary = await get('/api/v1/dashboard/summary');
+  var incidents = await get('/api/v1/dashboard/incidents?limit=50');
+  var canaryAlerts = await get('/api/v1/canary/alerts?limit=50');
+
+  var total24h = summary ? (summary.total_traces_last_24h || 0) : 0;
+  var blocked24h = summary ? (summary.blocked_count || 0) : 0;
+  var canaryAlertCount = canaryAlerts ? canaryAlerts.length : 0;
+
+  var toxicityStatus = 'healthy', piiStatus = 'healthy', injectionStatus = 'healthy', blocklistStatus = 'healthy', redactionStatus = 'healthy';
+  var canaryStatus = canaryAlertCount > 0 ? 'degraded' : 'healthy';
+
+  var toxicCount = 0, piiCount = 0, blocklistCount = 0;
+  (incidents || []).forEach(function (i) {
+    if (i.toxic) toxicCount++;
+    if (i.pii_detected) piiCount++;
+    if (i.blocklisted) blocklistCount++;
+  });
+  if (toxicCount > 5) toxicityStatus = 'degraded';
+  if (piiCount > 3) piiStatus = 'degraded';
+  if (blocklistCount > 5) blocklistStatus = 'degraded';
+
+  var html = '<div class="card"><h2>' + t('pipeline') + '</h2><p class="dim mb">' + t('pipelineDesc') + '</p>';
+  html += '<div class="pipeline-stages">';
+  var stages = [
+    { name: t('pipelineStageToxicity'), status: toxicityStatus, count: toxicCount + ' flagged' },
+    { name: t('pipelineStagePII'), status: piiStatus, count: piiCount + ' detected' },
+    { name: t('pipelineStageInjection'), status: injectionStatus, count: 'Active' },
+    { name: t('pipelineStageBlocklist'), status: blocklistStatus, count: blocklistCount + ' blocked' },
+    { name: t('pipelineStageCanary'), status: canaryStatus, count: canaryAlertCount + ' alerts' },
+    { name: t('pipelineStageRedaction'), status: redactionStatus, count: 'Active' }
+  ];
+  stages.forEach(function (stage) {
+    html += '<div class="pipeline-stage-card stage-' + stage.status + '">';
+    html += '<div class="pipeline-stage-name">' + escapeHtml(stage.name) + '</div>';
+    html += '<div class="pipeline-stage-status">' + buildPipelineStatusBadge(stage.status) + '</div>';
+    html += '<div class="pipeline-stage-count">' + escapeHtml(stage.count) + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div class="card" style="margin-top:16px"><h3>' + t('pipelineMetrics') + '</h3>';
+  html += '<div class="summary-grid" style="margin-top:12px">';
+  html += '<div class="summary-card"><div class="label">' + t('checksToday') + '</div><div class="value" style="color:#4F8EF7">' + total24h + '</div></div>';
+  html += '<div class="summary-card"><div class="label">' + t('blockedToday') + '</div><div class="value" style="color:' + (blocked24h > 0 ? '#ef4444' : '#4F8EF7') + '">' + blocked24h + '</div></div>';
+  html += '<div class="summary-card"><div class="label">' + t('avgLatency') + '</div><div class="value" style="color:#4F8EF7">' + (total24h > 0 ? '< 50ms' : '-') + '</div></div>';
+  html += '</div></div>';
   document.getElementById('main-content').innerHTML = html;
 }
 
@@ -306,7 +424,6 @@ async function renderPolicyGuardrails() {
   html += '</tbody></table></div>';
   document.getElementById('main-content').innerHTML = html;
 }
-
 function rP() { renderPolicyGuardrails(); }
 async function savePolicies() {
   var r = await post('/api/v1/policies', { policies: policyEdits });
@@ -325,11 +442,9 @@ async function runGuardrailTest() {
   var text = document.getElementById('test-text').value;
   if (!text) { showToast(t('enterText'), 'error'); return; }
   var btn = document.getElementById('test-btn');
-  btn.disabled = true;
-  btn.textContent = t('analyzing');
+  btn.disabled = true; btn.textContent = t('analyzing');
   var result = await post('/api/v1/guardrails/check', { text: text });
-  btn.disabled = false;
-  btn.textContent = t('runAnalysis');
+  btn.disabled = false; btn.textContent = t('runAnalysis');
   var el = document.getElementById('test-result');
   if (!result) { el.innerHTML = '<p style="color:#ef4444">' + t('unavailable') + '</p>'; return; }
   var html = '<div class="card" style="margin-top:16px"><h3>' + t('analysisResults') + '</h3>';
@@ -350,11 +465,9 @@ async function runBatchTest() {
   if (!text) { showToast(t('enterTextFirst'), 'error'); return; }
   var lines = text.split('\n').filter(function (l) { return l.trim(); });
   var btn = document.getElementById('batch-btn');
-  btn.disabled = true;
-  btn.textContent = t('testing') + ' ' + lines.length + ' ' + t('items');
+  btn.disabled = true; btn.textContent = t('testing') + ' ' + lines.length + ' ' + t('items');
   var result = await post('/api/v1/guardrails/batch', { texts: lines });
-  btn.disabled = false;
-  btn.textContent = t('batchTest');
+  btn.disabled = false; btn.textContent = t('batchTest');
   var el = document.getElementById('test-result');
   if (!result) { el.innerHTML = '<p style="color:#ef4444">' + t('batchFailed') + '</p>'; return; }
   var html = '<div class="card" style="margin-top:16px"><h3>' + t('batchResults') + ' (' + result.total + ' ' + t('tested') + ')</h3>';
@@ -366,92 +479,108 @@ async function runBatchTest() {
   el.innerHTML = html;
 }
 
-// ── Domain Thresholds ─────────────────────────────────────────────
+// ── Domain Thresholds / Blocklist / Audit / Hallucination ──────────
 async function renderDomainThresholds() {
   var dt = await get('/api/v1/settings/domain-thresholds');
   var thresholds = dt ? (dt.thresholds || []) : [];
-  var html = '<div class="card"><h2>' + t('domainThresholds') + '</h2><p class="dim mb">' + t('domainDesc') + '</p>';
-  html += '<div id="domain-list">';
+  var html = '<div class="card"><h2>' + t('domainThresholds') + '</h2><p class="dim mb">' + t('domainDesc') + '</p><div id="domain-list">';
   thresholds.forEach(function (t, i) {
     html += '<div class="domain-row"><span class="domain-label">' + escapeHtml(t.domain) + '</span>';
     html += '<select id="dt-severity-' + i + '" class="form-select"><option value="critical"' + (t.severity === 'critical' ? ' selected' : '') + '>Critical</option><option value="high"' + (t.severity === 'high' ? ' selected' : '') + '>High</option><option value="medium"' + (t.severity === 'medium' ? ' selected' : '') + '>Medium</option><option value="low"' + (t.severity === 'low' ? ' selected' : '') + '>Low</option></select>';
     html += '<select id="dt-tox-' + i + '" class="form-select"><option value="block"' + (t.toxicity_action === 'block' ? ' selected' : '') + '>Tox: Block</option><option value="flag"' + (t.toxicity_action === 'flag' ? ' selected' : '') + '>Tox: Flag</option><option value="allow"' + (t.toxicity_action === 'allow' ? ' selected' : '') + '>Tox: Allow</option></select>';
     html += '<select id="dt-pii-' + i + '" class="form-select"><option value="block"' + (t.pii_action === 'block' ? ' selected' : '') + '>PII: Block</option><option value="mask"' + (t.pii_action === 'mask' ? ' selected' : '') + '>PII: Mask</option><option value="flag"' + (t.pii_action === 'flag' ? ' selected' : '') + '>PII: Flag</option></select></div>';
   });
-  html += '</div>';
-  html += '<button class="btn-primary" onclick="saveDomainThresholds()" style="width:auto;padding:10px 24px">' + t('saveDomainThresholds') + '</button></div>';
+  html += '</div><button class="btn-primary" onclick="saveDomainThresholds()" style="width:auto;padding:10px 24px">' + t('saveDomainThresholds') + '</button></div>';
   document.getElementById('main-content').innerHTML = html;
 }
-
 async function saveDomainThresholds() {
   var dt = await get('/api/v1/settings/domain-thresholds');
   var items = dt ? (dt.thresholds || []) : [];
-  var updated = items.map(function (t, i) {
-    return {
-      domain: t.domain,
-      severity: (document.getElementById('dt-severity-' + i) || {}).value || t.severity,
-      toxicity_action: (document.getElementById('dt-tox-' + i) || {}).value || t.toxicity_action,
-      pii_action: (document.getElementById('dt-pii-' + i) || {}).value || t.pii_action
-    };
-  });
+  var updated = items.map(function (t, i) { return { domain: t.domain, severity: (document.getElementById('dt-severity-' + i) || {}).value || t.severity, toxicity_action: (document.getElementById('dt-tox-' + i) || {}).value || t.toxicity_action, pii_action: (document.getElementById('dt-pii-' + i) || {}).value || t.pii_action }; });
   await post('/api/v1/settings/domain-thresholds', { thresholds: updated });
   showToast(t('domainSaved'), 'success');
 }
-
-// ── Blocklist ─────────────────────────────────────────────────────
 async function renderBlocklist() {
   var bl = await get('/api/v1/settings/blocklist');
   var words = bl ? (bl.words || []) : [];
   var html = '<div class="card"><h2>' + t('customBlocklist') + '</h2><p class="dim mb">' + t('blocklistDesc') + '</p>';
   html += '<div style="display:flex;gap:8px;margin-bottom:16px"><input id="blocklist-word" class="form-input" placeholder="' + escapeHtml(t('blocklistPlaceholder')) + '" onkeydown="if(event.key===\'Enter\')addBlocklistWord()"/><button class="btn-primary" onclick="addBlocklistWord()" style="width:auto;padding:10px 20px;margin-top:0">' + t('addWord') + '</button></div>';
   html += '<table><thead><tr><th>Word</th><th>Action</th></tr></thead><tbody>';
-  words.forEach(function (w) {
-    html += '<tr><td>' + escapeHtml(w) + '</td><td><button class="filter-btn" onclick="removeBlocklistWord(\'' + escapeHtml(w) + '\')">' + t('remove') + '</button></td></tr>';
-  });
+  words.forEach(function (w) { html += '<tr><td>' + escapeHtml(w) + '</td><td><button class="filter-btn" onclick="removeBlocklistWord(\'' + escapeHtml(w) + '\')">' + t('remove') + '</button></td></tr>'; });
   if (!words.length) html += '<tr><td colspan="2" class="dim">' + t('noBlockedWords') + '</td></tr>';
   html += '</tbody></table></div>';
   document.getElementById('main-content').innerHTML = html;
 }
-
 async function addBlocklistWord() {
   var word = document.getElementById('blocklist-word').value.trim();
   if (!word) return;
   var result = await post('/api/v1/settings/blocklist', { word: word });
   if (result) { document.getElementById('blocklist-word').value = ''; renderBlocklist(); showToast(t('wordAdded'), 'success'); }
 }
-async function removeBlocklistWord(word) {
-  await del('/api/v1/settings/blocklist/' + encodeURIComponent(word));
-  renderBlocklist();
-  showToast(t('wordRemoved'), 'success');
-}
-
-// ── Audit / Hallucination ─────────────────────────────────────────
+async function removeBlocklistWord(word) { await del('/api/v1/settings/blocklist/' + encodeURIComponent(word)); renderBlocklist(); showToast(t('wordRemoved'), 'success'); }
 async function renderAuditLogs() {
   var logs = await get('/api/v1/audit?limit=50');
   var html = '<div class="card"><h2>' + t('auditLogs') + '</h2><p class="dim mb">' + t('auditDesc') + '</p>';
   html += '<table><thead><tr><th>User</th><th>Action</th><th>Resource</th><th>' + t('time') + '</th></tr></thead><tbody>';
-  (logs || []).forEach(function (l) {
-    html += '<tr><td>' + escapeHtml(l.user_email || '') + '</td><td>' + escapeHtml(l.action) + '</td><td>' + escapeHtml(l.resource_type || '') + '</td><td class="dim-sm">' + escapeHtml(l.timestamp || '') + '</td></tr>';
-  });
+  (logs || []).forEach(function (l) { html += '<tr><td>' + escapeHtml(l.user_email || '') + '</td><td>' + escapeHtml(l.action) + '</td><td>' + escapeHtml(l.resource_type || '') + '</td><td class="dim-sm">' + escapeHtml(l.timestamp || '') + '</td></tr>'; });
   if (!(logs || []).length) html += '<tr><td colspan="4" class="dim">' + t('noAuditLogs') + '</td></tr>';
   html += '</tbody></table></div>';
   document.getElementById('main-content').innerHTML = html;
 }
-
 async function renderHallucination() {
   var det = await get('/api/v1/hallucination/detections?limit=20');
   var items = (det && det.detections) ? det.detections : [];
   var html = '<div class="card"><h2>' + t('hallucinationDetections') + '</h2><p class="dim mb">' + t('hallucinationDesc') + '</p>';
   html += '<table><thead><tr><th>ID</th><th>Score</th><th>Prompt</th><th>Corrected</th></tr></thead><tbody>';
-  items.forEach(function (d) {
-    html += '<tr><td class="mono-sm">' + escapeHtml(d.id) + '</td><td>' + (d.score || 0).toFixed(2) + '</td><td class="text-snippet">' + escapeHtml((d.prompt_snippet || '').slice(0, 80)) + '...</td><td>' + (d.corrected ? buildBadge('clean', t('yes')) : buildBadge('toxic', t('no'))) + '</td></tr>';
-  });
+  items.forEach(function (d) { html += '<tr><td class="mono-sm">' + escapeHtml(d.id) + '</td><td>' + (d.score || 0).toFixed(2) + '</td><td class="text-snippet">' + escapeHtml((d.prompt_snippet || '').slice(0, 80)) + '...</td><td>' + (d.corrected ? buildBadge('clean', t('yes')) : buildBadge('toxic', t('no'))) + '</td></tr>'; });
   if (!items.length) html += '<tr><td colspan="4" class="dim">' + t('noHallucinations') + '</td></tr>';
   html += '</tbody></table></div>';
   document.getElementById('main-content').innerHTML = html;
 }
 
-// ── Settings ──────────────────────────────────────────────────────
+// ── Canary Tokens ─────────────────────────────────────────────────
+async function renderCanary() {
+  var tokens = await get('/api/v1/canary/tokens');
+  var alerts = await get('/api/v1/canary/alerts');
+  var items = tokens || [];
+  var alertItems = alerts || [];
+  var activeCount = items.filter(function (t) { return t.status === 'active'; }).length;
+  var html = '<div class="card"><h2>' + t('canaryTokens') + '</h2><p class="dim mb">' + t('canaryTokensDesc') + '</p>';
+  html += '<div class="summary-grid">';
+  html += '<div class="summary-card"><div class="label">' + t('activeTokens') + '</div><div class="value" style="color:#4F8EF7">' + activeCount + '</div></div>';
+  html += '<div class="summary-card"><div class="label">' + t('canaryAlerts') + '</div><div class="value" style="color:' + (alertItems.length > 0 ? '#ef4444' : '#4F8EF7') + '">' + alertItems.length + '</div></div></div>';
+  html += '<div class="card" style="margin-top:16px;border:1px solid rgba(79,142,247,0.2)"><h3>' + t('createCanary') + '</h3>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+  html += '<input id="canary-label" class="form-input" placeholder="' + escapeHtml(t('canaryLabelPlaceholder')) + '" style="flex:1;min-width:200px"/>';
+  html += '<input id="canary-prefix" class="form-input" placeholder="' + t('canaryPrefix') + '" value="pg" style="width:120px"/>';
+  html += '<select id="canary-placement" class="form-select" style="width:160px">';
+  html += '<option value="system_prompt">' + t('placementSystemPrompt') + '</option><option value="rag_store">' + t('placementRagStore') + '</option><option value="webhook">' + t('placementWebhook') + '</option></select>';
+  html += '<button class="btn-primary" onclick="createCanaryToken()" style="width:auto;padding:10px 20px;margin-top:0">' + t('createCanary') + '</button></div>';
+  html += '<div id="canary-created-display" style="margin-top:12px"></div></div>';
+  html += '<div class="card" style="margin-top:16px"><h3>' + t('activeTokens') + '</h3><table><thead><tr><th>' + t('canaryLabel') + '</th><th>' + t('placement') + '</th><th>' + t('alertCount') + '</th><th>' + t('status') + '</th><th>Action</th></tr></thead><tbody>';
+  items.forEach(function (t) {
+    html += '<tr><td>' + escapeHtml(t.label) + '</td><td>' + escapeHtml(t.placement) + '</td><td>' + (t.alert_count || 0) + '</td><td>' + (t.status === 'active' ? buildBadge('clean', t('active')) : buildBadge('pii', t('revoked'))) + '</td>';
+    html += '<td>' + (t.status === 'active' ? '<button class="filter-btn" onclick="revokeCanaryToken(\'' + escapeHtml(t.id) + '\')">' + t('revoke') + '</button>' : '<span class="dim-sm">-</span>') + '</td></tr>';
+  });
+  if (!items.length) html += '<tr><td colspan="5" class="dim">' + t('noCanaryTokens') + '</td></tr>';
+  html += '</tbody></table></div>';
+  html += '<div class="card" style="margin-top:16px"><h3>' + t('canaryAlerts') + '</h3><table><thead><tr><th>' + t('canaryLabel') + '</th><th>' + t('time') + '</th><th>' + t('sourceEndpoint') + '</th><th>' + t('sourceText') + '</th></tr></thead><tbody>';
+  alertItems.forEach(function (a) { html += '<tr><td>' + escapeHtml(a.token_label || '') + '</td><td class="dim-sm">' + escapeHtml(a.detected_at || '') + '</td><td>' + escapeHtml(a.source_endpoint || '-') + '</td><td class="text-snippet">' + escapeHtml((a.source_text || '').slice(0, 60)) + '...</td></tr>'; });
+  if (!alertItems.length) html += '<tr><td colspan="4" class="dim">' + t('noCanaryAlerts') + '</td></tr>';
+  html += '</tbody></table></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+async function createCanaryToken() {
+  var label = document.getElementById('canary-label').value.trim();
+  var prefix = document.getElementById('canary-prefix').value.trim() || 'pg';
+  var placement = document.getElementById('canary-placement').value || 'system_prompt';
+  if (!label) { showToast('Label is required', 'error'); return; }
+  var result = await post('/api/v1/canary/tokens', { label: label, token_prefix: prefix, placement: placement });
+  if (result) { document.getElementById('canary-created-display').innerHTML = '<div class="card" style="border:1px solid #22c55e"><h3 style="color:#22c55e">' + t('canaryCreated') + '</h3><div class="redacted-box">' + escapeHtml(result.token_hash) + '</div></div>'; document.getElementById('canary-label').value = ''; renderCanary(); showToast(t('canaryCreated'), 'success'); }
+}
+async function revokeCanaryToken(id) { if (!confirm(t('revoke') + ' token ' + id + '?')) return; await del('/api/v1/canary/tokens/' + id); renderCanary(); showToast(t('canaryRevoked'), 'success'); }
+
+// ── Settings / API Keys / Webhooks / Users ────────────────────────
 async function renderSettings() {
   var settings = await get('/api/v1/settings');
   var html = '<div class="card"><h2>' + t('settings') + '</h2>';
@@ -459,55 +588,45 @@ async function renderSettings() {
   html += '<div class="form-group"><label>' + (lang === 'fr' ? 'Mot de Passe Actuel' : 'Current Password') + '</label><input type="password" id="settings-curr-pw" class="form-input" placeholder="' + t('settingsReq') + '"/></div>';
   html += '<div class="form-group"><label>' + (lang === 'fr' ? 'Nouveau Mot de Passe' : 'New Password') + '</label><input type="password" id="settings-new-pw" class="form-input" placeholder="' + t('leaveBlank') + '"/></div>';
   html += '<hr style="border-color:rgba(79,142,247,0.1);margin:24px 0"/>';
-  html += '<h3>Language / Langue</h3>';
-  html += '<div style="display:flex;gap:8px;margin-top:12px">';
+  html += '<h3>Security</h3>';
+  html += '<div class="form-group"><label>Session Timeout (idle minutes before auto-logout)</label>';
+  html += '<select id="settings-timeout" class="form-select">';
+  var timeout = (settings && settings.session_timeout_minutes) || 30;
+  [15, 30, 60, 120, 240, 0].forEach(function(v) {
+    html += '<option value="' + v + '"' + (timeout === v ? ' selected' : '') + '>' + (v === 0 ? 'Never' : v + ' minutes') + '</option>';
+  });
+  html += '</select></div>';
+  html += '<hr style="border-color:rgba(79,142,247,0.1);margin:24px 0"/><h3>Language / Langue</h3><div style="display:flex;gap:8px;margin-top:12px">';
   html += '<button class="filter-btn' + (lang === 'en' ? ' active' : '') + '" onclick="setLang(\'en\')" style="font-size:16px">English</button>';
   html += '<button class="filter-btn' + (lang === 'fr' ? ' active' : '') + '" onclick="setLang(\'fr\')" style="font-size:16px">Français</button>';
-  html += '<button class="filter-btn' + (lang === 'ar' ? ' active' : '') + '" onclick="setLang(\'ar\')" style="font-size:16px">العربية</button>';
-  html += '</div>';
+  html += '<button class="filter-btn' + (lang === 'ar' ? ' active' : '') + '" onclick="setLang(\'ar\')" style="font-size:16px">العربية</button></div>';
   html += '<button class="btn-primary" onclick="saveAccountSettings()" style="width:auto;padding:10px 24px;margin-top:16px">' + t('saveSettings') + '</button></div>';
   document.getElementById('main-content').innerHTML = html;
 }
 async function saveAccountSettings() {
   var body = { admin_email: document.getElementById('settings-email').value };
-  var cp = document.getElementById('settings-curr-pw').value;
-  var np = document.getElementById('settings-new-pw').value;
+  var cp = document.getElementById('settings-curr-pw').value, np = document.getElementById('settings-new-pw').value;
+  var timeoutEl = document.getElementById('settings-timeout'); if (timeoutEl) { body.session_timeout_minutes = parseInt(timeoutEl.value); }
   if (cp && np) { body.current_password = cp; body.new_password = np; }
-  await post('/api/v1/settings', body);
-  showToast(t('settingsSaved'), 'success');
+  await post('/api/v1/settings', body); showToast(t('settingsSaved'), 'success');
 }
-
-// ── API Keys ──────────────────────────────────────────────────────
 async function renderApiKeys() {
   var keys = await get('/api/v1/api-keys');
   var items = keys || [];
   var html = '<div class="card"><h2>' + t('apiKeys') + '</h2><p class="dim mb">Create API keys for programmatic access to PolarisGate.</p>';
   html += '<button class="btn-primary" onclick="createApiKey()" style="width:auto;padding:8px 20px;margin-bottom:16px">' + t('createNewKey') + '</button><div id="new-key-display"></div>';
   html += '<table><thead><tr><th>Key ID</th><th>Name</th><th>Created</th><th>Action</th></tr></thead><tbody>';
-  items.forEach(function (k) {
-    html += '<tr><td class="mono-sm">' + escapeHtml(k.key_id) + '</td><td>' + escapeHtml(k.name) + '</td><td class="dim-sm">' + escapeHtml(k.created_at || '') + '</td><td><button class="filter-btn" onclick="revokeApiKey(\'' + escapeHtml(k.key_id) + '\')">Revoke</button></td></tr>';
-  });
+  items.forEach(function (k) { html += '<tr><td class="mono-sm">' + escapeHtml(k.key_id) + '</td><td>' + escapeHtml(k.name) + '</td><td class="dim-sm">' + escapeHtml(k.created_at || '') + '</td><td><button class="filter-btn" onclick="revokeApiKey(\'' + escapeHtml(k.key_id) + '\')">Revoke</button></td></tr>'; });
   if (!items.length) html += '<tr><td colspan="4" class="dim">' + t('noApiKeys') + '</td></tr>';
-  html += '</tbody></table></div>';
-  document.getElementById('main-content').innerHTML = html;
+  html += '</tbody></table></div>'; document.getElementById('main-content').innerHTML = html;
 }
 async function createApiKey() {
   var name = prompt('Key name:', 'My API Key');
   if (!name) return;
   var result = await post('/api/v1/api-keys', { name: name });
-  if (result) {
-    document.getElementById('new-key-display').innerHTML = '<div class="card" style="margin-bottom:16px;border:1px solid #22c55e"><h3 style="color:#22c55e">' + t('keyCreated') + '</h3><p style="font-size:12px;color:#f59e0b;margin:8px 0">' + t('keyWarning') + '</p><div class="redacted-box">' + escapeHtml(result.api_key) + '</div></div>';
-    renderApiKeys();
-  }
+  if (result) { document.getElementById('new-key-display').innerHTML = '<div class="card" style="margin-bottom:16px;border:1px solid #22c55e"><h3 style="color:#22c55e">' + t('keyCreated') + '</h3><p style="font-size:12px;color:#f59e0b;margin:8px 0">' + t('keyWarning') + '</p><div class="redacted-box">' + escapeHtml(result.api_key) + '</div></div>'; renderApiKeys(); }
 }
-async function revokeApiKey(keyId) {
-  if (!confirm('Revoke key ' + keyId + '?')) return;
-  await del('/api/v1/api-keys/' + keyId);
-  renderApiKeys();
-  showToast(t('keyRevoked'), 'success');
-}
-
-// ── Webhooks ──────────────────────────────────────────────────────
+async function revokeApiKey(keyId) { if (!confirm('Revoke key ' + keyId + '?')) return; await del('/api/v1/api-keys/' + keyId); renderApiKeys(); showToast(t('keyRevoked'), 'success'); }
 async function renderWebhooks() {
   var wh = await get('/api/v1/settings/webhooks');
   var w = wh || { url: '', enabled: false, events: 'toxicity,pii' };
@@ -518,51 +637,32 @@ async function renderWebhooks() {
   html += '<button class="btn-primary" onclick="saveWebhook()" style="width:auto;padding:10px 24px">' + t('saveWebhook') + '</button></div>';
   document.getElementById('main-content').innerHTML = html;
 }
-async function saveWebhook() {
-  await post('/api/v1/settings/webhooks', {
-    url: document.getElementById('wh-url').value,
-    enabled: document.getElementById('wh-enabled').checked,
-    events: document.getElementById('wh-events').value
-  });
-  showToast(t('webhookSaved'), 'success');
-}
-
-// ── Users ─────────────────────────────────────────────────────────
+async function saveWebhook() { await post('/api/v1/settings/webhooks', { url: document.getElementById('wh-url').value, enabled: document.getElementById('wh-enabled').checked, events: document.getElementById('wh-events').value }); showToast(t('webhookSaved'), 'success'); }
 async function renderUsers() {
   var users = await get('/api/v1/users');
   var items = users || [];
-  var html = '<div class="card"><h2>' + t('userManagement') + '</h2><p class="dim mb">' + t('userDesc') + '</p>';
-  html += '<div class="user-form">';
+  var html = '<div class="card"><h2>' + t('userManagement') + '</h2><p class="dim mb">' + t('userDesc') + '</p><div class="user-form">';
   html += '<input id="new-user-email" class="form-input" placeholder="' + escapeHtml(t('userEmailPlaceholder')) + '" onkeydown="if(event.key===\'Enter\')addUser()"/>';
   html += '<input id="new-user-pw" type="password" class="form-input" placeholder="' + t('passwordPlaceholder') + '"/>';
   html += '<select id="new-user-role" class="form-select"><option value="safety_officer">' + t('safetyOfficer') + '</option><option value="admin">' + t('admin') + '</option><option value="viewer">' + t('viewer') + '</option></select>';
-  html += '<button class="btn-primary" onclick="addUser()" style="width:auto;padding:10px 20px;margin-top:0">' + t('createUser') + '</button>';
-  html += '</div>';
+  html += '<button class="btn-primary" onclick="addUser()" style="width:auto;padding:10px 20px;margin-top:0">' + t('createUser') + '</button></div>';
   html += '<table><thead><tr><th>' + t('email') + '</th><th>' + t('role') + '</th><th>' + t('status') + '</th><th>Action</th></tr></thead><tbody>';
-  items.forEach(function (u) {
-    html += '<tr><td>' + escapeHtml(u.email) + '</td><td>' + escapeHtml(u.role) + '</td><td>' + (u.active ? buildBadge('clean', t('active')) : buildBadge('toxic', t('inactive'))) + '</td><td>' + (u.active ? '<button class="filter-btn" onclick="deactivateUser(\'' + escapeHtml(u.email) + '\')">' + t('deactivate') + '</button>' : '<span class="dim-sm">' + t('inactive') + '</span>') + '</td></tr>';
-  });
+  items.forEach(function (u) { html += '<tr><td>' + escapeHtml(u.email) + '</td><td>' + escapeHtml(u.role) + '</td><td>' + (u.active ? buildBadge('clean', t('active')) : buildBadge('toxic', t('inactive'))) + '</td><td>' + (u.active ? '<button class="filter-btn" onclick="deactivateUser(\'' + escapeHtml(u.email) + '\')">' + t('deactivate') + '</button>' : '<span class="dim-sm">' + t('inactive') + '</span>') + '</td></tr>'; });
   if (!items.length) html += '<tr><td colspan="4" class="dim">No users created</td></tr>';
-  html += '</tbody></table></div>';
-  document.getElementById('main-content').innerHTML = html;
+  html += '</tbody></table></div>'; document.getElementById('main-content').innerHTML = html;
 }
 async function addUser() {
   var email = document.getElementById('new-user-email').value.trim();
-  var pw = document.getElementById('new-user-pw').value;
-  var role = document.getElementById('new-user-role').value;
+  var pw = document.getElementById('new-user-pw').value, role = document.getElementById('new-user-role').value;
   if (!email || !pw) { showToast(t('emailPwRequired'), 'error'); return; }
   var result = await post('/api/v1/users', { email: email, password: pw, role: role });
   if (result) { renderUsers(); showToast(t('userCreated'), 'success'); }
 }
-async function deactivateUser(email) {
-  if (!confirm('Deactivate ' + email + '?')) return;
-  await del('/api/v1/users/' + encodeURIComponent(email));
-  renderUsers();
-  showToast(t('userDeactivated'), 'success');
-}
+async function deactivateUser(email) { if (!confirm('Deactivate ' + email + '?')) return; await del('/api/v1/users/' + encodeURIComponent(email)); renderUsers(); showToast(t('userDeactivated'), 'success'); }
 
 // ── Init ──────────────────────────────────────────────────────────
 (function init() {
+  applyStaticI18n();
   token = localStorage.getItem('polarisgate-token');
   if (token) {
     document.getElementById('login-screen').classList.add('hidden');

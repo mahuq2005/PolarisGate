@@ -584,8 +584,8 @@ python3 -m pytest tests/e2e/ -v
 [PostgreSQL]         [Redis]            [Ollama]
 ```
 
-**12 Services:**
-- `gateway` — FastAPI API (port 8002)
+**14 Services:**
+- `gateway` — FastAPI API (port 8002), organized as 10 domain routers
 - `frontend` — Static SPA via nginx (port 3001)
 - `guardrails` — Toxicity + PII detection (port 8005)
 - `hallucination-detector` — NLI ensemble (port 8008)
@@ -597,6 +597,8 @@ python3 -m pytest tests/e2e/ -v
 - `ollama` — LLM inference (Llama 3.2)
 - `opa` — Policy engine (port 8181)
 - `nginx` — Reverse proxy
+- `prometheus` — Metrics collection (port 9090)
+- `grafana` — Monitoring dashboards (port 3000)
 
 ---
 

@@ -117,28 +117,35 @@ TOXIC_KEYWORDS = [
 ]
 
 # ── Multilingual Toxicity Keywords ─────────────────────────────────
-# French toxic keywords (25 terms covering hate, harassment, profanity)
+# French toxic keywords (30 terms — expanded coverage for veiled threats)
 TOXIC_KEYWORDS_FR = [
     # Insults / harassment
     "connard", "connasse", "salope", "salopard", "enculé", "enculée",
     "bâtard", "ordure", "imbécile", "débile", "crétin",
+    "sous-merde", "racaille", "poufiasse", "gouine",
     # Profanity
     "merde", "putain", "putain de", "fait chier", "emmerder",
+    "nique ta mère", "nique ta race", "va te faire foutre",
     # Hate / threats
     "je te hais", "crève", "je vais te tuer", "je vais te buter",
     "dégage", "fous le camp", "ta gueule", "ferme ta gueule",
     "sale race", "raciste", "pédé", "terroriste",
+    "retourne dans ton pays", "tu sers à rien",
 ]
 
-# Arabic toxic keywords (25 terms covering hate, harassment, profanity)
+# Arabic toxic keywords (20 multi-word phrases — avoids morphological FPs)
 TOXIC_KEYWORDS_AR = [
-    # Hate / threats
-    "كافر", "خنزير", "حقير", "تافه", "موت", "اقتل", "اقتلك",
-    "داعش", "إرهابي", "خائن", "لقيط", "منحط", "وسخ", "جبان",
+    # Hate / threats (multi-word to avoid matching clean text fragments)
+    "أنت خنزير", "أنت حقير", "أنت جبان", "أنت وسخ",
+    "سوف أقتلك", "لأقتلنك", "سأقتلك",
+    "أنت كافر", "يا كافر",
+    "أنت إرهابي", "أنت داعشي",
     # Insults / harassment
-    "غبي", "حيوان", "ابن الكلب", "سافل", "فاشل", "منافق", "نجس",
+    "يا غبي", "يا حيوان", "يا كلب", "يا تافه",
+    "ابن الكلب", "يا منافق", "أنت فاشل",
     # Profanity
-    "تبا لك", "اخرس", "كس اختك", "كس أمك", "عنصري",
+    "تبا لك", "اللعنة عليك", "أخرس يا",
+    "كس اختك", "كس أمك", "كس أم",
 ]
 
 

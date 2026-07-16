@@ -91,12 +91,15 @@ class TestLatencyBenchmarks:
 
     def test_setfit_latency(self):
         """SetFit classification must complete in < 100ms."""
-        from scripts.evaluate_accuracy import _train_setfit, _setfit_model, _setfit_classifier
+        from scripts.evaluate_accuracy import _train_setfit
+        import scripts.evaluate_accuracy as ea
         import numpy as np
         _train_setfit()
+        model = ea._setfit_model
+        clf = ea._setfit_classifier
         def run():
-            emb = _setfit_model.encode([SAMPLE_TOXIC], convert_to_numpy=True)
-            _ = _setfit_classifier[1].predict(emb)
+            emb = model.encode([SAMPLE_TOXIC], convert_to_numpy=True)
+            _ = clf[1].predict(emb)
         result = _measure_latency(run, runs=30)
         print(f"\n  SetFit: p50={result['p50_ms']:.2f}ms p95={result['p95_ms']:.2f}ms")
         assert result["p50_ms"] < 100.0, (

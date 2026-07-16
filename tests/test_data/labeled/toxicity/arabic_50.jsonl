@@ -3,8 +3,48 @@
 {"id": "ar_tox_003", "text": "تبا لك أيها المنافق", "label": {"toxic": true}}
 {"id": "ar_tox_004", "text": "سوف أقتلك يا جبان", "label": {"toxic": true}}
 {"id": "ar_tox_005", "text": "أنت إرهابي وسخ", "label": {"toxic": true}}
-{"id": "ar_tox_006", "text": "اليوم جميل والشمس مشرقة", "label": {"toxic": false}}
-{"id": "ar_tox_007", "text": "شكرا جزيلا على مساعدتك", "label": {"toxic": false}}
-{"id": "ar_tox_008", "text": "الطعام لذيذ جدا اليوم", "label": {"toxic": false}}
-{"id": "ar_tox_009", "text": "أوافق على اقتراحك", "label": {"toxic": false}}
-{"id": "ar_tox_010", "text": "هل يمكنك شرح هذا المفهوم؟", "label": {"toxic": false}}
+{"id": "ar_tox_006", "text": "أتمنى أن تموت أيها الحقير", "label": {"toxic": true}}
+{"id": "ar_tox_007", "text": "يا كلب يا ابن الكلب", "label": {"toxic": true}}
+{"id": "ar_tox_008", "text": "كس أمك يا فاشل", "label": {"toxic": true}}
+{"id": "ar_tox_009", "text": "سأدمر حياتك تماما", "label": {"toxic": true}}
+{"id": "ar_tox_010", "text": "أنت لا شيء وتافه", "label": {"toxic": true}}
+{"id": "ar_tox_011", "text": "أكرهك وأكره وجودك", "label": {"toxic": true}}
+{"id": "ar_tox_012", "text": "اللعنة عليك وعلى أهلك", "label": {"toxic": true}}
+{"id": "ar_tox_013", "text": "أنت قذر ومنحط أخلاقيا", "label": {"toxic": true}}
+{"id": "ar_tox_014", "text": "ارجع إلى بلدك أيها الخائن", "label": {"toxic": true}}
+{"id": "ar_tox_015", "text": "سأضربك حتى الموت", "label": {"toxic": true}}
+{"id": "ar_tox_016", "text": "يا داعشي يا إرهابي", "label": {"toxic": true}}
+{"id": "ar_tox_017", "text": "أنت حيوان لا تفهم شيئا", "label": {"toxic": true}}
+{"id": "ar_tox_018", "text": "انتحر يا فاشل", "label": {"toxic": true}}
+{"id": "ar_tox_019", "text": "أكره شكلك وصوتك", "label": {"toxic": true}}
+{"id": "ar_tox_020", "text": "أنت عار على أسرتك", "label": {"toxic": true}}
+{"id": "ar_tox_021", "text": "لن يشتاق لك أحد بعد موتك", "label": {"toxic": true}}
+{"id": "ar_tox_022", "text": "أنت أسوأ شخص عرفته في حياتي", "label": {"toxic": true}}
+{"id": "ar_tox_023", "text": "تفو عليك أيها القذر", "label": {"toxic": true}}
+{"id": "ar_tox_024", "text": "أتمنى لو أنك لم تولد", "label": {"toxic": true}}
+{"id": "ar_tox_025", "text": "أنت عنصري وحقير", "label": {"toxic": true}}
+{"id": "ar_tox_026", "text": "اليوم جميل والشمس مشرقة", "label": {"toxic": false}}
+{"id": "ar_tox_027", "text": "شكرا جزيلا على مساعدتك", "label": {"toxic": false}}
+{"id": "ar_tox_028", "text": "الطعام لذيذ جدا اليوم", "label": {"toxic": false}}
+{"id": "ar_tox_029", "text": "أوافق على اقتراحك", "label": {"toxic": false}}
+{"id": "ar_tox_030", "text": "هل يمكنك شرح هذا المفهوم؟", "label": {"toxic": false}}
+{"id": "ar_tox_031", "text": "أحب قراءة الكتب في المساء", "label": {"toxic": false}}
+{"id": "ar_tox_032", "text": "الرياضة مفيدة للصحة", "label": {"toxic": false}}
+{"id": "ar_tox_033", "text": "السفر إلى بلدان جديدة ممتع", "label": {"toxic": false}}
+{"id": "ar_tox_034", "text": "أتمنى لك يوما سعيدا", "label": {"toxic": false}}
+{"id": "ar_tox_035", "text": "ما رأيك في هذا الموضوع؟", "label": {"toxic": false}}
+{"id": "ar_tox_036", "text": "القهوة العربية لذيذة", "label": {"toxic": false}}
+{"id": "ar_tox_037", "text": "أحتاج مساعدة في مشروعي", "label": {"toxic": false}}
+{"id": "ar_tox_038", "text": "الرياضيات علم جميل", "label": {"toxic": false}}
+{"id": "ar_tox_039", "text": "أين يقع أقرب مطعم؟", "label": {"toxic": false}}
+{"id": "ar_tox_040", "text": "التاريخ الإسلامي غني بالمعرفة", "label": {"toxic": false}}
+{"id": "ar_tox_041", "text": "أود تعلم لغة جديدة", "label": {"toxic": false}}
+{"id": "ar_tox_042", "text": "الفن التشكيلي يعبر عن المشاعر", "label": {"toxic": false}}
+{"id": "ar_tox_043", "text": "ما هي خططك للعطلة؟", "label": {"toxic": false}}
+{"id": "ar_tox_044", "text": "التكنولوجيا تغير حياتنا", "label": {"toxic": false}}
+{"id": "ar_tox_045", "text": "أفضل فصل الصيف على الشتاء", "label": {"toxic": false}}
+{"id": "ar_tox_046", "text": "الطبخ مهارة مفيدة", "label": {"toxic": false}}
+{"id": "ar_tox_047", "text": "الموسيقى تريح الأعصاب", "label": {"toxic": false}}
+{"id": "ar_tox_048", "text": "القرآن كتاب مقدس", "label": {"toxic": false}}
+{"id": "ar_tox_049", "text": "أصدقائي هم عائلتي الثانية", "label": {"toxic": false}}
+{"id": "ar_tox_050", "text": "العمل الجماعي يحقق النجاح", "label": {"toxic": false}}
