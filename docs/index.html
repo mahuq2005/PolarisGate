@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PolarisGate — AI Content Safety Gateway | Tensor-Lab Inc.</title>
-<meta name="description" content="PolarisGate is an open-source, self-hosted AI Content Safety Gateway. Detect toxic content, PII, prompt injection attacks, and hallucination in LLM outputs.">
-<meta name="keywords" content="AI safety, content safety, guardrails, PII detection, toxicity detection, prompt injection, hallucination detection, open source, self-hosted">
+<title>PolarisGate — Open-Source Enterprise AI Safety Middleware | Tensor-Lab Inc.</title>
+<meta name="description" content="PolarisGate is open-source AI safety middleware. Add toxicity detection, PII redaction, prompt injection blocking, and hallucination detection to any LLM call. Self-hosted, deploy in your own cloud.">
+<meta name="keywords" content="AI safety, LLM guardrails, PII redaction, prompt injection detection, hallucination detection, toxicity detection, open source, self-hosted, enterprise AI governance, AI middleware">
 <meta name="author" content="Tensor-Lab Inc.">
-<meta property="og:title" content="PolarisGate — AI Content Safety Gateway">
-<meta property="og:description" content="Open-source, self-hosted AI safety. Deploy in 2 minutes.">
+<meta property="og:title" content="PolarisGate — Open-Source Enterprise AI Safety Middleware">
+<meta property="og:description" content="Add safety to any LLM call. PII redaction, toxicity detection, injection blocking, hallucination detection. Self-hosted. Free. Apache 2.0.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mahuq2005.github.io/PolarisGate">
 <style>
@@ -50,11 +50,16 @@ body {
 .hero-badge {
   display: inline-block; padding: 6px 16px; border-radius: 20px;
   background: rgba(79, 142, 247, 0.1); color: #4F8EF7; font-size: 13px; font-weight: 600;
-  margin-bottom: 24px; border: 1px solid rgba(79, 142, 247, 0.15);
+  margin-bottom: 16px; border: 1px solid rgba(79, 142, 247, 0.15);
 }
 .hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; background: linear-gradient(135deg, #E2E8F0 0%, #4F8EF7 50%, #7C8BB5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero-subtitle { font-size: 20px; color: #94A3B8; max-width: 600px; margin: 0 auto 32px; line-height: 1.5; }
-.hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.hero-subtitle { font-size: 18px; color: #94A3B8; max-width: 700px; margin: 0 auto 24px; line-height: 1.6; }
+.hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+.hero-compliance { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+.hero-compliance span {
+  padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.15);
+}
 .btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px;
   border-radius: 12px; font-size: 15px; font-weight: 600; text-decoration: none;
@@ -65,10 +70,36 @@ body {
 .btn-secondary { background: rgba(79, 142, 247, 0.1); color: #4F8EF7; border: 1px solid rgba(79, 142, 247, 0.15); }
 .btn-secondary:hover { background: rgba(79, 142, 247, 0.15); }
 
+/* ─── Code Demo ────────────────────────────────────────── */
+.code-demo {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px;
+  margin: 0 auto; text-align: left;
+}
+@media (max-width: 768px) { .code-demo { grid-template-columns: 1fr; } }
+.code-box {
+  background: #060E1A; border: 1px solid rgba(79, 142, 247, 0.1); border-radius: 12px;
+  padding: 20px; overflow-x: auto;
+}
+.code-box .label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.code-box .label.bad { color: #ef4444; }
+.code-box .label.good { color: #22c55e; }
+.code-box pre {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 12px; line-height: 1.7; color: #94A3B8; margin: 0;
+}
+.code-box pre .kw { color: #c084fc; }
+.code-box pre .fn { color: #4F8EF7; }
+.code-box pre .str { color: #22c55e; }
+.code-box pre .cm { color: #64748b; }
+
 /* ─── Sections ─────────────────────────────────────────── */
 .section { padding: 80px 0; }
+.section-alt { padding: 80px 0; background: rgba(79, 142, 247, 0.02); }
 .section-title { font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 12px; }
-.section-desc { color: #94A3B8; text-align: center; max-width: 600px; margin: 0 auto 48px; font-size: 16px; }
+.section-desc { color: #94A3B8; text-align: center; max-width: 650px; margin: 0 auto 48px; font-size: 16px; }
 
 /* ─── Feature Grid ─────────────────────────────────────── */
 .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -81,6 +112,47 @@ body {
 .feature-icon { font-size: 28px; margin-bottom: 12px; }
 .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .feature-card p { color: #94A3B8; font-size: 14px; line-height: 1.6; }
+
+/* ─── Persona Cards ────────────────────────────────────── */
+.personas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.persona-card {
+  background: linear-gradient(135deg, rgba(79,142,247,0.03), transparent);
+  border: 1px solid rgba(79, 142, 247, 0.08); border-radius: 16px; padding: 28px;
+  text-align: center; transition: all .2s;
+}
+.persona-card:hover { border-color: rgba(79, 142, 247, 0.2); }
+.persona-icon { font-size: 40px; margin-bottom: 12px; }
+.persona-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.persona-card p { color: #94A3B8; font-size: 13px; line-height: 1.6; }
+
+/* ─── SDK / Deploy Grid ────────────────────────────────── */
+.deploy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.deploy-card {
+  background: rgba(79, 142, 247, 0.03); border: 1px solid rgba(79, 142, 247, 0.08);
+  border-radius: 16px; padding: 24px; text-align: center; transition: all .2s;
+}
+.deploy-card:hover { border-color: rgba(79, 142, 247, 0.2); }
+.deploy-card .icon { font-size: 32px; margin-bottom: 10px; }
+.deploy-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.deploy-card code {
+  display: block; background: #060E1A; border-radius: 8px; padding: 10px 14px;
+  font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: #4F8EF7;
+  margin-top: 10px; text-align: left; overflow-x: auto; user-select: all;
+}
+
+/* ─── SDK Code Block ───────────────────────────────────── */
+.sdk-section { text-align: center; }
+.sdk-code {
+  display: inline-block; text-align: left; background: #060E1A;
+  border: 1px solid rgba(79, 142, 247, 0.12); border-radius: 12px;
+  padding: 24px 28px; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px; line-height: 1.8; color: #94A3B8; max-width: 600px;
+  overflow-x: auto; user-select: all;
+}
+.sdk-code .kw { color: #c084fc; }
+.sdk-code .fn { color: #4F8EF7; }
+.sdk-code .str { color: #22c55e; }
+.sdk-code .cm { color: #64748b; }
 
 /* ─── Demo Video ───────────────────────────────────────── */
 .demo-video { max-width: 900px; margin: 0 auto; padding: 0 24px; }
@@ -112,6 +184,15 @@ tbody td:first-child { font-weight: 600; }
   font-size: 14px; color: #4F8EF7; margin-bottom: 24px; user-select: all;
 }
 
+/* ─── Diagram ──────────────────────────────────────────── */
+.diagram {
+  max-width: 700px; margin: 0 auto; padding: 0 24px; text-align: center;
+}
+.diagram pre {
+  display: inline-block; text-align: left; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px; line-height: 1.6; color: #94A3B8;
+}
+
 /* ─── Footer ───────────────────────────────────────────── */
 .footer {
   border-top: 1px solid rgba(79, 142, 247, 0.08); padding: 32px 24px;
@@ -128,6 +209,7 @@ tbody td:first-child { font-weight: 600; }
   .hero h1 { font-size: 32px; }
   .hero-subtitle { font-size: 16px; }
   .section-title { font-size: 24px; }
+  .code-demo { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -141,7 +223,9 @@ tbody td:first-child { font-weight: 600; }
       PolarisGate
     </a>
     <ul class="nav-links">
+      <li><a href="#what">What</a></li>
       <li><a href="#features">Features</a></li>
+      <li><a href="#who">Who</a></li>
       <li><a href="#demo">Demo</a></li>
       <li><a href="#comparison">Comparison</a></li>
       <li><a href="#deploy">Deploy</a></li>
@@ -154,15 +238,85 @@ tbody td:first-child { font-weight: 600; }
 <section class="hero">
   <div>
     <div class="hero-badge">v2.5 — Open Source (Apache 2.0)</div>
-    <h1>Enterprise AI<br>Governance Platform</h1>
-    <p class="hero-subtitle">Governed chat with 11 LLM providers, real-time PII & toxicity detection, prompt injection blocking, and hallucination detection — all self-hosted, all open source.</p>
+    <h1>Enterprise AI<br>Safety Middleware</h1>
+    <p class="hero-subtitle">
+      Add toxicity detection, PII redaction, prompt injection blocking, and hallucination detection to any LLM call.
+      <strong>Deploy in your own cloud. Keep your data. Use any LLM. Pay nothing.</strong>
+    </p>
+    <div class="hero-compliance">
+      <span>🛡️ SOC 2 Ready</span>
+      <span>🔒 GDPR Ready</span>
+      <span>🏥 HIPAA Ready</span>
+      <span>📋 OWASP LLM Top 10</span>
+      <span>🏛️ ISO 27001</span>
+    </div>
     <div class="hero-cta">
       <a href="https://github.com/mahuq2005/PolarisGate" class="btn btn-primary" target="_blank" rel="noopener">
         <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         View on GitHub
       </a>
       <a href="#deploy" class="btn btn-secondary">Deploy in 2 Minutes →</a>
+      <a href="#sdk" class="btn btn-secondary">Python SDK →</a>
     </div>
+
+    <!-- Before vs After Code -->
+    <div class="code-demo">
+      <div class="code-box">
+        <div class="label bad">Without PolarisGate</div>
+        <pre><span class="cm"># Unsafe — PII, injection, toxicity pass through</span>
+<span class="kw">import</span> openai
+
+response = openai.chat.completions.<span class="fn">create</span>(
+    model=<span class="str">"gpt-4o"</span>,
+    messages=[{<span class="str">"role"</span>:<span class="str">"user"</span>, <span class="str">"content"</span>: user_input}]
+)
+<span class="cm"># SIN: 123-456-789 leaks to OpenAI</span>
+<span class="cm"># Injection: "Ignore all previous..." goes through</span></pre>
+      </div>
+      <div class="code-box">
+        <div class="label good">With PolarisGate (3 lines)</div>
+        <pre><span class="kw">from</span> polarisgate <span class="kw">import</span> PolarisGate
+pg = <span class="fn">PolarisGate</span>()
+
+safe = pg.<span class="fn">check</span>(user_input)
+<span class="cm"># SIN redacted: ***-***-789 ✓</span>
+<span class="cm"># Injection blocked ✓</span>
+<span class="cm"># Toxicity checked ✓</span>
+
+response = openai.chat.completions.<span class="fn">create</span>(
+    model=<span class="str">"gpt-4o"</span>,
+    messages=[{<span class="str">"role"</span>:<span class="str">"user"</span>, <span class="str">"content"</span>: safe.redacted_text}]
+)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- What Is It -->
+<section id="what" class="section section-alt">
+  <h2 class="section-title">Where PolarisGate Sits</h2>
+  <p class="section-desc">A safety middleware layer between your application and any LLM provider — deploy in your VPC, keep your data.</p>
+  <div class="diagram">
+    <pre>
+ ┌─────────────────────────────────────────────────────┐
+ │  <span style="color:#E2E8F0">Your Application</span>                                    │
+ │  (Chat UI · API · Agent · Internal Tool)             │
+ └──────────────────────┬──────────────────────────────┘
+                        │
+                        ▼
+ ┌─────────────────────────────────────────────────────┐
+ │  <span style="color:#4F8EF7;font-weight:700">POLARISGATE</span>  ← <span style="color:#22c55e">Deployed in YOUR cloud/VPC</span>        │
+ │                                                     │
+ │  <span style="color:#94A3B8">Input</span>  ──▶ Toxicity → PII Redaction → Injection     │
+ │  <span style="color:#94A3B8">Output</span> ──▶ Hallucination → Toxicity → PII → Audit     │
+ └──────────────────────┬──────────────────────────────┘
+                        │
+                        ▼
+ ┌─────────────────────────────────────────────────────┐
+ │  <span style="color:#94A3B8">OpenAI  ·  Anthropic  ·  Bedrock  ·  Gemini  ·  Ollama</span> │
+ │  <span style="color:#94A3B8">Cohere  ·  Mistral  ·  DeepSeek  ·  Groq  ·  xAI   </span>      │
+ └─────────────────────────────────────────────────────┘
+    </pre>
   </div>
 </section>
 
@@ -188,13 +342,13 @@ tbody td:first-child { font-weight: 600; }
     </div>
     <div class="feature-card">
       <div class="feature-icon">🛡️</div>
-      <h3>PII Redaction</h3>
-      <p>Detects and automatically masks SIN, SSN, email, phone, credit card, IP, passport, and more. Email→j***@***.com</p>
+      <h3>PII Redaction ⭐</h3>
+      <p>Detects and automatically masks SIN, SSN, email, phone, credit card, IP, passport, and more. <strong>Only 3 of 20 competitors redact PII — not just detect.</strong></p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🚫</div>
       <h3>Prompt Injection Protection</h3>
-      <p>45 detection patterns — DAN, jailbreak attempts, system prompt leaks, role-switching, bypass attempts.</p>
+      <p>45+ detection patterns across graduated pipeline (regex → BERT → LLM judge). DAN, jailbreak attempts, system prompt leaks, role-switching.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🧠</div>
@@ -204,12 +358,40 @@ tbody td:first-child { font-weight: 600; }
     <div class="feature-card">
       <div class="feature-icon">📊</div>
       <h3>Dashboard & Audit Trail</h3>
-      <p>Real-time incident monitoring, policy editor with toggle switches, content testing with redacted output preview. Complete audit trail.</p>
+      <p>Real-time incident monitoring, policy editor with toggle switches, content testing with redacted output preview. Immutable audit trail.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🔐</div>
       <h3>Admin Controls</h3>
-      <p>Encrypted API key storage, RBAC, rate limiting, session management, and customizable blocklists. Deploy as router or safety layer.</p>
+      <p>Encrypted API key storage, RBAC, rate limiting, JWT auth, webhooks (Slack/Teams), custom blocklists, and session management.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Who Is This For -->
+<section id="who" class="section section-alt">
+  <h2 class="section-title">Built For Regulated Enterprises</h2>
+  <p class="section-desc">If your data can't leave your infrastructure, PolarisGate was built for you.</p>
+  <div class="personas">
+    <div class="persona-card">
+      <div class="persona-icon">🏦</div>
+      <h3>Banks & Financial Services</h3>
+      <p>SOC 2, PCI DSS, OSFI compliance. Detect and redact account numbers, SIN, and PII in real-time. Immutable audit trail for every LLM call. Deploy in your own VPC — no data leaves your infrastructure.</p>
+    </div>
+    <div class="persona-card">
+      <div class="persona-icon">🏥</div>
+      <h3>Healthcare & Life Sciences</h3>
+      <p>HIPAA-ready PHI redaction. Automatically mask patient IDs, medical record numbers, and health card numbers before they reach an LLM. Full audit trail for compliance evidence.</p>
+    </div>
+    <div class="persona-card">
+      <div class="persona-icon">🛡️</div>
+      <h3>Defense & Government</h3>
+      <p>Air-gapped deployment capable. FIPS 140-2 ready. Zero internet dependency — run entirely on local infrastructure with Ollama. No cloud account needed.</p>
+    </div>
+    <div class="persona-card">
+      <div class="persona-icon">🚀</div>
+      <h3>AI Startups & Scale-Ups</h3>
+      <p>Free and open source (Apache 2.0). Works with any LLM provider — no vendor lock-in. Python SDK with 3-line integration. Docker Compose in 2 minutes.</p>
     </div>
   </div>
 </section>
@@ -226,10 +408,38 @@ tbody td:first-child { font-weight: 600; }
   </div>
 </section>
 
+<!-- Python SDK -->
+<section id="sdk" class="section section-alt">
+  <h2 class="section-title">Python SDK — One Line Integration</h2>
+  <p class="section-desc">Add safety checks to any Python application in seconds.</p>
+  <div class="sdk-section">
+    <div class="sdk-code">
+<span class="cm"># Install</span>
+$ pip install polarisgate
+
+<span class="cm"># Use</span>
+<span class="kw">from</span> polarisgate <span class="kw">import</span> PolarisGate
+pg = <span class="fn">PolarisGate</span>()
+
+<span class="cm"># Check content safety</span>
+result = pg.<span class="fn">check</span>(<span class="str">"My SIN is 123-456-789 and I hate you!"</span>)
+<span class="kw">print</span>(result.pii_detected)      <span class="cm"># True</span>
+<span class="kw">print</span>(result.redacted_text)     <span class="cm"># "My SIN is ***-***-789 and I hate you!"</span>
+<span class="kw">print</span>(result.toxic)             <span class="cm"># True</span>
+<span class="kw">print</span>(result.is_safe())         <span class="cm"># False</span>
+
+<span class="cm"># Batch + streaming + redact</span>
+results = pg.<span class="fn">check_batch</span>([text1, text2, text3])
+clean   = pg.<span class="fn">redact</span>(<span class="str">"Email me at john@example.com"</span>)
+<span class="cm"># → "Email me at j***@***.com"</span>
+    </div>
+  </div>
+</section>
+
 <!-- Comparison -->
 <section id="comparison" class="section">
   <h2 class="section-title">How We Compare</h2>
-  <p class="section-desc">PolarisGate vs leading AI safety platforms. <strong>Bold</strong> features are unique to PolarisGate among open-source tools.</p>
+  <p class="section-desc">PolarisGate vs leading AI safety platforms. <strong>Bold</strong> features are unique to PolarisGate among open-source tools. <a href="https://github.com/mahuq2005/PolarisGate/blob/main/competitive-analysis.md" style="color:#4F8EF7">Full competitive analysis →</a></p>
   <div class="table-wrap">
     <table>
       <thead>
@@ -238,32 +448,72 @@ tbody td:first-child { font-weight: 600; }
       <tbody>
         <tr class="highlight"><td>Toxicity Detection</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
         <tr class="highlight"><td>PII Detection</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross"><small>*</small></td><td class="check">✓</td></tr>
-        <tr class="highlight"><td><strong>PII Redaction</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td></tr>
+        <tr class="highlight"><td><strong>⭐ PII Redaction</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td></tr>
         <tr class="highlight"><td>Prompt Injection Detection</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td><strong>Hallucination Detection</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>⭐ Hallucination Detection</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
         <tr class="highlight"><td>Dashboard / UI</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td></tr>
-        <tr class="highlight"><td><strong>Audit Trail</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>⭐ Audit Trail</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
         <tr class="highlight"><td>Custom Policies</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td><strong>Batch Testing</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td><strong>Webhooks</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Self-Hosted</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
-        <tr class="highlight"><td>Open Source</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Batch Testing</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td>Webhooks (Slack/Teams)</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>Self-Hosted</strong></td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>Open Source</strong></td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
         <tr class="highlight"><td>Streaming SSE</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
         <tr class="highlight"><td>Python SDK</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
         <tr class="highlight"><td>Flat Cost / No Per-Request</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td></tr>
+        <tr class="highlight"><td><strong>⭐ BYOA (Your Cloud)</strong></td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<!-- Deploy CTA -->
-<section id="deploy" class="cta-section">
-  <h2>Deploy in 2 Minutes</h2>
-  <p>Self-hosted. No cloud dependency. No per-request pricing.</p>
-  <div class="code-block">git clone https://github.com/mahuq2005/PolarisGate.git && cd PolarisGate && docker compose up -d</div>
+<!-- Deployment Options -->
+<section id="deploy" class="section section-alt">
+  <h2 class="section-title">Deploy Anywhere</h2>
+  <p class="section-desc">PolarisGate deploys into <strong>your</strong> infrastructure — not ours. Your data never leaves your control.</p>
+  <div class="deploy-grid">
+    <div class="deploy-card">
+      <div class="icon">🐳</div>
+      <h3>Docker Compose</h3>
+      <p style="color:#94A3B8;font-size:13px;margin-bottom:8px">14 services. 2 minutes.</p>
+      <code>git clone https://github.com/mahuq2005/PolarisGate.git
+cd PolarisGate
+docker compose up -d</code>
+    </div>
+    <div class="deploy-card">
+      <div class="icon">☸️</div>
+      <h3>Kubernetes (Helm)</h3>
+      <p style="color:#94A3B8;font-size:13px;margin-bottom:8px">Production-grade. Auto-scaling.</p>
+      <code>helm repo add polarisgate https://...
+helm install polarisgate polarisgate/polarisgate</code>
+    </div>
+    <div class="deploy-card">
+      <div class="icon">📦</div>
+      <h3>Air-Gapped / Offline</h3>
+      <p style="color:#94A3B8;font-size:13px;margin-bottom:8px">Zero internet. USB transfer.</p>
+      <code>bash scripts/build_airgap.sh
+# Transfer tarball → deploy offline</code>
+    </div>
+    <div class="deploy-card">
+      <div class="icon">☁️</div>
+      <h3>Bring Your Own Cloud</h3>
+      <p style="color:#94A3B8;font-size:13px;margin-bottom:8px">AWS · Azure · GCP. Your VPC.</p>
+      <code># Terraform modules available
+terraform apply
+# CloudFormation: 1-click deploy</code>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="cta-section">
+  <h2>Ready to Add Safety to Your LLM Calls?</h2>
+  <p>Open source. Self-hosted. Deploy in your cloud. Pay nothing.</p>
+  <div class="code-block">pip install polarisgate</div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="https://github.com/mahuq2005/PolarisGate" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub →</a>
+    <a href="https://github.com/mahuq2005/PolarisGate" class="btn btn-primary" target="_blank" rel="noopener">⭐ Star on GitHub</a>
     <a href="https://github.com/mahuq2005/PolarisGate/blob/main/README.md" class="btn btn-secondary" target="_blank" rel="noopener">Documentation</a>
+    <a href="https://github.com/mahuq2005/PolarisGate/blob/main/competitive-analysis.md" class="btn btn-secondary" target="_blank" rel="noopener">Competitive Analysis</a>
   </div>
 </section>
 
@@ -272,7 +522,9 @@ tbody td:first-child { font-weight: 600; }
   <div class="footer-links">
     <a href="https://github.com/mahuq2005/PolarisGate">GitHub</a>
     <a href="https://github.com/mahuq2005/PolarisGate/blob/main/LICENSE">Apache 2.0</a>
+    <a href="https://github.com/mahuq2005/PolarisGate/blob/main/CHANGELOG.md">Changelog</a>
     <a href="https://github.com/mahuq2005/PolarisGate/blob/main/competitive-analysis.md">Competitive Analysis</a>
+    <a href="https://github.com/mahuq2005/PolarisGate/blob/main/SECURITY.md">Security</a>
   </div>
   <p>Product by <strong class="footer-brand">Tensor-Lab Inc.</strong></p>
   <p style="margin-top:4px;opacity:0.6">Open Source AI Infrastructure — Toronto, Canada</p>
