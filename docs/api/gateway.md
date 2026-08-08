@@ -288,6 +288,62 @@ Authorization: Bearer <token>
 
 ---
 
+## Chat Completions (Multi-LLM)
+
+### List Providers
+
+```http
+GET /api/v1/chat/providers
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "providers": ["anthropic", "cohere", "deepseek", "google", "groq", "mistral", "mock", "ollama", "openai", "together", "xai"],
+  "context_limits": {"openai": 128000, "anthropic": 200000, "google": 1048576, "ollama": 8192}
+}
+```
+
+### Chat Completion (Stateless)
+
+```http
+POST /api/v1/chat/completions
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "provider": "openai",
+  "model": "gpt-4o",
+  "messages": [{"role": "user", "content": "Hello!"}]
+}
+```
+
+### Chat Completion (Stateful — Server-Side Memory)
+
+Uses `conversation_id` to persist conversation history in PostgreSQL. The gateway loads history, trims to the provider's context window, runs guardrails, and saves new messages.
+
+```http
+# First message — auto-creates conversation
+POST /api/v1/chat/completions
+{"provider": "ollama", "model": "llama3.2:1b", "message": "My name is Alice"}
+
+# Response includes conversation_id
+{"text": "...", "conversation_id": "uuid-here", "safety": {...}}
+
+# Follow-up — uses conversation history
+POST /api/v1/chat/completions
+{"provider": "ollama", "model": "llama3.2:1b", "conversation_id": "uuid-here", "message": "What is my name?"}
+```
+
+### Conversation Management
+
+```http
+GET    /api/v1/chat/conversations          # List user's conversations
+GET    /api/v1/chat/conversations/{id}     # Get full history
+DELETE /api/v1/chat/conversations/{id}     # Delete conversation
+```
+
 ## Rate Limits
 
 | Endpoint | Limit | Window |

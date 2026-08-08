@@ -1,0 +1,1 @@
+"""PolarisGate RAG Pipeline — document ingestion, embedding, retrieval."""

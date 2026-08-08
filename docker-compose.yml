@@ -3,6 +3,8 @@ networks:
     driver: bridge
 services:
   aida-bridge:
+    profiles:
+      - full
     build:
       context: .
       dockerfile: services/aida-bridge/Dockerfile
@@ -35,6 +37,8 @@ services:
     - aida_chroma:/app/chroma_db
     - aida_pdfs:/app/pdfs
   bias-monitor:
+    profiles:
+      - full
     build:
       context: .
       dockerfile: services/bias-monitor/Dockerfile
@@ -63,6 +67,8 @@ services:
           cpus: '0.5'
           memory: 512M
   collector:
+    profiles:
+      - full
     build:
       context: .
       dockerfile: services/collector/Dockerfile
@@ -196,6 +202,8 @@ services:
     volumes:
     - ./policies:/app/policies
   hallucination-detector:
+    profiles:
+      - full
     build:
       context: .
       dockerfile: services/hallucination-detector/Dockerfile

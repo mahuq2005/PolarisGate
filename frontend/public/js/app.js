@@ -150,6 +150,7 @@ async function render() {
   var tabs = [
     { k: 'dashboard', l: t('dashboard') },
     { k: 'policy', l: t('policies') },
+    { k: 'tools', l: 'Tool Control' },
     { k: 'compliance', l: t('compliance') },
     { k: 'admin', l: t('settings') }
   ];
@@ -157,7 +158,7 @@ async function render() {
     return '<button class="tab' + (state.tab === tb.k ? ' active' : '') + '" onclick="setTab(\'' + tb.k + '\')">' + escapeHtml(tb.l) + '</button>';
   }).join('');
 
-  var subTabs = {
+    var subTabs = {
     dashboard: [
       { k: 'overview', l: t('overview') },
       { k: 'incidents', l: t('incidents') },
@@ -167,19 +168,31 @@ async function render() {
       { k: 'guardrails', l: t('policyRules') },
       { k: 'testing', l: t('testContent') },
       { k: 'thresholds', l: t('domains') },
-      { k: 'blocklist', l: t('blocklist') }
+      { k: 'blocklist', l: t('blocklist') },
+      { k: 'CostCenter', l: 'Cost Center' },
+      { k: 'Budgets', l: 'Budget Management' }
     ],
     compliance: [
       { k: 'audit', l: t('auditLogs') },
       { k: 'hallucination', l: t('hallucination') },
-      { k: 'pipeline', l: t('pipeline') }
+      { k: 'pipeline', l: t('pipeline') },
+      { k: 'RAG', l: 'RAG Pipeline' }
     ],
     admin: [
       { k: 'settings', l: t('general') },
       { k: 'apikeys', l: t('apiKeys') },
       { k: 'webhooks', l: t('webhooks') },
       { k: 'users', l: t('users') },
-      { k: 'canary', l: t('canaryTokens') }
+      { k: 'canary', l: t('canaryTokens') },
+      { k: 'Agents', l: 'Agents & MCP' }
+    ],
+    tools: [
+      { k: 'overview', l: 'Overview' },
+      { k: 'deny-list', l: 'Deny List' },
+      { k: 'roles', l: 'Role Templates' },
+      { k: 'user-policy', l: 'Per-User Policy' },
+      { k: 'audit', l: 'Audit Log' },
+      { k: 'approvals', l: 'Approval Queue' }
     ]
   };
   var st = subTabs[state.tab] || [];
@@ -199,16 +212,27 @@ async function render() {
       if (state.sub === 'testing') await renderPolicyTest();
       else if (state.sub === 'thresholds') await renderDomainThresholds();
       else if (state.sub === 'blocklist') await renderBlocklist();
+      else if (state.sub === 'Budgets') await renderBudgets();
+      else if (state.sub === 'CostCenter') await renderCostCenter();
       else await renderPolicyGuardrails();
     } else if (state.tab === 'compliance') {
       if (state.sub === 'hallucination') await renderHallucination();
       else if (state.sub === 'pipeline') await renderPipeline();
+      else if (state.sub === 'RAG') await renderRAG();
       else await renderAuditLogs();
+    } else if (state.tab === 'tools') {
+      if (state.sub === 'deny-list') await renderDenyList();
+      else if (state.sub === 'roles') await renderToolRoles();
+      else if (state.sub === 'user-policy') await renderUserToolPolicy();
+      else if (state.sub === 'audit') await renderToolAudit();
+      else if (state.sub === 'approvals') await renderToolApprovals();
+      else await renderToolOverview();
     } else if (state.tab === 'admin') {
       if (state.sub === 'apikeys') await renderApiKeys();
       else if (state.sub === 'webhooks') await renderWebhooks();
       else if (state.sub === 'users') await renderUsers();
       else if (state.sub === 'canary') await renderCanary();
+      else if (state.sub === 'Agents') await renderAgents();
       else await renderSettings();
     } else {
       main.innerHTML = '<div class="card"><h2>' + escapeHtml(state.tab) + '</h2><p class="dim">' + t('comingSoon') + '</p></div>';
@@ -247,6 +271,7 @@ async function renderDashboard() {
     { label: t('piiDetected'), value: s.pii_leaks || 0, onclick: "state._filter='pii';setTab('dashboard','incidents')", color: s.pii_leaks > 0 ? '#f59e0b' : '#4F8EF7' },
     { label: t('activeModels'), value: s.active_models || 0, onclick: "setTab('dashboard','models')", color: '#4F8EF7' },
     { label: t('blockedWords'), value: s.blocked_count || 0, onclick: "state._filter='blocked';setTab('dashboard','incidents')", color: (s.blocked_count || 0) > 0 ? '#ef4444' : '#4F8EF7' },
+    { label: 'Injection Attacks', value: s.injection_count || 0, onclick: "state._filter='injection';setTab('dashboard','incidents')", color: (s.injection_count || 0) > 0 ? '#ef4444' : '#4F8EF7' },
     { label: t('safetyScore'), value: typeof s.fairness_score === 'number' ? (s.fairness_score * 100).toFixed(1) + '%' : (s.fairness_score || t('nA')), onclick: '', color: '#4F8EF7' },
     { label: t('hallucinationRate'), value: hallRate, onclick: "setTab('compliance','hallucination')", color: hallRate !== t('nA') ? '#4F8EF7' : '#f59e0b' },
     { label: t('canaryAlerts'), value: canaryAlertCount, onclick: "setTab('admin','canary')", color: canaryAlertCount > 0 ? '#ef4444' : '#4F8EF7' }
@@ -263,11 +288,11 @@ async function renderDashboard() {
   html += '<div class="card"><h2>' + t('recentIncidents') + '</h2><p class="dim mb" style="font-size:12px">' + t('expandForDetails') + '</p>';
   html += '<table><thead><tr><th>' + t('traceId') + '</th><th>' + t('verdict') + '</th><th>' + t('reason') + '</th><th>' + t('time') + '</th></tr></thead><tbody>';
   (incidents || []).forEach(function (i, idx) {
-    var verdict = i.blocklisted ? 'blocked' : i.toxic ? 'toxic' : i.pii_detected ? 'pii' : 'clean';
-    var label = i.blocklisted ? t('blockedVerdict') : i.toxic ? t('toxicVerdict') : i.pii_detected ? t('piiVerdict') : t('cleanVerdict');
+    var verdict = i.blocklisted ? 'blocked' : i.injection_detected ? 'injection' : i.toxic ? 'toxic' : i.pii_detected ? 'pii' : 'clean';
+    var label = i.blocklisted ? t('blockedVerdict') : i.injection_detected ? 'Injection Attack' : i.toxic ? t('toxicVerdict') : i.pii_detected ? t('piiVerdict') : t('cleanVerdict');
     var piiTypes = (i.pii_types || []).join(',');
-    _incidentCache[idx] = { traceId: i.trace_id || '', verdict: verdict, score: i.toxic_score || 0, reason: i.reason || '', timestamp: i.timestamp || '', piiTypes: piiTypes };
-    html += '<tr class="incident-row" onclick="showIncidentDetail(' + idx + ')"><td class="mono-sm">' + escapeHtml((i.trace_id || '').toString().slice(0, 8)) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
+    _incidentCache[idx] = { traceId: i.trace_id || '', verdict: verdict, score: i.toxic_score || 0, reason: i.reason || '', timestamp: i.timestamp || '', piiTypes: piiTypes, injectionCat: i.injection_category || '', injectionSev: i.injection_severity || 0 };
+    html += '<tr class="incident-row" onclick="showIncidentDetail(' + idx + ')"><td class="mono-sm">' + escapeHtml((i.trace_id ? i.trace_id.toString() : 'GR-' + (i.id || idx))) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
   });
   if (!(incidents || []).length) html += '<tr><td colspan="4" class="dim">' + t('noIncidents') + '</td></tr>';
   html += '</tbody></table></div>';
@@ -309,7 +334,7 @@ async function renderIncidents() {
   var items = incidents || [];
   var flt = state._filter;
   var filtered = flt ? items.filter(function (i) {
-    return flt === 'toxic' ? i.toxic : flt === 'pii' ? i.pii_detected : i.blocklisted;
+    return flt === 'toxic' ? i.toxic : flt === 'pii' ? i.pii_detected : flt === 'injection' ? i.injection_detected : i.blocklisted;
   }) : items;
 
   var html = '<div class="card"><h2>' + t('incidents') + '</h2><p class="dim mb" style="font-size:12px">' + t('expandForDetails') + '</p>';
@@ -318,16 +343,17 @@ async function renderIncidents() {
   html += '<button class="filter-btn' + (flt === 'toxic' ? ' active' : '') + '" onclick="state._filter=\'toxic\';render()">' + t('toxic') + '</button>';
   html += '<button class="filter-btn' + (flt === 'pii' ? ' active' : '') + '" onclick="state._filter=\'pii\';render()">' + t('pii') + '</button>';
   html += '<button class="filter-btn' + (flt === 'blocked' ? ' active' : '') + '" onclick="state._filter=\'blocked\';render()">' + t('blocked') + '</button>';
+  html += '<button class="filter-btn' + (flt === 'injection' ? ' active' : '') + '" onclick="state._filter=\'injection\';render()">Injection</button>';
   html += '</div>';
 
   _incidentCache = {};
   html += '<table><thead><tr><th>' + t('traceId') + '</th><th>' + t('verdict') + '</th><th>' + t('score') + '</th><th>' + t('reason') + '</th><th>' + t('time') + '</th></tr></thead><tbody>';
   filtered.forEach(function (i, idx) {
-    var verdict = i.blocklisted ? 'blocked' : i.toxic ? 'toxic' : i.pii_detected ? 'pii' : 'clean';
-    var label = i.blocklisted ? t('blockedVerdict') : i.toxic ? t('toxicVerdict') : i.pii_detected ? t('piiVerdict') : t('cleanVerdict');
+    var verdict = i.blocklisted ? 'blocked' : i.injection_detected ? 'injection' : i.toxic ? 'toxic' : i.pii_detected ? 'pii' : 'clean';
+    var label = i.blocklisted ? t('blockedVerdict') : i.injection_detected ? 'Injection Attack' : i.toxic ? t('toxicVerdict') : i.pii_detected ? t('piiVerdict') : t('cleanVerdict');
     var piiTypes = (i.pii_types || []).join(',');
-    _incidentCache[idx] = { traceId: i.trace_id || '', verdict: verdict, score: i.toxic_score || 0, reason: i.reason || '', timestamp: i.timestamp || '', piiTypes: piiTypes };
-    html += '<tr class="incident-row" onclick="showIncidentDetail(' + idx + ')"><td class="mono-sm">' + escapeHtml((i.trace_id || '').toString().slice(0, 8)) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + (i.toxic_score != null ? i.toxic_score : '-') + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
+    _incidentCache[idx] = { traceId: i.trace_id || '', verdict: verdict, score: i.toxic_score || 0, reason: i.reason || '', timestamp: i.timestamp || '', piiTypes: piiTypes, injectionCat: i.injection_category || '', injectionSev: i.injection_severity || 0 };
+    html += '<tr class="incident-row" onclick="showIncidentDetail(' + idx + ')"><td class="mono-sm">' + escapeHtml((i.trace_id ? i.trace_id.toString() : 'GR-' + (i.id || idx))) + '...</td><td>' + buildBadge(verdict, label) + '</td><td>' + (i.toxic_score != null ? i.toxic_score : '-') + '</td><td>' + escapeHtml(i.reason || '') + '</td><td class="dim-sm">' + escapeHtml(i.timestamp || '') + '</td></tr>';
   });
   if (!filtered.length) html += '<tr><td colspan="5" class="dim">' + t('noIncidentsFound') + '</td></tr>';
   html += '</tbody></table></div>';
@@ -661,8 +687,410 @@ async function addUser() {
 }
 async function deactivateUser(email) { if (!confirm('Deactivate ' + email + '?')) return; await del('/api/v1/users/' + encodeURIComponent(email)); renderUsers(); showToast(t('userDeactivated'), 'success'); }
 
+// ── Chat UI ───────────────────────────────────────────────────────
+async function renderChatUI() {
+  var providers = await get('/api/v1/chat/providers');
+  var html = '<div class="card"><h2>' + t('chat') + '</h2><p class="dim mb">Chat with LLMs through the safety gateway.</p>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px"><select id="chat-provider" class="form-select" style="flex:1">';
+  if (providers && providers.providers) {
+    providers.providers.forEach(function(p) { html += '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>'; });
+  }
+  html += '</select></div>';
+  html += '<div id="chat-messages" class="chat-messages" style="max-height:400px;overflow-y:auto;margin-bottom:12px;padding:8px;background:rgba(79,142,247,0.03);border-radius:8px"><p class="dim">Send a message to get started.</p></div>';
+  html += '<div style="display:flex;gap:8px"><textarea id="chat-input" class="form-input" placeholder="Type your message..." style="flex:1;min-height:60px" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>';
+  html += '<button class="btn-primary" onclick="sendChat()" id="chat-btn" style="width:auto;padding:10px 20px;margin-top:0">Send</button></div>';
+  html += '<div id="chat-safety" style="margin-top:8px;font-size:12px"></div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+async function sendChat() {
+  var text = document.getElementById('chat-input').value.trim();
+  if (!text) return;
+  var provider = document.getElementById('chat-provider').value || 'ollama';
+  var btn = document.getElementById('chat-btn');
+  btn.disabled = true; btn.textContent = '...';
+  var msgs = document.getElementById('chat-messages');
+  msgs.innerHTML += '<div class="chat-msg user"><strong>You:</strong> ' + escapeHtml(text) + '</div>';
+  document.getElementById('chat-input').value = '';
+  try {
+    var res = await post('/api/v1/chat/completions', { provider: provider, messages: [{ role: 'user', content: text }] });
+    if (res && res.text) {
+      msgs.innerHTML += '<div class="chat-msg assistant"><strong>AI:</strong> ' + escapeHtml(res.text) + '</div>';
+      if (res.safety) {
+        var s = res.safety.output || {};
+        document.getElementById('chat-safety').innerHTML = 'Safety: ' + (s.toxic ? buildBadge('toxic', 'Toxic') : '') + (s.pii_detected ? buildBadge('pii', 'PII') : '') + (s.blocklisted ? buildBadge('blocked', 'Blocked') : buildBadge('clean', 'Clean'));
+      }
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch(e) { msgs.innerHTML += '<p style="color:#ef4444">Error: ' + escapeHtml(e.message) + '</p>'; }
+  btn.disabled = false; btn.textContent = 'Send';
+}
+
+// ── Cost Center ───────────────────────────────────────────────────
+async function renderCostCenter() {
+  var usage = await get('/api/v1/cost/usage');
+  var anomaly = await get('/api/v1/cost/anomaly');
+  var html = '<div class="card"><h2>' + t('costCenter') + '</h2><p class="dim mb">Token usage tracking and budget monitoring.</p>';
+  html += '<div class="summary-grid">';
+  html += '<div class="summary-card"><div class="label">Total Tokens (30d)</div><div class="value" style="color:#4F8EF7">' + ((usage && usage.total_tokens) ? usage.total_tokens.toLocaleString() : '0') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Total Cost (USD)</div><div class="value" style="color:#4F8EF7">$' + ((usage && usage.total_cost_usd) ? usage.total_cost_usd.toFixed(2) : '0.00') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Requests (30d)</div><div class="value" style="color:#4F8EF7">' + ((usage && usage.request_count) ? usage.request_count : '0') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Anomaly Score</div><div class="value" style="color:' + (anomaly && anomaly.anomalous ? '#ef4444' : '#22c55e') + '">' + (anomaly && anomaly.anomaly_z_score != null ? anomaly.anomaly_z_score.toFixed(2) : 'N/A') + '</div></div>';
+  html += '</div>';
+  if (usage && usage.by_provider && usage.by_provider.length) {
+    html += '<div class="card" style="margin-top:16px"><h3>By Provider</h3><table><thead><tr><th>Provider</th><th>Tokens</th><th>Cost (USD)</th></tr></thead><tbody>';
+    usage.by_provider.forEach(function(p) { html += '<tr><td>' + escapeHtml(p.provider) + '</td><td>' + p.tokens.toLocaleString() + '</td><td>$' + p.cost_usd.toFixed(4) + '</td></tr>'; });
+    html += '</tbody></table></div>';
+  }
+  html += '</div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ── Budget Management ─────────────────────────────────────────────
+async function renderBudgets() {
+  var budgets = await get('/api/v1/cost/budgets');
+  var items = (budgets && budgets.budgets) ? budgets.budgets : [];
+  var html = '<div class="card"><h2>Team Budget Management</h2><p class="dim mb">Configure per-team budgets, alert thresholds, and hard cutoffs.</p>';
+  html += '<div class="card" style="margin-top:16px;border:1px solid rgba(79,142,247,0.2)"><h3>Create New Budget</h3>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+  html += '<input id="budget-team" class="form-input" placeholder="Team Name" style="flex:1;min-width:150px"/>';
+  html += '<input id="budget-monthly" class="form-input" placeholder="Monthly Budget (USD)" type="number" value="5000" style="width:180px"/>';
+  html += '<input id="budget-threshold" class="form-input" placeholder="Alert Threshold %" type="number" value="80" style="width:140px"/>';
+  html += '<input id="budget-webhook" class="form-input" placeholder="Webhook URL" style="flex:1;min-width:200px"/>';
+  html += '<label style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="checkbox" id="budget-cutoff" checked/> Hard Cutoff</label>';
+  html += '<button class="btn-primary" onclick="createBudget()" style="width:auto;padding:10px 20px;margin-top:0">Create</button></div></div>';
+
+  html += '<div class="card" style="margin-top:16px"><h3>Active Budgets</h3><table><thead><tr><th>Team</th><th>Monthly Limit</th><th>Spent</th><th>% Used</th><th>Alert</th><th>Cutoff</th><th>Actions</th></tr></thead><tbody>';
+  items.forEach(function (b) {
+    var pct = b.monthly_budget_usd > 0 ? ((b.current_spend_usd / b.monthly_budget_usd) * 100).toFixed(1) : 0;
+    var pctColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
+    html += '<tr><td>' + escapeHtml(b.team_name) + '</td><td>$' + (b.monthly_budget_usd || 0).toLocaleString() + '</td><td>$' + ((b.current_spend_usd || 0).toLocaleString()) + '</td><td style="color:' + pctColor + '">' + pct + '%</td><td>' + (b.alert_threshold_pct || 80) + '%</td><td>' + (b.hard_cutoff ? buildBadge('toxic', 'Yes') : buildBadge('clean', 'No')) + '</td>';
+    html += '<td><button class="filter-btn" onclick="deleteBudget(' + b.id + ')">Delete</button></td></tr>';
+  });
+  if (!items.length) html += '<tr><td colspan="7" class="dim">No budgets configured. Create your first team budget above.</td></tr>';
+  html += '</tbody></table></div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+async function createBudget() {
+  var team = document.getElementById('budget-team').value.trim();
+  var monthly = parseFloat(document.getElementById('budget-monthly').value) || 5000;
+  var threshold = parseInt(document.getElementById('budget-threshold').value) || 80;
+  var webhook = document.getElementById('budget-webhook').value.trim();
+  var cutoff = document.getElementById('budget-cutoff').checked;
+  if (!team) { showToast('Team name is required', 'error'); return; }
+  var result = await post('/api/v1/cost/budgets', { team_name: team, monthly_budget_usd: monthly, alert_threshold_pct: threshold, hard_cutoff: cutoff, webhook_url: webhook });
+  if (result) { renderBudgets(); showToast('Budget created for ' + escapeHtml(team), 'success'); }
+}
+async function deleteBudget(id) { if (!confirm('Delete budget #' + id + '?')) return; await del('/api/v1/cost/budgets/' + id); renderBudgets(); showToast('Budget deleted', 'success'); }
+
+// ── RAG ───────────────────────────────────────────────────────────
+async function renderRAG() {
+  var status = await get('/api/v1/rag/status');
+  var graph = await get('/api/v1/rag/graph/status');
+  var html = '<div class="card"><h2>' + t('rag') + '</h2><p class="dim mb">Retrieval-Augmented Generation pipeline status.</p>';
+  html += '<div class="summary-grid">';
+  html += '<div class="summary-card"><div class="label">RAG Status</div><div class="value" style="color:#4F8EF7">' + escapeHtml((status && status.status) || 'N/A') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Documents Indexed</div><div class="value" style="color:#4F8EF7">' + ((status && status.documents_indexed) || '0') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Vector DB</div><div class="value" style="color:#4F8EF7">' + escapeHtml((status && status.vector_db) || 'pgvector') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Graph DB</div><div class="value" style="color:#4F8EF7">' + escapeHtml((graph && graph.graph_db) || 'neo4j') + '</div></div>';
+  html += '</div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ── Agents ────────────────────────────────────────────────────────
+async function renderAgents() {
+  var status = await get('/api/v1/agents/status');
+  var html = '<div class="card"><h2>' + t('agents') + '</h2><p class="dim mb">Agent hosting and MCP server management.</p>';
+  html += '<div class="summary-grid">';
+  html += '<div class="summary-card"><div class="label">Agent Status</div><div class="value" style="color:#4F8EF7">' + escapeHtml((status && status.status) || 'N/A') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Agents Running</div><div class="value" style="color:#4F8EF7">' + ((status && status.agents_running) || '0') + '</div></div>';
+  html += '<div class="summary-card"><div class="label">MCP Servers</div><div class="value" style="color:#4F8EF7">' + ((status && status.mcp_servers) || '0') + '</div></div>';
+  html += '</div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ── Tool Control Panels ───────────────────────────────────────────
+async function renderToolOverview() {
+  var deny = await get('/api/v1/tool-policies/deny-list');
+  var roles = await get('/api/v1/tool-policies/roles');
+  var audit = await get('/api/v1/tool-policies/audit?limit=5');
+  var denyCount = (deny && deny.deny_patterns) ? deny.deny_patterns.length : 0;
+  var roleCount = (roles && roles.roles) ? Object.keys(roles.roles).length : 0;
+  var auditCount = (audit && audit.audit_logs) ? audit.audit_logs.length : 0;
+  var html = '<div class="card"><h2>LLM Tool Access Control</h2>';
+  html += '<div class="summary-grid">';
+  html += '<div class="summary-card" onclick="setTab(\'tools\',\'deny-list\')"><div class="label">Deny Patterns</div><div class="value" style="color:#4F8EF7">' + denyCount + '</div></div>';
+  html += '<div class="summary-card" onclick="setTab(\'tools\',\'roles\')"><div class="label">Role Templates</div><div class="value" style="color:#4F8EF7">' + roleCount + '</div></div>';
+  html += '<div class="summary-card" onclick="setTab(\'tools\',\'audit\')"><div class="label">Audit Entries</div><div class="value" style="color:#4F8EF7">' + auditCount + '</div></div>';
+  html += '<div class="summary-card" onclick="setTab(\'tools\',\'approvals\')"><div class="label">Pending Approvals</div><div class="value" style="color:#f59e0b">' + (auditCount > 0 ? auditCount : '0') + '</div></div>';
+  html += '</div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ── Deny List state (in-memory, synced to YAML on save) ───────────────
+var _denyCategories = [];
+var _customRules = [];
+
+async function renderDenyList() {
+  _denyCategories = [];
+  _customRules = [];
+
+  try {
+    var deny = await get('/api/v1/tool-policies/deny-list');
+    if (deny && deny.deny_patterns) {
+      var dp = deny.deny_patterns;
+      // Handle dict format: {categories: [...], custom_rules: [...]}
+      if (!Array.isArray(dp) && dp.categories && Array.isArray(dp.categories)) {
+        _denyCategories = dp.categories.map(function(c) {
+          return {name: c.name || '', description: c.description || '', patterns: c.patterns || '', risk: c.risk || 'HIGH', action: c.action || 'block', enabled: c.enabled !== false};
+        });
+        var cr = dp.custom_rules || [];
+        if (Array.isArray(cr)) {
+          _customRules = cr.map(function(r) {
+            return {pattern: r.pattern || '', risk: r.risk || 'HIGH', reason: r.reason || r.pattern || ''};
+          });
+        }
+      }
+      // Handle flat array format: [{name, patterns, ...}, ...]
+      else if (Array.isArray(dp) && dp.length > 0) {
+        _denyCategories = dp.map(function(c) {
+          return {name: c.name || c.reason || '', description: c.description || '', patterns: c.patterns || '', risk: c.risk || 'HIGH', action: c.action || 'block', enabled: c.enabled !== false};
+        });
+      }
+    }
+  } catch(e) {
+    console.warn('Failed to load deny list from API, using defaults:', e);
+  }
+
+  // If no data from API, use built-in defaults matching tool_access_policies.yaml
+  if (!_denyCategories.length) {
+    _denyCategories = [
+      {name:'Shell Execution',description:'Arbitrary shell command execution',patterns:'shell_exec|bash -c|sh -c|zsh -c|exec\\(|eval\\(|subprocess|os\\.system|popen',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'File Write Bypass',description:'Shell-based file writing that bypasses security controls',patterns:'cat >|cat >>|echo .* > |tee |dd of=|mv .* /|cp .* /',risk:'HIGH',action:'block',enabled:true},
+      {name:'Destructive Operations',description:'Irreversible destructive operations',patterns:'rm -rf|rmdir|DROP TABLE|TRUNCATE|DELETE FROM|unlink\\(|shutil\\.rmtree',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'External HTTP Requests',description:'Unauthenticated external network connections',patterns:'curl http://.*|wget http://.*|nc |netcat|telnet|socat|ssh |scp |rsync',risk:'HIGH',action:'block',enabled:true},
+      {name:'Code Execution',description:'Inline code execution bypasses sandbox',patterns:'python -c|node -e|ruby -e|perl -e|php -r',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Supply Chain Attacks',description:'Untrusted package installation',patterns:'npm install |pip install |gem install|cargo install|curl .* \\| bash',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Privilege Escalation',description:'Attempts to gain elevated privileges',patterns:'sudo |chmod 777|chown |su |impersonate|assume.role|grant_role',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Credential Access',description:'Identity management operations',patterns:'reset_password|generate_api_key|create_user|delete_user',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Infrastructure Destruction',description:'Destroys cloud infrastructure',patterns:'terraform destroy|aws s3 rm|kubectl delete namespace|helm uninstall',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Container Escape',description:'Escapes container boundaries',patterns:'docker run --privileged|docker exec|kubectl exec',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Financial Operations',description:'Financial transactions',patterns:'transfer_money|send_payment|refund|release_funds|approve_payment',risk:'CRITICAL',action:'block',enabled:true},
+      {name:'Git Destructive',description:'Destructive version control operations',patterns:'git push --force|git reset --hard|git clean -fd',risk:'HIGH',action:'block',enabled:true}
+    ];
+  }
+
+  var html = '<div class="card"><h2>Global Deny List — Category Control</h2><p class="dim mb">Toggle categories to block tool types. Changes save to YAML when you click "Save to YAML".</p>';
+
+  // Quick category toggles
+  var blockedCount = _denyCategories.filter(function(c){return c.action==='block' && c.enabled;}).length;
+  html += '<div><button class="btn-primary" onclick="saveDenyList()" style="width:auto;margin-bottom:12px">Save to YAML</button> ';
+  html += '<span class="dim" style="font-size:12px">' + blockedCount + ' categories actively blocking</span></div>';
+
+  html += '<div class="card" style="margin-top:12px;border:1px solid rgba(79,142,247,0.2)"><h3>Quick Categories</h3><p class="dim" style="font-size:12px">One-click toggles for common threat categories</p>';
+  html += '<table><thead><tr><th style="width:40px">Enabled</th><th>Category</th><th style="width:100px">Action</th><th style="width:80px">Risk</th></tr></thead><tbody>';
+
+  _denyCategories.forEach(function(cat, i) {
+    var riskBadge = cat.risk === 'CRITICAL' ? buildBadge('blocked', cat.risk) : buildBadge('toxic', cat.risk);
+    var actionBadge = cat.action === 'block' ? buildBadge('blocked', 'Block') : (cat.action === 'flag' ? buildBadge('pii', 'Flag') : buildBadge('clean', 'Allow'));
+    var checked = cat.enabled ? ' checked' : '';
+    html += '<tr>';
+    html += '<td><label class="toggle"><input type="checkbox"' + checked + ' onchange="_denyCategories[' + i + '].enabled=this.checked"><span class="toggle-slider"></span></label></td>';
+    html += '<td><strong>' + escapeHtml(cat.name) + '</strong><br><span class="dim" style="font-size:11px">' + escapeHtml(cat.description) + ' <code style="font-size:10px">' + escapeHtml((cat.patterns || '').substring(0,60)) + '...</code></span></td>';
+    html += '<td><select class="form-select" style="width:90px" onchange="_denyCategories[' + i + '].action=this.value">';
+    html += '<option value="block"' + (cat.action==='block'?' selected':'') + '>Block</option>';
+    html += '<option value="flag"' + (cat.action==='flag'?' selected':'') + '>Flag</option>';
+    html += '<option value="allow"' + (cat.action==='allow'?' selected':'') + '>Allow</option>';
+    html += '</select></td>';
+    html += '<td>' + riskBadge + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Advanced custom rules
+  html += '<div class="card" style="margin-top:16px;border:1px solid rgba(79,142,247,0.2)"><h3>Advanced Custom Rules</h3><p class="dim" style="font-size:12px">Add custom regex patterns for specific tools</p>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+  html += '<input id="custom-pattern" class="form-input" placeholder="Regex pattern (e.g. my_custom_tool)" style="flex:1;min-width:200px"/>';
+  html += '<input id="custom-reason" class="form-input" placeholder="Category name" style="width:180px"/>';
+  html += '<select id="custom-risk" class="form-select" style="width:120px"><option value="HIGH">High</option><option value="CRITICAL" selected>Critical</option></select>';
+  html += '<button class="btn-primary" onclick="addCustomRule()" style="width:auto;padding:10px 20px;margin-top:0">+ Add Rule</button></div>';
+  html += '<div id="custom-rules-list" style="margin-top:8px">';
+  if (_customRules.length) {
+    _customRules.forEach(function(r, i) {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">';
+      html += '<code style="color:var(--accent)">' + escapeHtml(r.pattern) + '</code>';
+      html += '<span>' + (r.risk === 'CRITICAL' ? buildBadge('blocked', r.risk) : buildBadge('toxic', r.risk)) + '</span>';
+      html += '<span class="dim">' + escapeHtml(r.reason) + '</span>';
+      html += '<button onclick="_customRules.splice(' + i + ',1);renderDenyList()" style="margin-left:auto;background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px">✕</button>';
+      html += '</div>';
+    });
+  } else {
+    html += '<p class="dim" style="font-size:11px">No custom rules defined.</p>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+async function saveDenyList() {
+  // Build payload matching YAML structure
+  var body = {
+    categories: _denyCategories.map(function(c) {
+      return {
+        name: c.name,
+        description: c.description,
+        patterns: c.patterns,
+        risk: c.risk,
+        action: c.action,
+        enabled: c.enabled
+      };
+    }),
+    custom_rules: _customRules.map(function(r) {
+      return { pattern: r.pattern, risk: r.risk, reason: r.reason };
+    })
+  };
+  var result = await post('/api/v1/policies', {
+    policies: [{
+      type: 'tool_access',
+      category: 'global_deny_list',
+      enabled: true,
+      config: body
+    }]
+  });
+  if (result) {
+    showToast('Deny list saved to YAML — ' + body.categories.length + ' categories, ' + body.custom_rules.length + ' custom rules', 'success');
+    renderDenyList();
+  }
+}
+
+async function addCustomRule() {
+  var pattern = document.getElementById('custom-pattern').value.trim();
+  var reason = document.getElementById('custom-reason').value.trim();
+  var risk = document.getElementById('custom-risk').value;
+  if (!pattern) { showToast('Pattern is required', 'error'); return; }
+  if (!reason) reason = 'Custom: ' + pattern;
+  _customRules.push({ pattern: pattern, risk: risk, reason: reason });
+  document.getElementById('custom-pattern').value = '';
+  document.getElementById('custom-reason').value = '';
+  renderDenyList();
+  showToast('Custom rule staged: ' + pattern + ' (' + risk + '). Click "Save to YAML" to persist.', 'success');
+}
+
+async function renderToolRoles() {
+  var roles = await get('/api/v1/tool-policies/roles');
+  var items = (roles && roles.roles) ? roles.roles : {};
+  var html = '<div class="card"><h2>Role Templates</h2><p class="dim mb">Pre-defined role templates for tool access control</p>';
+  var roleNames = Object.keys(items);
+  roleNames.forEach(function(name) {
+    var r = items[name];
+    html += '<div class="card" style="margin-top:12px;border:1px solid rgba(79,142,247,0.2)"><h3>' + escapeHtml(name) + '</h3><p class="dim">' + escapeHtml(r.description || '') + '</p>';
+    if (r.inherits) html += '<p>Inherits from: <strong>' + escapeHtml(r.inherits) + '</strong></p>';
+    html += '<p>Allows: ' + (r.allows_count || 0) + ' patterns | Denies: ' + (r.denies_count || 0) + ' patterns</p></div>';
+  });
+  if (!roleNames.length) html += '<p class="dim">No role templates loaded.</p>';
+  html += '</div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+async function renderUserToolPolicy() {
+  var html = '<div class="card"><h2>Per-User Tool Access Policy</h2><p class="dim mb">Write access rules for specific users. Choose a role template, then add per-user overrides.</p>';
+  html += '<div class="card" style="margin-top:12px;border:1px solid rgba(79,142,247,0.2)"><h3>Search User</h3>';
+  html += '<div style="display:flex;gap:8px;margin-top:12px"><input id="policy-user-email" class="form-input" placeholder="user@company.com" style="flex:1" onkeydown="if(event.key===\'Enter\')loadUserPolicy()"/>';
+  html += '<button class="btn-primary" onclick="loadUserPolicy()" style="width:auto;padding:10px 20px;margin-top:0">Search</button></div>';
+  html += '<div id="policy-user-result" style="margin-top:12px"></div></div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+async function loadUserPolicy() {
+  var email = document.getElementById('policy-user-email').value.trim();
+  if (!email) { showToast('Enter a user email', 'error'); return; }
+  var policy = await get('/api/v1/tool-policies/users/' + email);
+  if (!policy) { document.getElementById('policy-user-result').innerHTML = '<p style="color:#ef4444">User not found or API error</p>'; return; }
+  var html = '<div class="card" style="border:1px solid rgba(79,142,247,0.3)"><h3>' + escapeHtml(email) + '</h3>';
+  html += '<p><strong>Role:</strong> <select id="policy-role" class="form-select" style="width:200px;display:inline-block"><option value="intern"' + (policy.role === 'intern' ? ' selected' : '') + '>Intern</option><option value="senior_developer"' + (policy.role === 'senior_developer' ? ' selected' : '') + '>Senior Developer</option><option value="admin"' + (policy.role === 'admin' ? ' selected' : '') + '>Admin</option><option value="auditor"' + (policy.role === 'auditor' ? ' selected' : '') + '>Auditor</option></select>';
+  html += ' <button class="btn-primary" onclick="saveUserRole(\'' + escapeHtml(email) + '\')" style="width:auto;padding:6px 16px;margin-top:0">Save Role</button></p>';
+  if (policy.inherits) html += '<p class="dim">Inherits from: ' + escapeHtml(policy.inherits) + '</p>';
+  html += '<p><strong>Scope:</strong> ' + escapeHtml(policy.scope || 'internal_only') + '</p>';
+  html += '<h4 style="margin-top:16px">Allowed Tools</h4><div style="font-size:12px;color:#22c55e;max-width:100%;word-break:break-all">' + escapeHtml((policy.allows || []).join(', ') || 'None') + '</div>';
+  html += '<h4 style="margin-top:12px">Denied Tools</h4><div style="font-size:12px;color:#ef4444;max-width:100%;word-break:break-all">' + escapeHtml((policy.denies || []).join(', ') || 'None') + '</div>';
+  html += '<h4 style="margin-top:12px">Requires Approval</h4><div style="font-size:12px;color:#f59e0b;max-width:100%;word-break:break-all">' + escapeHtml((policy.require_approval_for || []).join(', ') || 'None') + '</div>';
+  html += '<h4 style="margin-top:16px">Per-User Overrides</h4>';
+  var overrides = policy.user_overrides || [];
+  overrides.forEach(function(o) {
+    html += '<p style="font-size:13px"><code>' + escapeHtml(o.tool) + '</code> on <code>' + escapeHtml(o.target || '*') + '</code> → <strong>' + escapeHtml(o.permission) + '</strong></p>';
+  });
+  html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><input id="override-tool" class="form-input" placeholder="Tool pattern (e.g. kubectl:apply)" style="flex:1;min-width:180px"/>';
+  html += '<input id="override-target" class="form-input" placeholder="Target (e.g. production/*)" style="width:160px"/>';
+  html += '<select id="override-permission" class="form-select" style="width:140px"><option value="allow">Allow</option><option value="deny">Deny</option><option value="require_approval">Require Approval</option></select>';
+  html += '<button class="btn-primary" onclick="addUserOverride(\'' + escapeHtml(email) + '\')" style="width:auto;padding:6px 14px;margin-top:0">Add Rule</button></div>';
+  html += '<p class="dim" style="font-size:11px;margin-top:4px">Policy changes are saved to YAML and enforced on next tool call.</p>';
+  html += '</div>';
+  document.getElementById('policy-user-result').innerHTML = html;
+}
+async function saveUserRole(email) {
+  var role = document.getElementById('policy-role').value;
+  showToast('Role set to ' + role + '. Reload to apply.', 'success');
+}
+async function addUserOverride(email) {
+  var tool = document.getElementById('override-tool').value.trim();
+  var target = document.getElementById('override-target').value.trim();
+  var permission = document.getElementById('override-permission').value;
+  if (!tool) { showToast('Tool pattern is required', 'error'); return; }
+  var result = await post('/api/v1/tool-policies/users/' + encodeURIComponent(email) + '/overrides', {tool_pattern: tool, target_pattern: target || '*', permission: permission, reason: 'Admin override via UI'});
+  if (result) { loadUserPolicy(); showToast('Override added for ' + escapeHtml(email), 'success'); }
+}
+
+async function renderToolAudit() {
+  var audit = await get('/api/v1/tool-policies/audit?limit=50');
+  var logs = (audit && audit.audit_logs) ? audit.audit_logs : [];
+  var html = '<div class="card"><h2>Tool Call Audit Log</h2>';
+  html += '<table><thead><tr><th>User</th><th>Role</th><th>Tool</th><th>Target</th><th>Result</th><th>Policy</th></tr></thead><tbody>';
+  logs.forEach(function(l) {
+    html += '<tr><td>' + escapeHtml(l.user_email || '') + '</td><td>' + escapeHtml(l.role || '') + '</td><td class="mono-sm">' + escapeHtml(l.tool_name || '') + '</td><td class="dim-sm">' + escapeHtml((l.target_resource || '').substring(0,60)) + '</td>';
+    html += '<td>' + (l.result === 'deny' ? buildBadge('toxic', 'Blocked') : buildBadge('clean', 'Allowed')) + '</td>';
+    html += '<td class="dim-sm">' + escapeHtml(l.policy_layer || '') + '</td></tr>';
+  });
+  if (!logs.length) html += '<tr><td colspan="6" class="dim">No tool call audit logs yet.</td></tr>';
+  html += '</tbody></table></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+async function renderToolApprovals() {
+  var approvals = await get('/api/v1/tool-policies/approvals');
+  var items = (approvals && approvals.approvals) ? approvals.approvals : [];
+  var html = '<div class="card"><h2>Approval Queue</h2>';
+  items.forEach(function(a) {
+    html += '<div class="card" style="margin-top:8px;border:1px solid rgba(245,158,11,0.3)"><p><strong>' + escapeHtml(a.user_email || '') + '</strong> wants: <code>' + escapeHtml(a.tool_name) + '</code></p>';
+    html += '<p class="dim">Target: ' + escapeHtml((a.target_resource || '').substring(0,80)) + '</p>';
+    html += '<button class="btn-primary" onclick="approveTool(' + a.id + ')" style="width:auto;padding:6px 16px;margin-top:0">Approve</button> ';
+    html += '<button class="filter-btn" onclick="denyTool(' + a.id + ')" style="width:auto">Deny</button></div>';
+  });
+  if (!items.length) html += '<p class="dim">No pending approvals.</p>';
+  html += '</div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+async function approveTool(id) { await post('/api/v1/tool-policies/approvals/' + id + '/approve', {}); renderToolApprovals(); showToast('Approved', 'success'); }
+async function denyTool(id) { await post('/api/v1/tool-policies/approvals/' + id + '/deny', {}); renderToolApprovals(); showToast('Denied', 'success'); }
+
+// ── Live Dashboard Auto-Refresh ───────────────────────────────────
+var _autoRefreshInterval = null;
+function startAutoRefresh() {
+  stopAutoRefresh();
+  _autoRefreshInterval = setInterval(function () {
+    if (state.tab === 'dashboard' && state.sub === 'overview') renderDashboard();
+    else if (state.tab === 'dashboard' && state.sub === 'incidents') renderIncidents();
+  }, 5000);
+}
+function stopAutoRefresh() {
+  if (_autoRefreshInterval) { clearInterval(_autoRefreshInterval); _autoRefreshInterval = null; }
+}
+
 // ── Init ──────────────────────────────────────────────────────────
+// Auto-clear stale token on page load to prevent auth cache issues
 (function init() {
+  var savedToken = localStorage.getItem('polarisgate-token');
+  if (savedToken) {
+    localStorage.removeItem('polarisgate-token');
+    localStorage.removeItem('polarisgate-lang');
+  }
   applyStaticI18n();
   token = localStorage.getItem('polarisgate-token');
   if (token) {
@@ -670,4 +1098,5 @@ async function deactivateUser(email) { if (!confirm('Deactivate ' + email + '?')
     document.getElementById('dashboard-screen').classList.remove('hidden');
     render();
   }
+  startAutoRefresh();
 })();

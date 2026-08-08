@@ -1,5 +1,6 @@
 """PolarisGate API Client."""
 import time
+import json
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any, Iterator
 
@@ -21,6 +22,10 @@ class ServiceUnavailableError(PolarisGateError):
 
 class APIError(PolarisGateError):
     """Raised when the gateway returns an error response."""
+
+
+class SafetyBlockedError(PolarisGateError):
+    """Raised when the safety pipeline blocks a request."""
 
 
 @dataclass
@@ -78,6 +83,46 @@ class CheckResult:
         return f"CheckResult({' + '.join(flags) if flags else 'safe'})"
 
 
+@dataclass
+class ChatResponse:
+    """Response from a chat completion through the safety pipeline."""
+
+    text: str = ""
+    model: str = ""
+    provider: str = ""
+    usage: Dict[str, Any] = field(default_factory=dict)
+    safety_input_toxic: bool = False
+    safety_input_pii: bool = False
+    safety_output_toxic: bool = False
+    safety_output_pii: bool = False
+    safety_output_blocked: bool = False
+    is_flagged: bool = False
+    _raw: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_response(cls, data: Dict[str, Any]) -> "ChatResponse":
+        safety = data.get("safety", {})
+        inp = safety.get("input", {})
+        out = safety.get("output", {})
+        flagged = bool(
+            inp.get("toxic") or inp.get("pii_detected") or
+            out.get("toxic") or out.get("pii_detected") or out.get("blocklisted")
+        )
+        return cls(
+            text=data.get("text", ""),
+            model=data.get("model", ""),
+            provider=data.get("provider", ""),
+            usage=data.get("usage", {}),
+            safety_input_toxic=inp.get("toxic", False),
+            safety_input_pii=inp.get("pii_detected", False),
+            safety_output_toxic=out.get("toxic", False),
+            safety_output_pii=out.get("pii_detected", False),
+            safety_output_blocked=out.get("blocklisted", False),
+            is_flagged=flagged,
+            _raw=data,
+        )
+
+
 class PolarisGate:
     """Client for the PolarisGate Content Safety Gateway API.
 
@@ -85,6 +130,15 @@ class PolarisGate:
         pg = PolarisGate(api_key="pk-...")
         result = pg.check("I hate you, you idiot!")
         print(result.is_safe())  # False
+
+        # Chat with guardrails
+        response = pg.chat(
+            provider="ollama",
+            model="llama3.2:1b",
+            messages=[{"role": "user", "content": "Hello!"}]
+        )
+        print(response.text)
+        print(response.is_flagged)  # False
     """
 
     DEFAULT_TIMEOUT = 30
@@ -240,9 +294,135 @@ class PolarisGate:
                 data = decoded[6:]
                 if data == "[DONE]":
                     break
-                import json
-
                 yield json.loads(data)
+
+    # ── Chat completions (NEW) ────────────────────────────────────
+
+    def chat(
+        self,
+        messages: List[Dict[str, str]],
+        provider: str = "ollama",
+        model: str = "llama3.2:1b",
+        temperature: float = 0.7,
+        max_tokens: int = 1024,
+        api_key: Optional[str] = None,
+    ) -> ChatResponse:
+        """Send a chat completion through the PolarisGate safety pipeline.
+
+        Args:
+            messages: List of messages in OpenAI format
+                [{"role": "user", "content": "Hello!"}]
+            provider: LLM provider to use (openai, anthropic, ollama, etc.)
+            model: Model name (gpt-4o, llama3.2:1b, etc.)
+            temperature: Sampling temperature (0.0 - 2.0)
+            max_tokens: Maximum tokens in the response
+            api_key: Optional API key for the LLM provider (if not configured in admin)
+
+        Returns:
+            ChatResponse with text, safety metadata, and usage info.
+
+        Raises:
+            SafetyBlockedError: If the input or output was blocked by guardrails.
+        """
+        body: Dict[str, Any] = {
+            "provider": provider,
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        if api_key:
+            body["api_key"] = api_key
+
+        try:
+            resp = self._request(
+                "POST",
+                "/api/v1/chat/completions",
+                json=body,
+                timeout=120,
+            )
+        except APIError as exc:
+            if "blocked" in str(exc).lower() or "safety" in str(exc).lower():
+                raise SafetyBlockedError(str(exc)) from exc
+            raise
+
+        return ChatResponse.from_response(resp.json())
+
+    def proxy_chat(
+        self,
+        model: str,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int = 1024,
+        **kwargs,
+    ) -> ChatResponse:
+        """Proxy a chat completion — auto-detects provider from model name.
+
+        Useful when PolarisGate sits behind an existing LLM router like LiteLLM.
+        The provider is auto-detected from the model name (e.g. "gpt-4o" → openai).
+
+        Args:
+            model: Model name (auto-detects provider)
+            messages: List of messages in OpenAI format
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens
+            **kwargs: Additional fields passed through to the provider
+
+        Returns:
+            ChatResponse with text, detected provider, and safety metadata.
+        """
+        body: Dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            **kwargs,
+        }
+
+        try:
+            resp = self._request(
+                "POST",
+                "/api/v1/proxy/chat/completions",
+                json=body,
+                timeout=120,
+            )
+        except APIError as exc:
+            if "blocked" in str(exc).lower() or "safety" in str(exc).lower():
+                raise SafetyBlockedError(str(exc)) from exc
+            raise
+
+        return ChatResponse.from_response(resp.json())
+
+    def list_providers(self) -> List[str]:
+        """Get the list of available LLM providers.
+
+        Returns:
+            List of provider names (e.g. ["openai", "anthropic", "ollama", ...])
+        """
+        resp = self._request("GET", "/api/v1/chat/providers", timeout=10)
+        return resp.json().get("providers", [])
+
+    def upload_file(self, file_path: str) -> Dict[str, Any]:
+        """Upload a file for chat context.
+
+        Args:
+            file_path: Path to the file on disk (txt, md, json, csv, py, etc.)
+
+        Returns:
+            Dict with filename, size, content, and truncated flag.
+        """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        with open(file_path, "rb") as f:
+            resp = self._request(
+                "POST",
+                "/api/v1/chat/upload",
+                files={"file": (os.path.basename(file_path), f, "application/octet-stream")},
+                timeout=30,
+                headers={"Authorization": f"Bearer {self.api_key}"},  # No Content-Type for multipart
+            )
+        return resp.json()
 
     def health(self) -> Dict[str, str]:
         """Check gateway health status.

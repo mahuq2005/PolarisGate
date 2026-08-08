@@ -115,6 +115,19 @@ td { padding: 10px 12px; border-bottom: 1px solid rgba(79,142,247,0.05); font-si
 .form-input:focus { border-color: rgba(79,142,247,0.35); }
 .form-select { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(79,142,247,0.12); background: #0B1120; color: #E2E8F0; font-size: 14px; outline: none; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748B'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
 .form-select option { background: #151F32; color: #E2E8F0; }
+
+/* Custom Dropdown */
+.custom-select { position: relative; display: inline-block; min-width: 120px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.custom-select-trigger { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(79,142,247,0.12); background: #0B1120; color: #E2E8F0; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-right: 14px; transition: border-color 0.15s; }
+.custom-select-trigger:hover { border-color: rgba(79,142,247,0.25); }
+.custom-select.open .custom-select-trigger { border-color: rgba(79,142,247,0.35); }
+.custom-select .chevron { font-size: 10px; color: #64748B; transition: transform 0.2s; }
+.custom-select.open .chevron { transform: rotate(180deg); }
+.custom-select-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #151F32; border: 1px solid rgba(79,142,247,0.15); border-radius: 10px; z-index: 1000; max-height: 240px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.custom-select.open .custom-select-menu { display: block; }
+.custom-option { padding: 9px 14px; font-size: 14px; color: #94A3B8; transition: all 0.12s; white-space: nowrap; }
+.custom-option:hover { background: rgba(79,142,247,0.1); color: #E2E8F0; }
+.custom-option.selected { color: #4F8EF7; font-weight: 600; background: rgba(79,142,247,0.08); }
 .test-textarea { width: 100%; min-height: 120px; padding: 14px; border-radius: 12px; border: 1px solid rgba(79,142,247,0.12); background: #0B1120; color: #E2E8F0; font-size: 14px; outline: none; resize: vertical; }
 .test-textarea:focus { border-color: rgba(79,142,247,0.35); }
 .redacted-box { background: #0B1120; border: 1px solid rgba(79,142,247,0.12); border-radius: 10px; padding: 14px; font-size: 13px; color: #E2E8F0; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }

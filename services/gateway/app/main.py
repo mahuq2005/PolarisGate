@@ -1,5 +1,5 @@
 """PolarisGate API Gateway — AI Content Safety Platform.
-
+ 
 Application factory: wires up middleware, routers, and lifecycle handlers.
 All business logic lives in routers/ and helpers.py.
 """
@@ -28,13 +28,64 @@ from .routers import (
     traces,
     misc,
     canary,
+    chat,
+    proxy,
     cohere_routes,
+    admin_providers,
+    gdpr,
 )
+
+# ── Provider-based safety (interface architecture) ──────────────
+from shared.provider_factory import create_all_providers
+from shared.tenant_context import TenantContextMiddleware
+
+# ── New platform microservice routers ────────────────────────────
+try:
+    from services.cost_tracker.app.main import router as cost_router
+except ImportError:
+    cost_router = None
+
+try:
+    from services.agent_host.app.main import router as agent_router
+except ImportError:
+    agent_router = None
+
+try:
+    from services.rag_pipeline.app.main import router as rag_router
+except ImportError:
+    rag_router = None
+
+try:
+    from services.accuracy_monitor.app.main import router as accuracy_router
+except ImportError:
+    accuracy_router = None
+
+# ── MCP Tool Access Control ────────────────────────────────────
+try:
+    from .mcp.policy_router import router as mcp_policy_router
+except ImportError:
+    mcp_policy_router = None
 
 setup_logging(service_name="polarisgate-gateway")
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="PolarisGate Content Safety Gateway", version="2.4.0")
+app = FastAPI(title="PolarisGate Content Safety Gateway", version="3.0.0")
+
+# ── Tenant Context (multi-team scoping) ──────────────────────────
+app.add_middleware(TenantContextMiddleware)
+
+# ── Initialize providers at startup ──────────────────────────────
+try:
+    _providers = create_all_providers()
+    app.state.safety_provider = _providers["safety"]
+    app.state.auth_provider = _providers["auth"]
+    app.state.infra_provider = _providers["infra"]
+    logger.info("Providers initialized: safety=%s, auth=%s, infra=%s",
+                type(_providers["safety"]).__name__,
+                type(_providers["auth"]).__name__,
+                type(_providers["infra"]).__name__)
+except Exception as e:
+    logger.warning("Provider initialization failed: %s", e)
 
 # ── CORS ──────────────────────────────────────────────────────
 _cors_origins = os.getenv(
@@ -105,6 +156,29 @@ app.include_router(traces.router)
 app.include_router(misc.router)
 app.include_router(canary.router)
 app.include_router(cohere_routes.router)
+app.include_router(chat.router)
+app.include_router(proxy.router)
+app.include_router(admin_providers.router)
+app.include_router(gdpr.router)
+
+# ── New platform service routers ─────────────────────────────────
+if cost_router is not None:
+    app.include_router(cost_router)
+    logger.info("Cost tracker router registered")
+if agent_router is not None:
+    app.include_router(agent_router)
+    logger.info("Agent host router registered")
+if rag_router is not None:
+    app.include_router(rag_router)
+    logger.info("RAG pipeline router registered")
+if accuracy_router is not None:
+    app.include_router(accuracy_router)
+    logger.info("Accuracy monitor router registered")
+
+# ── LLM Tool Access Control ──────────────────────────────────────
+if mcp_policy_router is not None:
+    app.include_router(mcp_policy_router)
+    logger.info("MCP Tool Access Control router registered")
 
 
 if __name__ == "__main__":

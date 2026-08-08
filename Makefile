@@ -3,7 +3,7 @@
 # Enterprise-grade build, test, and deployment automation
 # ═══════════════════════════════════════════════════════════════════════════
 
-.PHONY: help deploy setup build up down restart logs test lint clean dev prod train train-all train-status \
+.PHONY: help deploy deploy-gateway deploy-full setup build up down restart logs test lint clean dev prod chat providers train train-all train-status \
         security-check sast scan-deps sbom audit certs ollama-pull status stats \
         polaris-up polaris-down polaris-init polaris-status \
         sidecar-deploy kill-switch-test budget-check cache-stats \
@@ -81,6 +81,24 @@ help:
 # One-command full deploy — the only command you need for a fresh machine
 deploy:
 	@bash scripts/deploy.sh
+
+# ─── Profile-Based Deployment ────────────────────────────────────────────
+
+# Build and start only Gateway profile services (safety layer behind existing router)
+deploy-gateway:
+	docker compose --profile gateway up -d --build
+
+# Build and start Full profile services (Admin Portal + Chat Portal + all services)
+deploy-full:
+	docker compose --profile full up -d --build
+
+# Open the Chat Portal in the default browser
+chat:
+	@open http://localhost:3001/chat.html
+
+# Print available LLM providers via the Gateway API
+providers:
+	@curl -s http://localhost:8002/api/v1/chat/providers | python3 -m json.tool
 
 # Standalone accuracy gate checks (does not deploy)
 # Deploy mode: 4 fast smoke tests (<5s)

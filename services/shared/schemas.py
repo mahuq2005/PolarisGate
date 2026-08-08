@@ -101,6 +101,7 @@ class DashboardSummary(BaseModel):
     flagged_toxicity: int = 0
     pii_leaks: int = 0
     blocked_count: int = 0
+    injection_count: int = 0
     fairness_score: Union[float, str] = "N/A - insufficient data"
     active_models: int = 0
 
@@ -113,6 +114,10 @@ class IncidentResponse(BaseModel):
     pii_detected: bool = False
     pii_types: Optional[List[str]] = None
     blocklisted: bool = False
+    injection_detected: Optional[bool] = False
+    injection_score: Optional[float] = 0.0
+    injection_category: Optional[str] = None
+    injection_severity: Optional[int] = 0
     timestamp: Optional[datetime] = None
 
 

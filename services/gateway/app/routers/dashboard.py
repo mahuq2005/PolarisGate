@@ -33,13 +33,16 @@ async def dashboard_summary(
             "SELECT COUNT(*) FROM traces WHERE timestamp > NOW() - INTERVAL '24 hours'"
         )
         flagged_toxicity = await db.fetchval(
-            "SELECT COUNT(*) FROM guardrail_results WHERE toxic = true"
+            "SELECT COUNT(*) FROM guardrail_results WHERE toxic = true AND COALESCE(injection_detected, false) = false"
         )
         pii_leaks = await db.fetchval(
             "SELECT COUNT(*) FROM guardrail_results WHERE pii_detected = true"
         )
         blocked_count = await db.fetchval(
-            "SELECT COUNT(*) FROM guardrail_results WHERE blocklisted = true"
+            "SELECT COUNT(*) FROM guardrail_results WHERE blocklisted = true AND COALESCE(injection_detected, false) = false"
+        )
+        injection_count = await db.fetchval(
+            "SELECT COUNT(*) FROM guardrail_results WHERE COALESCE(injection_detected, false) = true"
         )
         active_models = await db.fetchval(
             "SELECT COUNT(DISTINCT model_id) FROM traces"
@@ -49,6 +52,7 @@ async def dashboard_summary(
             flagged_toxicity=flagged_toxicity or 0,
             pii_leaks=pii_leaks or 0,
             blocked_count=blocked_count or 0,
+            injection_count=injection_count or 0,
             fairness_score=calculate_fairness_score(
                 total_traces=total_traces or 0,
                 flagged_toxicity=flagged_toxicity or 0,
@@ -74,8 +78,12 @@ async def incidents(
     pool = await get_pool()
     async with pool.acquire() as db:
         rows = await db.fetch(
-            "SELECT trace_id, toxic, toxic_score, reason, pii_detected, "
-            "pii_types, blocklisted, timestamp "
+            "SELECT trace_id, toxic, toxic_score, reason, "
+            "pii_detected, pii_types, COALESCE(blocklisted, false) as blocklisted, "
+            "COALESCE(injection_detected, false) as injection_detected, "
+            "COALESCE(injection_score, 0.0) as injection_score, "
+            "injection_category, COALESCE(injection_severity, 0) as injection_severity, "
+            "timestamp "
             "FROM guardrail_results ORDER BY timestamp DESC LIMIT $1",
             limit,
         )
@@ -85,7 +93,7 @@ async def incidents(
             d["trace_id"] = (
                 str(d["trace_id"])
                 if d.get("trace_id") is not None
-                else "unknown"
+                else f"GR-{d.get('id', '?')}"
             )
             if d.get("pii_types") and isinstance(d["pii_types"], str):
                 d["pii_types"] = [

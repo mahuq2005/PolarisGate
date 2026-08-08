@@ -1,0 +1,155 @@
+# PolarisGate LLM Tool Access Policy
+# Category-based deny list (Azure/Lakera pattern) with advanced regex fallback
+# Follows AWS IAM policy model: Deny List → Context → User → Role → Default
+
+global_deny_list:
+  categories:
+    - name: "Shell Execution"
+      description: "Arbitrary shell command execution"
+      patterns: "shell_exec|bash -c|sh -c|zsh -c|exec\\(|eval\\(|subprocess|os\\.system|popen"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "File Write Bypass"
+      description: "Shell-based file writing that bypasses security controls"
+      patterns: "cat >|cat >>|echo .* > |tee |dd of=|mv .* /|cp .* /"
+      risk: HIGH
+      action: block
+      enabled: true
+
+    - name: "Destructive Operations"
+      description: "Irreversible destructive operations"
+      patterns: "rm -rf|rmdir|DROP TABLE|TRUNCATE|DELETE FROM|unlink\\(|shutil\\.rmtree"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "External HTTP Requests"
+      description: "Unauthenticated external network connections"
+      patterns: "curl http://.*|wget http://.*|nc |netcat|telnet|socat|ssh |scp |rsync"
+      risk: HIGH
+      action: block
+      enabled: true
+
+    - name: "Code Execution"
+      description: "Inline code execution bypasses sandbox"
+      patterns: "python -c|node -e|ruby -e|perl -e|php -r"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Supply Chain Attacks"
+      description: "Untrusted package installation"
+      patterns: "npm install |pip install |gem install|cargo install|curl .* \\| bash"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Privilege Escalation"
+      description: "Attempts to gain elevated privileges"
+      patterns: "sudo |chmod 777|chown |su |impersonate|assume.role|grant_role"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Credential Access"
+      description: "Identity management operations"
+      patterns: "reset_password|generate_api_key|create_user|delete_user"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Infrastructure Destruction"
+      description: "Destroys cloud infrastructure"
+      patterns: "terraform destroy|aws s3 rm|kubectl delete namespace|helm uninstall"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Container Escape"
+      description: "Escapes container boundaries"
+      patterns: "docker run --privileged|docker exec|kubectl exec"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Financial Operations"
+      description: "Financial transactions"
+      patterns: "transfer_money|send_payment|refund|release_funds|approve_payment"
+      risk: CRITICAL
+      action: block
+      enabled: true
+
+    - name: "Git Destructive"
+      description: "Destructive version control operations"
+      patterns: "git push --force|git reset --hard|git clean -fd"
+      risk: HIGH
+      action: block
+      enabled: true
+
+  custom_rules: []
+
+# —— Role Templates (4 built-in, inheritable) ——
+roles:
+  intern:
+    description: "Read-only access — safe for interns and contractors"
+    tools_allow:
+      - "read_file|list_files|search_files|grep|find|git:status|git:log|git:diff"
+      - "database:query|SELECT"
+    tools_deny:
+      - "write_file|send_email|deploy|kubectl|git:push|execute_command|curl"
+    scope: "internal_only"
+    max_concurrent_tools: 5
+
+  senior_developer:
+    description: "Full dev access with production guardrails"
+    inherits: intern
+    adds_allow:
+      - "write_to_file|replace_in_file|writeFile"
+      - "send_email:internal"
+      - "git:push:dev/*|git:commit|git:add"
+      - "deploy:staging"
+      - "kubectl:get|kubectl:describe|kubectl:logs"
+    adds_deny:
+      - "deploy:production|git:push --force:main"
+    scope: "internal_and_approved_saas"
+
+  admin:
+    description: "Full access with audit on everything"
+    inherits: senior_developer
+    adds_allow:
+      - "deploy:production|kubectl:*|terraform:*|helm:*"
+      - "execute_command (with approval + audit)"
+    adds_deny:
+      - "rm -rf|DROP TABLE|git push --force main"
+    require_approval_for:
+      - "deploy:production"
+      - "terraform:destroy"
+      - "kubectl:delete namespace"
+    scope: "internal_and_approved_saas"
+
+  auditor:
+    description: "Read-only across all systems — for compliance"
+    tools_allow:
+      - "read_file|search_files|grep|git:log|kubectl:get|aws:list|database:query"
+    tools_deny:
+      - all_write_tools
+    scope: "internal_only"
+    read_only: true
+
+# —— Per-User Overrides ——
+users: {}
+
+# —— Context-Based Restrictions ——
+contexts:
+  chat_ui:
+    max_tools_per_response: 3
+    require_confirmation_for:
+      - "deploy"
+      - "kubectl:delete"
+      - "send_email:external"
+
+  api_key:
+    tool_scope: "api_key_scopes"
+    max_concurrent_tools: 1

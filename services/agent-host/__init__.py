@@ -1,0 +1,1 @@
+"""PolarisGate Agent Host — agent lifecycle and MCP server management."""

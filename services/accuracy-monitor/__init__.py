@@ -1,0 +1,1 @@
+"""PolarisGate Accuracy Monitor — daily evaluation and drift detection."""
