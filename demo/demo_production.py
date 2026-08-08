@@ -241,12 +241,14 @@ def record_screen():
             show_brand_overlay("PolarisGate", "Enterprise AI Safety Middleware")
             page.wait_for_timeout(max(scene_duration_ms - 2000, 3000))
             hide_brand_overlay()
-            # Navigate to login
+            # Navigate to login (main page uses #login-email, #login-password, #login-btn)
             page.goto(BASE)
-            page.fill('input[aria-label="Email"]', EMAIL)
-            page.fill('input[aria-label="Password"]', PASSWORD)
-            page.click('button[aria-label="Login"]')
-            page.wait_for_selector("#dashboard-screen:not(.hidden)", timeout=15000)
+            page.wait_for_timeout(1000)
+            page.fill('#login-email', EMAIL)
+            page.fill('#login-password', PASSWORD)
+            page.click('#login-btn')
+            page.wait_for_timeout(3000)
+            page.wait_for_selector('#dashboard-screen:not(.hidden)', timeout=15000)
             page.wait_for_timeout(1500)
 
         elif action == "login":
@@ -305,11 +307,11 @@ def record_screen():
             # Go back to main page (re-login needed after coming from chat.html)
             page.goto(BASE)
             page.wait_for_timeout(1500)
-            # Login
-            page.fill('input[aria-label="Email"]', EMAIL)
-            page.fill('input[aria-label="Password"]', PASSWORD)
-            page.click('button[aria-label="Login"]')
-            page.wait_for_timeout(2000)
+            # Login (main page uses #login-email, #login-password, #login-btn)
+            page.fill('#login-email', EMAIL)
+            page.fill('#login-password', PASSWORD)
+            page.click('#login-btn')
+            page.wait_for_timeout(3000)
             # Now on dashboard — click Policies tab
             page.locator(".tab:has-text('Policies')").click(timeout=5000)
             page.wait_for_timeout(1500)
