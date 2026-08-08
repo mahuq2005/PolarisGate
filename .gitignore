@@ -7,3 +7,4 @@ node_modules/
 *.log
 ollama_data/
 pgdata/
+.DS_Store
