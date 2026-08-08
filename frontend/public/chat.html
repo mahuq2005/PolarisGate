@@ -120,17 +120,18 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     min-height:60vh; text-align:center; gap:8px; padding:40px 20px;
   }
-  .welcome .icon { font-size: 44px; opacity:0.2; margin-bottom: 4px; }
+  .welcome .icon { margin-bottom: 4px; opacity: 0.3; }
   .welcome h1 { font-size: 26px; font-weight: 600; letter-spacing:-0.3px; }
   .welcome p { font-size:13px; color:var(--text-muted); max-width:440px; line-height:1.5; }
   .welcome .suggestions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:14px; }
   .welcome .suggestion {
     background:var(--bg-secondary); color:var(--text-secondary); border:1px solid var(--border);
     padding:9px 16px; border-radius:20px; font-size:13px; cursor:pointer; transition:all 0.15s;
+    display:inline-flex; align-items:center; gap:4px;
   }
   .welcome .suggestion:hover { border-color:var(--accent); color:var(--text-primary); }
 
-  /* ── Messages (flat text, no bubbles — exact DeepSeek style) ── */
+  /* ── Messages (flat text, no bubbles) ── */
   .msg-group {
     display:flex; gap:14px; padding: 18px 0; animation: slideUp 0.2s ease;
   }
@@ -155,7 +156,7 @@
     display:flex; align-items:center; gap:8px; margin-top:8px; font-size:11px; color:var(--text-muted);
   }
   .msg-group.user .msg-meta { flex-direction:row-reverse; }
-  .safety-badge { padding:1px 7px; border-radius:6px; font-size:10px; font-weight:600; }
+  .safety-badge { padding:1px 7px; border-radius:6px; font-size:10px; font-weight:600; display:inline-flex; align-items:center; gap:3px; }
   .safety-badge.safe { background:rgba(39,174,96,0.1); color:var(--success); }
   .safety-badge.flagged { background:rgba(243,156,18,0.1); color:var(--warning); }
   .safety-badge.blocked { background:rgba(231,76,60,0.1); color:var(--danger); }
@@ -218,7 +219,7 @@
     background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px;
     padding:36px 32px; width:380px; max-width:90vw; text-align:center;
   }
-  .login-card .logo-icon { font-size:36px; margin-bottom:6px; }
+  .login-card .logo-icon { margin-bottom:6px; }
   .login-card h1 { font-size:20px; color:var(--text-primary); margin-bottom:2px; }
   .login-card p { color:var(--text-muted); font-size:12px; margin-bottom:20px; }
   .login-card input {
@@ -242,7 +243,7 @@
 
 <div id="login-overlay" class="login-overlay">
   <div class="login-card">
-    <div class="logo-icon">🛡️</div>
+    <div class="logo-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
     <h1>PolarisGate Chat</h1>
     <p>Enterprise AI with safety guardrails</p>
     <input type="email" id="login-email" placeholder="Email" value="admin@polarisgate.ai" autocomplete="email">
@@ -275,7 +276,7 @@
 
     <header class="topbar">
       <div class="topbar-left">
-        <button class="hamburger" onclick="toggleDrawer()" title="History">☰</button>
+        <button class="hamburger" onclick="toggleDrawer()" title="History">&#9776;</button>
         <span class="topbar-logo">PolarisGate</span>
       </div>
       <div class="topbar-right">
@@ -286,14 +287,14 @@
     <div class="chat-container" id="chat-container">
       <div class="chat-messages" id="chat-messages">
         <div class="welcome">
-          <div class="icon">🛡️</div>
+          <div class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
           <h1>How can I help you today?</h1>
           <p>Every message passes through safety guardrails for toxicity, PII, and prompt injection</p>
           <div class="suggestions">
-            <button class="suggestion" onclick="sendSuggestion('Explain quantum computing in simple terms')">🔬 Explain quantum computing</button>
-            <button class="suggestion" onclick="sendSuggestion('Write a professional email to schedule a meeting')">📧 Write a meeting email</button>
-            <button class="suggestion" onclick="sendSuggestion('Summarize the key principles of GDPR')">📋 Summarize GDPR</button>
-            <button class="suggestion" onclick="sendSuggestion('Compare REST and GraphQL APIs')">💻 REST vs GraphQL</button>
+            <button class="suggestion" onclick="sendSuggestion('Explain quantum computing in simple terms')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Explain quantum computing</button>
+            <button class="suggestion" onclick="sendSuggestion('Write a professional email to schedule a meeting')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Write a meeting email</button>
+            <button class="suggestion" onclick="sendSuggestion('Summarize the key principles of GDPR')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Summarize GDPR</button>
+            <button class="suggestion" onclick="sendSuggestion('Compare REST and GraphQL APIs')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>REST vs GraphQL</button>
           </div>
         </div>
       </div>
@@ -308,9 +309,8 @@
             </button>
           </div>
           <div class="input-actions">
-            <div class="provider-dropdown-wrap" id="provider-dropdown">
-            </div>
-            <span style="color:var(--text-muted);font-size:10px;margin:0 2px;">·</span>
+            <div class="provider-dropdown-wrap" id="provider-dropdown"></div>
+            <span style="color:var(--text-muted);font-size:10px;margin:0 2px;">&middot;</span>
             <label class="btn-attach" for="file-input" title="Attach file">
               <svg viewBox="0 0 16 16" fill="none"><path d="M14.5 7.5l-8 8a4.5 4.5 0 01-6.36-6.36l8-8a3 3 0 014.24 4.24l-8 8a1.5 1.5 0 01-2.12-2.12l8-8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
               Attach
@@ -330,14 +330,13 @@ var chatToken = localStorage.getItem('pg-chat-token');
 var currentProvider = 'ollama';
 var conversations = [];
 var serverConversations = [];
-var activeConv = null;        // server-side conversation_id (string) or null
+var activeConv = null;
 var currentMessages = [];
 var currentConvTitle = '';
-var contextLimits = {};       // provider → context window size
+var contextLimits = {};
 
 if (chatToken) { showApp(); }
 document.getElementById('login-password').addEventListener('keydown', function(e) { if (e.key === 'Enter') handleChatLogin(); });
-// Close custom dropdown when clicking outside
 document.addEventListener('click', function(e) {
   var open = document.querySelector('.custom-select.open');
   if (open && !open.contains(e.target)) { open.classList.remove('open'); }
@@ -387,27 +386,22 @@ async function loadProviders() {
     contextLimits = data.context_limits || {};
     currentProvider = providers.indexOf('ollama')>=0 ? 'ollama' : (providers.indexOf('mock')>=0 ? 'mock' : providers[0]);
     var opts = providers.map(function(p) { return {value:p, label:p.charAt(0).toUpperCase()+p.slice(1)}; });
-    var html = '<div class="custom-select chat-custom-select" id="chat-provider-cs" onclick="event.stopPropagation();var el=document.getElementById(\'chat-provider-cs\');if(el.classList.contains(\'open\')){el.classList.remove(\'open\')}else{el.classList.add(\'open\')}"><div class="custom-select-trigger"><span class="cs-label">'+escapeHtml(currentProvider.charAt(0).toUpperCase()+currentProvider.slice(1))+'</span><span class="chevron">▼</span></div><div class="custom-select-menu">'+opts.map(function(o){return '<div class="custom-option'+(o.value===currentProvider?' selected':'')+'" onclick="event.stopPropagation();document.getElementById(\'chat-provider-cs\').classList.remove(\'open\');document.querySelector(\'#chat-provider-cs .cs-label\').textContent=\''+escapeHtml(o.label).replace(/'/g,"\\'")+'\';onProviderChange(\''+o.value+'\');">'+escapeHtml(o.label)+'</div>';}).join('')+'</div></div>';
+    var html = '<div class="custom-select chat-custom-select" id="chat-provider-cs" onclick="event.stopPropagation();var el=document.getElementById(\'chat-provider-cs\');if(el.classList.contains(\'open\')){el.classList.remove(\'open\')}else{el.classList.add(\'open\')}"><div class="custom-select-trigger"><span class="cs-label">'+escapeHtml(currentProvider.charAt(0).toUpperCase()+currentProvider.slice(1))+'</span><span class="chevron">&#9660;</span></div><div class="custom-select-menu">'+opts.map(function(o){return '<div class="custom-option'+(o.value===currentProvider?' selected':'')+'" onclick="event.stopPropagation();document.getElementById(\'chat-provider-cs\').classList.remove(\'open\');document.querySelector(\'#chat-provider-cs .cs-label\').textContent=\''+escapeHtml(o.label).replace(/'/g,"\\'")+'\';onProviderChange(\''+o.value+'\');">'+escapeHtml(o.label)+'</div>';}).join('')+'</div></div>';
     document.getElementById('provider-dropdown').innerHTML = html;
   } catch(e) { document.getElementById('provider-dropdown').innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Unavailable</span>'; }
 }
 
 async function loadServerConversations() {
   try {
-    var res = await fetch(API + '/api/v1/chat/conversations', {
-      headers: { Authorization: 'Bearer ' + chatToken }
-    });
+    var res = await fetch(API + '/api/v1/chat/conversations', { headers: { Authorization: 'Bearer ' + chatToken } });
     if (!res.ok) throw new Error('Failed');
     var data = await res.json();
     serverConversations = data.conversations || [];
   } catch(e) { serverConversations = []; }
   renderConversations();
-  // Welcome screen — user clicks a conversation to resume
 }
 
-function onProviderChange(val) {
-  currentProvider = val;
-}
+function onProviderChange(val) { currentProvider = val; }
 
 function newChat() {
   activeConv=null; currentMessages=[]; currentConvTitle='';
@@ -420,7 +414,7 @@ async function handleFileAttach(event) {
   var file = event.target.files[0];
   if (!file) return;
   attachedFile = file;
-  document.getElementById('file-preview').innerHTML = '<span class="file-tag">📎 '+escapeHtml(file.name)+' <span class="remove" onclick="removeFile()">✕</span></span>';
+  document.getElementById('file-preview').innerHTML = '<span class="file-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2" style="vertical-align:middle"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> '+escapeHtml(file.name)+' <span class="remove" onclick="removeFile()">&#10005;</span></span>';
 }
 
 function removeFile() {
@@ -443,60 +437,16 @@ function selectServerConversation(idx) {
 
 async function loadServerMessages(convId) {
   try {
-    var res = await fetch(API + '/api/v1/chat/conversations/' + convId, {
-      headers: { Authorization: 'Bearer ' + chatToken }
-    });
+    var res = await fetch(API + '/api/v1/chat/conversations/' + convId, { headers: { Authorization: 'Bearer ' + chatToken } });
     if (!res.ok) throw new Error('Failed');
     var data = await res.json();
     var msgs = data.messages || [];
     currentMessages = msgs.map(function(m) {
       var s = m.safety || {};
-      return {
-        role: m.role,
-        content: m.content || '',
-        time: m.created_at ? new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '',
-        safety: { blocked: false, flagged: !!(s.toxic || s.pii_detected) }
-      };
+      return { role: m.role, content: m.content || '', time: m.created_at ? new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '', safety: { blocked: false, flagged: !!(s.toxic || s.pii_detected) } };
     });
   } catch(e) { currentMessages = []; }
   renderMessages();
-}
-
-function selectConversation(idx) {
-  var c = conversations[idx];
-  activeConv=idx; currentMessages=JSON.parse(JSON.stringify(c.messages)); currentConvTitle=c.title;
-  renderConversations(); renderMessages(); closeDrawer();
-}
-
-function saveConversation() {
-  if (currentMessages.length===0) return;
-  if (!currentConvTitle) {
-    var f = currentMessages.find(function(m){return m.role==='user';});
-    if (f) currentConvTitle = f.content.substring(0,60)+(f.content.length>60?'...':'');
-  }
-  if (activeConv!==null && activeConv<conversations.length) {
-    conversations[activeConv].messages=JSON.parse(JSON.stringify(currentMessages));
-    conversations[activeConv].title=currentConvTitle||conversations[activeConv].title;
-    conversations[activeConv].provider=currentProvider;
-  } else {
-    conversations.push({id:Date.now(),title:currentConvTitle||'New conversation',provider:currentProvider,messages:JSON.parse(JSON.stringify(currentMessages)),created:new Date().toISOString()});
-    activeConv=conversations.length-1;
-  }
-  localStorage.setItem('pg-convs',JSON.stringify(conversations));
-  renderConversations();
-}
-
-async function deleteServerConversation(convId, e) {
-  e.stopPropagation();
-  if (!confirm('Delete this conversation?')) return;
-  try {
-    await fetch(API + '/api/v1/chat/conversations/' + convId, {
-      method: 'DELETE',
-      headers: { Authorization: 'Bearer ' + chatToken }
-    });
-  } catch(err) {}
-  if (activeConv === convId) newChat();
-  loadServerConversations();
 }
 
 function renderConversations() {
@@ -506,22 +456,22 @@ function renderConversations() {
     return;
   }
   el.innerHTML = serverConversations.map(function(c){
-    return '<div class="conv-item'+(c.id === activeConv ? ' active' : '')+'" onclick="selectServerConversation('+serverConversations.indexOf(c)+')">' +
-      '<span class="icon">💬</span><span>' + escapeHtml(c.title || 'Untitled') + '</span>' +
-      '<span style="margin-left:auto;font-size:10px;color:var(--text-muted);cursor:pointer" onclick="deleteServerConversation(\''+c.id+'\',event)">✕</span>' +
-      '</div>';
+    return '<div class="conv-item'+(c.id === activeConv ? ' active' : '')+'" onclick="selectServerConversation('+serverConversations.indexOf(c)+')">'
+      + '<span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><span>' + escapeHtml(c.title || 'Untitled') + '</span>'
+      + '<span style="margin-left:auto;font-size:10px;color:var(--text-muted);cursor:pointer" onclick="deleteServerConversation(\''+c.id+'\',event)">&#10005;</span>'
+      + '</div>';
   }).join('');
 }
 
 function renderMessages() {
   var el = document.getElementById('chat-messages');
   if (currentMessages.length===0) {
-    el.innerHTML='<div class="welcome"><div class="icon">🛡️</div><h1>How can I help you today?</h1><p>Every message passes through safety guardrails for toxicity, PII, and prompt injection</p><div class="suggestions"><button class="suggestion" onclick="sendSuggestion(\'Explain quantum computing in simple terms\')">🔬 Explain quantum computing</button><button class="suggestion" onclick="sendSuggestion(\'Write a professional email to schedule a meeting\')">📧 Write a meeting email</button><button class="suggestion" onclick="sendSuggestion(\'Summarize the key principles of GDPR\')">📋 Summarize GDPR</button><button class="suggestion" onclick="sendSuggestion(\'Compare REST and GraphQL APIs\')">💻 REST vs GraphQL</button></div></div>';
+    el.innerHTML='<div class="welcome"><div class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h1>How can I help you today?</h1><p>Every message passes through safety guardrails for toxicity, PII, and prompt injection</p><div class="suggestions"><button class="suggestion" onclick="sendSuggestion(\'Explain quantum computing in simple terms\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Explain quantum computing</button><button class="suggestion" onclick="sendSuggestion(\'Write a professional email to schedule a meeting\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Write a meeting email</button><button class="suggestion" onclick="sendSuggestion(\'Summarize the key principles of GDPR\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Summarize GDPR</button><button class="suggestion" onclick="sendSuggestion(\'Compare REST and GraphQL APIs\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>REST vs GraphQL</button></div></div>';
     document.getElementById('chat-container').scrollTop=0; return;
   }
   el.innerHTML = currentMessages.map(function(m){
     var cls = m.role==='user' ? 'user' : (m.role==='error'?'error':'');
-    var avatar = m.role==='user'?'U':(m.role==='error'?'⚠':'AI');
+    var avatar = m.role==='user'?'U':(m.role==='error'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>':'AI');
     var html = '<div class="msg-group '+cls+'">';
     html += '<div class="msg-avatar">'+avatar+'</div>';
     html += '<div class="msg-body">';
@@ -531,9 +481,9 @@ function renderMessages() {
     if (m.safety) {
       if (m.safety.blocked) html += '<span class="safety-badge blocked">BLOCKED</span>';
       else if (m.safety.flagged) html += '<span class="safety-badge flagged">FLAGGED</span>';
-      else if (!m._typing) html += '<span class="safety-badge safe">✅ Safe</span>';
+      else if (!m._typing) html += '<span class="safety-badge safe"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Safe</span>';
     }
-    if (m.provider) html += '<span style="margin-left:auto">'+m.provider+' · '+m.model+'</span>';
+    if (m.provider) html += '<span style="margin-left:auto">'+m.provider+' &middot; '+m.model+'</span>';
     html += '</div></div></div>';
     return html;
   }).join('');
@@ -567,28 +517,18 @@ async function sendMessage() {
   renderMessages();
 
   try {
-    // Build messages array from conversation history (last 20 messages for context)
     var historyMessages = [];
     var recentMsgs = currentMessages.filter(function(m){return m.role==='user'||m.role==='assistant';}).slice(-20);
     for (var i=0; i<recentMsgs.length; i++) {
       var rm = recentMsgs[i];
-      if (rm.role==='user'||rm.role==='assistant') {
-        historyMessages.push({role:rm.role==='assistant'?'assistant':'user',content:rm.content});
-      }
+      if (rm.role==='user'||rm.role==='assistant') { historyMessages.push({role:rm.role==='assistant'?'assistant':'user',content:rm.content}); }
     }
-    // Add the new user message
     historyMessages.push({role:'user',content:text});
 
-    // If a file is attached, upload it first and prepend content to the message
     if (attachedFile) {
-      var fd = new FormData();
-      fd.append('file', attachedFile);
+      var fd = new FormData(); fd.append('file', attachedFile);
       try {
-        var uploadRes = await fetch(API+'/api/v1/chat/upload', {
-          method:'POST',
-          headers:{Authorization:'Bearer '+chatToken},
-          body:fd
-        });
+        var uploadRes = await fetch(API+'/api/v1/chat/upload', { method:'POST', headers:{Authorization:'Bearer '+chatToken}, body:fd });
         if (uploadRes.ok) {
           var uploadData = await uploadRes.json();
           var fileContent = uploadData.content || '';
@@ -599,41 +539,25 @@ async function sendMessage() {
       removeFile();
     }
 
-    // Use stateful mode if we have an active conversation
-    var body = {
-      provider: currentProvider,
-      model: currentProvider==='ollama'?'llama3.2:1b':(currentProvider==='mock'?'mock':'')
-    };
-    if (activeConv && typeof activeConv === 'string') {
-      body.conversation_id = activeConv;
-      body.message = text;
-    } else {
-      body.message = text;  // Auto-creates conversation server-side
-    }
+    var body = { provider: currentProvider, model: currentProvider==='ollama'?'llama3.2:1b':(currentProvider==='mock'?'mock':'') };
+    if (activeConv && typeof activeConv === 'string') { body.conversation_id = activeConv; body.message = text; }
+    else { body.message = text; }
 
-    var res = await fetch(API+'/api/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json',Authorization:'Bearer '+chatToken},
-      body:JSON.stringify(body)
-    });
+    var res = await fetch(API+'/api/v1/chat/completions',{ method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+chatToken}, body:JSON.stringify(body) });
     currentMessages=currentMessages.filter(function(m){return m._typing!==tid;});
     if (!res.ok) {
       var err = await res.json().catch(function(){return{};});
-      currentMessages.push({role:'error',content:'⚠ '+((err.detail||'Safety policy blocked this message')),time:now,safety:{blocked:true}});
+      currentMessages.push({role:'error',content:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2" style="vertical-align:middle"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> '+((err.detail||'Safety policy blocked this message')),time:now,safety:{blocked:true}});
     } else {
       var data = await res.json();
       var s = data.safety || {};
       var flagged = !!((s.input&&(s.input.toxic||s.input.pii_detected))||(s.output&&(s.output.toxic||s.output.pii_detected||s.output.blocklisted)));
       currentMessages.push({role:'assistant',content:data.text||'',time:now,safety:{blocked:false,flagged:flagged},provider:data.provider,model:data.model});
-      // If backend returned a new conversation_id, use it
-      if (data.conversation_id && !activeConv) {
-        activeConv = data.conversation_id;
-        loadServerConversations();  // Refresh sidebar
-      }
+      if (data.conversation_id && !activeConv) { activeConv = data.conversation_id; loadServerConversations(); }
     }
   } catch(e) {
     currentMessages=currentMessages.filter(function(m){return m._typing!==tid;});
-    currentMessages.push({role:'error',content:'⚠ Network error: '+e.message,time:now,safety:{blocked:true}});
+    currentMessages.push({role:'error',content:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2" style="vertical-align:middle"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Network error: '+e.message,time:now,safety:{blocked:true}});
   }
   renderMessages(); btn.disabled=false; input.focus();
 }
