@@ -270,8 +270,8 @@ def record_screen():
                 # Fallback: try JS login
                 page.evaluate("handleChatLogin()")
                 page.wait_for_timeout(3000)
-            # Now send a welcome message via suggestion
-            page.evaluate("sendSuggestion('Explain quantum computing in simple terms')")
+            # Send a short, fast prompt
+            page.evaluate("sendSuggestion('Say hello in one sentence')")
             page.wait_for_timeout(3000)
             page.wait_for_timeout(max(scene_duration_ms - 9000, 1000))
 
@@ -297,7 +297,7 @@ def record_screen():
             page.evaluate("""
                 var input = document.getElementById('chat-input');
                 if (input) {
-                    input.value = 'What safety features does this platform provide?';
+                    input.value = 'List 3 programming languages';
                     sendMessage();
                 }
             """)
