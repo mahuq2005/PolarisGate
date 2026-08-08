@@ -47,44 +47,34 @@ SCENES = [
         "pause_after": 1500,
     },
     {
-        "caption": "Governed Chat Portal — 11 LLM Providers",
+        "caption": "Pre-loaded Safety Demo — Safe, PII, Toxicity, Injection",
         "narration": (
-            "Here's the governed chat portal. Users select from eleven approved "
-            "LLM providers — OpenAI, Anthropic, Bedrock, Gemini, Ollama, and more. "
-            "Every message is checked by the safety pipeline before it reaches the model."
+            "This pre-loaded conversation demonstrates every safety feature. A safe question about "
+            "the capital of France passes through cleanly. Next, a message containing a social insurance "
+            "number and email address is flagged for PII — PolarisGate detected the sensitive data."
         ),
-        "action": "goto_chat",
-        "pause_after": 1500,
+        "action": "open_seeded_chat",
+        "pause_after": 2000,
     },
     {
-        "caption": "Chat with real-time guardrails on every prompt and response",
+        "caption": "Toxicity Detection — harassment and profanity blocked",
         "narration": (
-            "Let's send a message through the chat. Watch the safety badges appear in real-time "
-            "after the response — showing whether the content passed all guardrail checks."
+            "Here a toxic message triggers the harassment detection. The keyword-to-BERT cascade "
+            "identifies hate speech and flags it with a toxic score. But the real power is prompt "
+            "injection protection — a DAN jailbreak attempt is blocked entirely before reaching any model."
         ),
-        "action": "chat_safe",
-        "pause_after": 3000,
+        "action": "scroll_chat_1",
+        "pause_after": 2000,
     },
     {
-        "caption": "PII Redaction — automatically mask sensitive data",
+        "caption": "Prompt Injection Blocked + Safe Follow-up",
         "narration": (
-            "Now let's test PII redaction. We'll type a message containing a social insurance number "
-            "and an email address. PolarisGate automatically detects this sensitive data and flags it — "
-            "showing the PII badge in real-time. Only three of twenty competitors can actually redact PII — "
-            "not just detect it."
+            "PolarisGate's graduated pipeline — regex, BERT, and LLM judge — catches the injection "
+            "immediately and shows a blocked error message. And finally, a clean follow-up asking "
+            "about programming languages passes through safely with no issues."
         ),
-        "action": "chat_pii",
-        "pause_after": 4000,
-    },
-    {
-        "caption": "Prompt Injection Protection — 45+ detection patterns across graduated pipeline",
-        "narration": (
-            "PolarisGate's prompt injection protection uses a graduated pipeline — regex, BERT, and "
-            "LLM judge — to catch jailbreak attempts like DAN before they reach any model. "
-            "Forty-five plus detection patterns with configurable thresholds for your security needs."
-        ),
-        "action": "chat_safe2",
-        "pause_after": 3000,
+        "action": "scroll_chat_2",
+        "pause_after": 2000,
     },
     {
         "caption": "Dashboard — 7 summary tiles + Policies — 13 toggle switches",
@@ -254,55 +244,40 @@ def record_screen():
             # Already logged in from brand_intro, just stay on dashboard
             page.wait_for_timeout(scene_duration_ms)
 
-        elif action == "goto_chat":
-            # Navigate to dedicated Chat page (has its own login!)
+        elif action == "open_seeded_chat":
+            # Navigate to dedicated Chat page, login, open pre-seeded conversation
             page.goto(f"{BASE}/chat.html")
             page.wait_for_timeout(1500)
-            # Login to chat page (separate auth from main dashboard)
             page.fill('#login-email', EMAIL)
             page.fill('#login-password', PASSWORD)
             page.click('button:has-text("Login")')
             page.wait_for_timeout(2500)
-            # Verify chat app is now visible
-            try:
-                page.wait_for_selector('#chat-app[style*="block"]', timeout=8000)
-            except:
-                # Fallback: try JS login
-                page.evaluate("handleChatLogin()")
-                page.wait_for_timeout(3000)
-            # Send a short, fast prompt
-            page.evaluate("sendSuggestion('Say hello in one sentence')")
-            page.wait_for_timeout(3000)
-            page.wait_for_timeout(max(scene_duration_ms - 9000, 1000))
-
-        elif action == "chat_safe":
-            # Safe chat already sent; just wait
-            page.wait_for_timeout(3000)
-            page.wait_for_timeout(max(scene_duration_ms - 3000, 2000))
-
-        elif action == "chat_pii":
-            # Send PII message via JS (bypasses any overlay)
+            # Click the pre-seeded demo conversation from sidebar
             page.evaluate("""
-                var input = document.getElementById('chat-input');
-                if (input) {
-                    input.value = 'My SIN is 123-456-789 and my email is john.smith@example.com. Can you verify this?';
-                    sendMessage();
+                var items = document.querySelectorAll('.conv-item');
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].textContent.indexOf('PolarisGate Safety Demo') >= 0) {
+                        items[i].click();
+                        break;
+                    }
                 }
             """)
-            page.wait_for_timeout(3000)
-            page.wait_for_timeout(max(scene_duration_ms - 4000, 3000))
+            page.wait_for_timeout(2000)
+            # Scroll to top to show first messages
+            page.evaluate("document.getElementById('chat-container').scrollTop = 0")
+            page.wait_for_timeout(max(scene_duration_ms - 7000, 2000))
 
-        elif action == "chat_safe2":
-            # Second safe message — show another clean exchange
-            page.evaluate("""
-                var input = document.getElementById('chat-input');
-                if (input) {
-                    input.value = 'List 3 programming languages';
-                    sendMessage();
-                }
-            """)
-            page.wait_for_timeout(3000)
-            page.wait_for_timeout(max(scene_duration_ms - 4000, 3000))
+        elif action == "scroll_chat_1":
+            # Scroll down to show toxicity + injection messages
+            page.evaluate("document.getElementById('chat-container').scrollTop += 250")
+            page.wait_for_timeout(1000)
+            page.wait_for_timeout(max(scene_duration_ms - 2000, 2000))
+
+        elif action == "scroll_chat_2":
+            # Scroll to bottom to show blocked injection + safe follow-up
+            page.evaluate("document.getElementById('chat-container').scrollTop += 300")
+            page.wait_for_timeout(1000)
+            page.wait_for_timeout(max(scene_duration_ms - 2000, 2000))
 
         elif action == "dashboard_policies":
             # Go back to main page (re-login needed after coming from chat.html)
