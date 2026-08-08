@@ -256,23 +256,25 @@ def record_screen():
             page.wait_for_timeout(scene_duration_ms)
 
         elif action == "goto_chat":
-            # Navigate to dedicated Chat page
+            # Navigate to dedicated Chat page (has its own login!)
             page.goto(f"{BASE}/chat.html")
+            page.wait_for_timeout(1500)
+            # Login to chat page (separate auth from main dashboard)
+            page.fill('#login-email', EMAIL)
+            page.fill('#login-password', PASSWORD)
+            page.click('button:has-text("Login")')
+            page.wait_for_timeout(2500)
+            # Verify chat app is now visible
+            try:
+                page.wait_for_selector('#chat-app[style*="block"]', timeout=8000)
+            except:
+                # Fallback: try JS login
+                page.evaluate("handleChatLogin()")
+                page.wait_for_timeout(3000)
+            # Now send a welcome message via suggestion
+            page.evaluate("sendSuggestion('Explain quantum computing in simple terms')")
             page.wait_for_timeout(3000)
-            # Force-dismiss welcome overlay + send a message via JS
-            page.evaluate("""
-                // Hide welcome screen if present
-                var w = document.querySelector('.welcome');
-                if (w) w.style.display = 'none';
-                // Send a message
-                var input = document.getElementById('chat-input');
-                if (input) {
-                    input.value = 'Explain quantum computing in simple terms';
-                    sendMessage();
-                }
-            """)
-            page.wait_for_timeout(3000)
-            page.wait_for_timeout(max(scene_duration_ms - 8000, 1000))
+            page.wait_for_timeout(max(scene_duration_ms - 9000, 1000))
 
         elif action == "chat_safe":
             # Safe chat already sent; just wait
