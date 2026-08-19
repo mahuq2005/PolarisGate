@@ -237,8 +237,11 @@ async def run_full_pipeline(
     try:
         response = await provider.chat(req)
     except Exception as exc:
-        logger.error("Provider %s call failed: %s", provider_name, exc)
-        raise HTTPException(502, f"LLM provider error ({provider_name}): {str(exc)}")
+        logger.error(
+            "Provider %s call failed: %r (%s)",
+            provider_name, exc, type(exc).__name__,
+        )
+        raise HTTPException(502, f"LLM provider error ({provider_name}): {exc!r}")
 
     # 3. Output guardrails
     output_check = await run_input_guardrails(response.text, current_user, http_request)

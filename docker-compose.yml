@@ -217,7 +217,7 @@ services:
     - LLM_A_URL=http://ollama:11434/api/generate
     - LLM_B_URL=http://ollama:11434/api/generate
     - MODEL_A=llama3.2:1b
-    - MODEL_B=llama3.2:3b
+    - MODEL_B=llama3.2:1b
     - DATABASE_URL=${DATABASE_URL}
     - THRESHOLDS_PATH=/app/policies/confidence_thresholds.yaml
     healthcheck:

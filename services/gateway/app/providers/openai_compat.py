@@ -36,12 +36,16 @@ class OpenAICompatProvider(BaseProvider):
         auth_prefix: str = "Bearer ",
         query_params: Optional[dict[str, str]] = None,
         provider_name: str = "openai_compat",
+        default_model: str = "",
+        default_max_tokens: int = 1024,
     ):
         self.base_url = base_url.rstrip("/")
         self.auth_header = auth_header
         self.auth_prefix = auth_prefix
         self.query_params = query_params or {}
         self.provider_name = provider_name
+        self.default_model = default_model
+        self.default_max_tokens = default_max_tokens
 
     # ── Request normalisation ────────────────────────────────────────
 
@@ -66,10 +70,10 @@ class OpenAICompatProvider(BaseProvider):
 
         return ProviderRequest(
             prompt_text=prompt_text,
-            model=body.get("model", ""),
+            model=body.get("model") or self.default_model,
             system_prompt=system_prompt,
             temperature=float(body.get("temperature", 0.7)),
-            max_tokens=int(body.get("max_tokens", 1024)),
+            max_tokens=int(body.get("max_tokens") or self.default_max_tokens),
             api_key=body.get("api_key", ""),
             extra={
                 "messages": messages,
@@ -161,7 +165,7 @@ class OpenAICompatProvider(BaseProvider):
 
         logger.debug("%s chat → %s model=%s", self.provider_name, url, req.model)
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             resp = await client.post(url, json=body, headers=headers)
             resp.raise_for_status()
             return self.normalize_response(resp.json())
@@ -233,6 +237,8 @@ class OpenAICompatProvider(BaseProvider):
             auth_prefix=config.get("auth_prefix", "Bearer "),
             query_params=config.get("query_params"),
             provider_name=config.get("provider_name", "openai_compat"),
+            default_model=config.get("default_model", ""),
+            default_max_tokens=config.get("default_max_tokens", 1024),
         )
 
 
@@ -299,6 +305,8 @@ BUILTIN_PROVIDER_CONFIGS: dict[str, dict] = {
         "auth_header": "none",
         "auth_prefix": "",
         "provider_name": "ollama",
+        "default_model": "llama3.2:1b",
+        "default_max_tokens": 256,
     },
     "vllm": {
         "base_url": "",  # User provides
