@@ -80,6 +80,10 @@ async def test_detect_injection_uses_pipeline(monkeypatch):
         detected = True
         score = 0.92
         patterns_matched = ["ignore instructions"]
+        category = "system_override"
+
+        class severity:
+            value = "high"
 
     class FakePipeline:
         async def run(self, text):

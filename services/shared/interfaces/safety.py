@@ -88,6 +88,8 @@ class InjectionResult:
     detected: bool
     score: float
     patterns_matched: List[str] = field(default_factory=list)
+    category: Optional[str] = None
+    severity: str = "none"
     latency_ms: float = 0.0
 
 

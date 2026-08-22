@@ -150,10 +150,13 @@ class LocalSafetyProvider(SafetyProvider):
         try:
             from shared.injection import get_pipeline
             result = await get_pipeline().run(text)
+            severity = result.severity.value if getattr(result, "severity", None) else "none"
             return InjectionResult(
                 detected=bool(result.detected),
                 score=round(float(result.score), 2),
                 patterns_matched=list(result.patterns_matched or []),
+                category=result.category,
+                severity=severity,
                 latency_ms=round((time.perf_counter() - start) * 1000, 2),
             )
         except Exception as exc:

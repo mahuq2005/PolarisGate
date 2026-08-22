@@ -15,14 +15,12 @@ Pipeline order:
 from __future__ import annotations
 
 import logging
-import re
 import uuid
 from typing import Optional
 
 from fastapi import HTTPException, Request
 
-from ..constants import detect_injection, redact_text
-from ..helpers import load_blocklist, load_policies_from_file
+from ..helpers import load_blocklist
 from ..providers import BaseProvider, ProviderRequest, ProviderResponse, get_provider
 
 # DB pool import — use same path as main.py
@@ -43,17 +41,19 @@ async def _get_db_pool_safe():
 
 logger = logging.getLogger(__name__)
 
-# ── Inline keyword categories (mirrored from guardrails.py) ──────────────────
-# Kept here so the safety pipeline has no dependency on guardrails router.
-_category_keywords: dict[str, list[str]] = {
-    "hate_speech": ["hate", "racist", "sexist"],
-    "harassment": ["stupid", "idiot", "dumb", "ugly", "loser", "trash"],
-    "threat": ["kill", "attack", "destroy", "die", "death", "threat", "violence"],
-    "profanity": ["damn", "crap", "hell", "bastard", "jerk", "asshole"],
-}
-
-
 # ── Public API ────────────────────────────────────────────────────────────────
+
+
+async def _get_safety_provider(http_request: Request):
+    """Resolve the SafetyProvider from app.state, falling back to the factory."""
+    try:
+        sp = getattr(http_request.app.state, "safety_provider", None)
+        if sp is not None:
+            return sp
+    except Exception:
+        pass
+    from shared.provider_factory import create_safety_provider
+    return create_safety_provider()
 
 
 async def run_input_guardrails(
@@ -63,62 +63,41 @@ async def run_input_guardrails(
 ) -> dict:
     """Run all guardrail checks on user input text.
 
+    Delegates to the SafetyProvider interface (toxicity/PII/injection go to
+    the real ML services), while keeping the cheap blocklist + canary checks
+    inline (they are config/token checks, not ML).
+
     Returns a dict with boolean flags and scores.
     """
+    safety = await _get_safety_provider(request)
+
+    # Toxicity — via the interface (guardrails BERT/Presidio)
+    tox = await safety.detect_toxicity(text)
+    toxic = tox.toxic
+    toxic_score = tox.score
+    toxic_reason = tox.reason
+
+    # PII — via the interface
+    pii = await safety.detect_pii(text)
+    redacted_pii = await safety.redact_pii(text)
+    pii_detected = pii.detected
+    pii_types: list[str] = list(pii.types or [])
+    redacted = redacted_pii.redacted_text or text
+
+    # Injection — via the interface (shared.injection cascade)
+    inj = await safety.detect_injection(text)
+    inj_detected = inj.detected
+    inj_score = inj.score
+    inj_matches = inj.patterns_matched
+    inj_category = inj.category
+    inj_severity = inj.severity
+
+    # Blocklist (cheap config check — stays inline)
     text_lower = text.lower()
-
-    # Toxicity — keyword matching against enabled categories
-    policy_data = load_policies_from_file()
-    saved_policies = policy_data.get("policies", [])
-    enabled_tox: set[str] = {
-        p.get("category", "")
-        for p in saved_policies
-        if p.get("type") == "toxicity" and p.get("enabled", True)
-    }
-
-    toxic = False
-    toxic_score = 0.0
-    toxic_reason: Optional[str] = None
-    for cat, kws in _category_keywords.items():
-        if cat in enabled_tox:
-            for kw in kws:
-                if re.search(r'\b' + re.escape(kw) + r'\b', text_lower):
-                    toxic, toxic_score, toxic_reason = True, 0.85, "Keyword match"
-                    break
-
-    # PII
-    pii_detected = False
-    pii_types: list[str] = []
-    redacted = redact_text(text)
-    if redacted != text:
-        pii_detected = True
-        from ..constants import PII_PATTERNS
-
-        for pattern, ptype, _ in PII_PATTERNS:
-            if pattern.search(text):
-                pii_types.append(ptype)
-
-    # Injection — use the new graduated response pipeline if available
-    try:
-        from shared.injection import get_pipeline
-        inj_result = await get_pipeline().run(text)
-        inj_detected = inj_result.detected
-        inj_score = inj_result.score
-        inj_matches = inj_result.patterns_matched
-        inj_severity = inj_result.severity.value
-        inj_action = inj_result.recommended_action.value
-    except ImportError:
-        # Fall back to v3.0 regex-only detector
-        from ..constants import detect_injection
-        inj_detected, inj_score, inj_matches = detect_injection(text)
-        inj_severity = 0
-        inj_action = "block" if inj_detected else "allow"
-
-    # Blocklist
     blocklist_words = load_blocklist()
     blocklisted = bool(blocklist_words and any(w in text_lower for w in blocklist_words))
 
-    # Canary (best-effort — won't fail the request if canary service is down)
+    # Canary (token check — stays inline, best-effort)
     canary_result: Optional[dict] = None
     try:
         from ..routers.canary import check_canary
@@ -136,8 +115,8 @@ async def run_input_guardrails(
         "injection_detected": inj_detected,
         "injection_score": round(inj_score, 2),
         "injection_matches": inj_matches,
-        "injection_category": inj_result.category if 'inj_result' in dir() and inj_result else None,
-        "injection_severity": inj_result.severity.value if 'inj_result' in dir() and inj_result else 0,
+        "injection_category": inj_category,
+        "injection_severity": inj_severity,
         "blocklisted": blocklisted,
         "canary_triggered": canary_result is not None,
         "canary_label": canary_result["label"] if canary_result else None,
@@ -233,6 +212,18 @@ async def run_full_pipeline(
             f"Reason: {'blocklisted word' if input_check['blocklisted'] else 'prompt injection detected'}.",
         )
 
+    # 1b. Budget pre-check (hard cutoff)
+    team_id = getattr(http_request.state, "team_id", None) or current_user.get("sub", "default")
+    try:
+        from shared.quota_enforcer import check_quota
+        quota = await check_quota(team_id)
+        if not quota.get("allowed", True):
+            raise HTTPException(402, f"Budget exceeded: {quota.get('reason', 'team budget exhausted')}")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Budget pre-check unavailable (fail-open): %s", exc)
+
     # 2. Forward to provider
     try:
         response = await provider.chat(req)
@@ -243,8 +234,32 @@ async def run_full_pipeline(
         )
         raise HTTPException(502, f"LLM provider error ({provider_name}): {exc!r}")
 
+    # 2b. Record usage (post-call)
+    try:
+        from shared.token_counter import get_token_counter
+        usage = response.usage or {}
+        await get_token_counter().record_usage(
+            user_id=current_user.get("sub", "system"),
+            team_id=team_id,
+            provider=provider_name,
+            model=req.model,
+            input_tokens=int(usage.get("prompt_tokens", 0) or 0),
+            output_tokens=int(usage.get("completion_tokens", 0) or 0),
+            cost_usd=0.0,
+        )
+    except Exception as exc:
+        logger.warning("Usage recording unavailable: %s", exc)
+
     # 3. Output guardrails
     output_check = await run_input_guardrails(response.text, current_user, http_request)
+
+    # 3b. Hallucination check (output — the #1 spear, now wired in)
+    hallucination = None
+    try:
+        safety = await _get_safety_provider(http_request)
+        hallucination = await safety.detect_hallucination(response.text, req.prompt_text)
+    except Exception as exc:
+        logger.warning("Hallucination check unavailable: %s", exc)
 
     # 4. Write to guardrail_results (for dashboard visibility — both input + output)
     try:
@@ -330,7 +345,14 @@ async def run_full_pipeline(
                 "pii_types": output_check["pii_types"],
                 "blocklisted": output_check["blocklisted"],
                 "canary_triggered": output_check["canary_triggered"],
+                "hallucinated": bool(hallucination.hallucinated) if hallucination else False,
+                "hallucination_confidence": float(hallucination.confidence) if hallucination else 0.0,
             },
+        },
+        "budget": {
+            "team_id": team_id,
+            "allowed": quota.get("allowed", True),
+            "reason": quota.get("reason", "ok"),
         },
         "usage": response.usage,
     }
