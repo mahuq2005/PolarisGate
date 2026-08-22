@@ -257,22 +257,63 @@ POST /api/v1/chat/completions
 
 ---
 
-## 10. Migration From Current State
+## 10. Implementation Gaps Discovered In Code Review (P0/P1/P2 Prerequisites)
 
-| Current Problem | Blueprint Fix |
-|---|---|
-| Two safety stacks (real services + dead interface) | One pipeline → capability registry → real providers (hybrid) |
-| Regex-only injection | Defense-in-depth cascade (regex → ML → LLM judge) |
-| Indirect injection unaddressed | Named requirement + Lakera / mDeBERTa path |
-| Monolithic `SafetyProvider` | Per-capability routing |
-| Budget CRUD exists but unenforced | Threshold gate wired into request path (P2) |
-| Three overlapping cost implementations | One DB-backed system (`team_budgets` + `usage_logs`) |
-| Bias keyword stub conflicts with EU AI Act | Demote: interface slot, disabled, offline eval |
-| Bedrock/LiteLLM commoditize the ML | Moat = secure+controlled bundle + Canadian PII + on-prem |
+These were found by tracing the actual code paths. They MUST be resolved in or before P0/P1/P2.
+
+### Gap 1 - Inter-Service Auth Does Not Exist (Blocks P0)
+
+The guardrails service /api/v1/check is protected by require_auth (JWT). The gateway's current run_input_guardrails does inline regex - it does NOT call guardrails over HTTP. There is no shared service-token / inter-service auth helper. Decision needed: shared service token (X-Service-Token env-var) vs gateway-minted JWT. Recommendation: shared service token.
+
+### Gap 2 - PII Redaction Has No ML Backend (Threatens The #1 Moat)
+
+guardrails exposes detection only (scan/check). The Rewriter object exists (regex mask_pii) but no HTTP endpoint returns redacted text. LocalSafetyProvider.redact_pii uses gateway-local regex. Recommendation: expose /api/v1/redact on guardrails using Presidio anonymizer.
+
+### Gap 3 - health_check() Lies (Silent Failure Risk)
+
+LocalSafetyProvider.health_check() hardcodes status ok. After P0 it must probe guardrails :8005 + hallucination :8008 and report real availability.
+
+### Gap 4 - Streaming Path Bypasses Budget + Interface
+
+chat.py and proxy.py streaming routes call run_input_guardrails + provider.chat_stream() directly - no check_quota / record_usage. All paths must go through the same interface + budget loop.
+
+### Gap 5 - cohere_routes.py Bypasses The Safety Pipeline Entirely
+
+cohere_routes.py calls _provider.chat() / chat_stream() directly (lines 125, 171) with no run_full_pipeline. All provider routes must converge on one safety entry point.
+
+### Gap 6 - llm_judge Latency On Slow Ollama (Injection)
+
+The injection pipeline's llm_judge calls Ollama (llama3.2:1b) with 2s timeout. On the slow Docker-Ollama stack it will always time out and fail-open. Gate behind a flag; document it requires a warm/fast LLM.
+
+### Gap 7 - Factory Cloud Branches Are Dead Code (Silent Fallback Risk)
+
+provider_factory.py aws/azure/gcp branches log "not implemented" and fall back to local. For P3/P4 they must fail loudly (raise) so a misconfigured SAFETY_PROVIDER=aws does not silently run regex.
+
+### Gap 8 - Argument-Mapping Shim For Hallucination
+
+Interface is detect_hallucination(claim, source); the service endpoint takes context, response, domain, trace_id. The provider needs a mapping shim (source->context, claim->response, default domain="general").
 
 ---
 
-## 11. OWASP / NIST Coverage Map
+## 11. Migration From Current State
+
+| Current Problem | Blueprint Fix |
+|---|---|
+| Two safety stacks (real services + dead interface) | One pipeline to capability registry to real providers (hybrid) |
+| Regex-only injection | Defense-in-depth cascade (regex -> ML -> LLM judge) |
+| Indirect injection unaddressed | Named requirement + Lakera / mDeBERTa path |
+| Monolithic SafetyProvider | Per-capability routing |
+| Budget CRUD exists but unenforced | Threshold gate wired into request path (P2) |
+| Three overlapping cost implementations | One DB-backed system (team_budgets + usage_logs) |
+| Bias keyword stub conflicts with EU AI Act | Demote: interface slot, disabled, offline eval |
+| Bedrock/LiteLLM commoditize the ML | Moat = secure+controlled bundle + Canadian PII + on-prem |
+| Streaming + cohere routes bypass safety | All routes converge on one interface-driven pipeline (Gaps 4/5) |
+| No inter-service auth for hybrid topology | Shared service token (Gap 1) |
+| redact_pii is gateway regex, not ML | Presidio anonymizer endpoint on guardrails (Gap 2) |
+
+---
+
+## 12. OWASP / NIST Coverage Map
 
 | Framework Item | Blueprint Coverage |
 |---|---|
