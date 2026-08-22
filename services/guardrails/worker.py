@@ -240,8 +240,24 @@ security_scheme = HTTPBearer(auto_error=False)
 injection_detector = get_injection_detector()
 
 
-async def require_auth(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
-    """Dependency that verifies JWT token and returns the payload."""
+async def require_auth(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
+    """Dependency that verifies JWT token OR shared service token.
+
+    Two auth paths:
+      1. JWT Bearer token (user-facing requests) — verified via verify_jwt.
+      2. X-Service-Token header (internal gateway→guardrails calls) — compared
+         to the SERVICE_TOKEN env var.
+
+    Returns the payload dict (empty for service-token auth).
+    """
+    # Path 2: internal service token
+    service_token = os.getenv("SERVICE_TOKEN", "")
+    if service_token:
+        supplied = request.headers.get("X-Service-Token", "")
+        if supplied and supplied == service_token:
+            return {"sub": "service", "role": "service"}
+
+    # Path 1: user JWT
     if credentials is None:
         raise HTTPException(status_code=401, detail="Missing authorization header")
     payload = verify_jwt(credentials.credentials)
@@ -456,6 +472,7 @@ async def enforce_check(payload: GuardrailCheckRequest, auth: dict = Depends(req
         toxic=toxic,
         toxic_score=toxic_score,
         pii_detected=bool(pii),
+        pii_types=list(pii.keys()) if pii else None,
         detection_source=source,
         label_details=label_details if label_details else None,
     )

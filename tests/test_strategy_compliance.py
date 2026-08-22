@@ -108,14 +108,14 @@ def test_frontend_not_nextjs():
 
 
 def test_frontend_tab_count():
-    """Strategy: Exactly 4 top-level tabs."""
+    """Strategy: 5 top-level tabs (dashboard, policy, tools, compliance, admin)."""
     with open("frontend/public/js/app.js") as f:
         js = f.read()
     # Match the top-level tabs array: const tabs = [{ k: 'dashboard', l: 'Dashboard' }, ...]
     m = re.search(r"(?:const|var|let) tabs = \[(.*?)\]", js, re.DOTALL)
     assert m, "Could not find top-level tabs definition"
     tab_keys = re.findall(r"k:\s*'(\w+)'", m.group(1))
-    assert len(tab_keys) == 4, f"Expected 4 top-level tabs, got {len(tab_keys)}: {tab_keys}"
+    assert len(tab_keys) == 5, f"Expected 5 top-level tabs, got {len(tab_keys)}: {tab_keys}"
     assert "dashboard" in tab_keys
     assert "policy" in tab_keys
     assert "compliance" in tab_keys

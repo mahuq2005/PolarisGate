@@ -79,6 +79,7 @@ class GuardrailCheckResponse(BaseModel):
     toxic: bool = False
     toxic_score: float = 0.0
     pii_detected: bool = False
+    pii_types: Optional[List[str]] = None
     detection_source: Optional[str] = None
     label_details: Optional[Dict[str, float]] = None
 
