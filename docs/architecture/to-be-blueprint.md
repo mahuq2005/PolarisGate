@@ -265,7 +265,65 @@ POST /api/v1/chat/completions
 
 ---
 
-## 10. Implementation Gaps (13, Grouped By Layer)
+## 9b. Engineering Principles Review (SOLID · GRASP · TDD · DDD)
+
+A code review against the four principles, grounded in the actual codebase.
+
+### SOLID — 2.5 / 5
+
+| Principle | Verdict | Evidence |
+|---|---|---|
+| **S — Single Responsibility** | ❌ Violated (worst) | `guardrails/worker.py` = 764 lines (HTTP + ML + policy + cache + SHAP + reload). `cost_tracker.py` = 421 lines (cost + carbon + tiering + model rec). God-classes. |
+| **O — Open/Closed** | ✅ Good | `BaseProvider` + `SafetyProvider` ABCs = new provider is a new class, no edits to existing. The one nailed principle. |
+| **L — Liskov Substitution** | ⚠️ Partial | `LocalSafetyProvider` reports all capabilities "available" while running regex stubs — subtype silently degrades, violating the supertype contract. |
+| **I — Interface Segregation** | ❌ Violated | Monolithic `SafetyProvider` forces all 6 checks on every implementation; point-solution providers can't fit cleanly. |
+| **D — Dependency Inversion** | ⚠️ Half-done | Interfaces + factory exist, but the live request path imports concrete `constants.detect_injection` directly; `app.state.safety_provider` is stored but never consumed. |
+
+### GRASP — 3 / 6
+
+| Pattern | Verdict | Evidence |
+|---|---|---|
+| **Information Expert** | ⚠️ Mixed | Safety logic *should* live in the safety services, but the gateway holds 3 inline regex copies. |
+| **Creator** | ✅ OK | `ProviderFactory` owns provider creation. |
+| **Controller** | ⚠️ Bloated | Gateway does auth + tenant + safety + budget + routing + audit with no application-service layer. |
+| **Low Coupling / High Cohesion** | ❌ Violated | 3 duplicate safety implementations → high coupling, low cohesion. Root of most gaps. |
+| **Pure Fabrication** | ⚠️ Missing | Budget + safety + audit are manually inlined in `run_full_pipeline()` instead of a composed `SafetyPipelineService`. |
+| **Indirection** | ✅ Good where used | Interface layer is textbook indirection — but not wired into the request path. |
+
+### TDD — 2 / 5
+
+| Aspect | Verdict | Evidence |
+|---|---|---|
+| Breadth | ✅ Decent | ~28 test files (toxicity, PII, hallucination, injection, policy, budget, auth). |
+| Interface layer tested | ❌ Critical | Zero dedicated test for `SafetyProvider` / `provider_factory`; only `validate_v3.py` touches it. |
+| Test-first | ❌ Absent | Interface shipped without tests → that's why it rotted into a lying regex stub. |
+| Pyramid | ⚠️ Top-heavy | `tests/unit/` referenced in README but doesn't exist; integration-blurred. |
+| Strategy guard | ✅ Idea, stale | `test_strategy_compliance.py` is clever, but forbids "budget/agent" — contradicts the new blueprint. |
+
+### DDD — 1 / 5
+
+| Concept | Verdict |
+|---|---|
+| Bounded Contexts | ❌ None — no `domain/`/`application/`/`infrastructure/` layers |
+| Entities / Value Objects | ❌ None — `team_budgets`/`usage_logs` are Pydantic schemas + raw SQL, not domain models |
+| Aggregates / Repositories | ❌ None — raw SQL scattered in routers |
+| Ubiquitous Language | ⚠️ Partial — words exist but not codified into a shared model |
+| Anti-corruption layer | ✅ *Accidental* — the provider interface is effectively one, just not framed as DDD |
+
+### Root-Cause Insight
+
+> The interface layer was added **without tests, without a domain model, and without wiring into the request path** — so it silently rotted into a regex stub that lies about its capabilities (LSP violation). The 13 code-path gaps are *symptoms*; gaps 14–20 are the *root causes*.
+
+### Engineering Principles → Blueprint Additions
+
+1. **Testing principle:** every capability provider ships with a contract test (fixes 14/15).
+2. **DDD-lite:** introduce a thin domain model for the three pillars — `Team`, `Budget`, `SafetyVerdict` entities + repositories — replacing raw SQL in routes (fixes 19).
+3. **No-god-class gate:** split `worker.py` and `cost_tracker.py` (fixes 17).
+4. **Update `test_strategy_compliance.py`** to assert the *new* strategy (fixes 18).
+
+---
+
+## 10. Implementation Gaps (20, Grouped By Layer)
 
 Found by tracing the actual code paths. All must be resolved in or before P0–P4.
 
@@ -301,6 +359,18 @@ Found by tracing the actual code paths. All must be resolved in or before P0–P
 |---|---|---|---|
 | 7 | Factory `aws`/`azure`/`gcp` branches log "not implemented" and silently fall back to regex | 🔴 | P3 |
 | 12 | `agent-host` / `rag-pipeline` / `accuracy-monitor` are stubs (`self.running=True`, ~20 lines) | 🟡 | P5 |
+
+### Layer 5 — Engineering Principles (root causes, SOLID/GRASP/TDD/DDD)
+
+| # | Gap | Principle | Severity | Phase |
+|---|---|---|---|---|
+| 14 | Interface layer (`SafetyProvider` / `provider_factory`) has **zero dedicated tests** — only `validate_v3.py` (a script, not a unit test) touches it | TDD | 🔴 | P0 |
+| 15 | `LocalSafetyProvider.get_capabilities()` returns "all available" while running regex stubs — **Liskov Substitution contract violation** (subtype silently degrades) | SOLID-L | 🔴 | P0 |
+| 16 | Monolithic `SafetyProvider` ABC forces all 6 checks on every implementation — **fat interface**; point-solution providers (Lakera = injection only) can't fit cleanly | SOLID-I | 🔴 | P1 |
+| 17 | `guardrails/worker.py` (764 lines) + `cost_tracker.py` (421 lines) are **god-classes** mixing HTTP + ML + policy + cache + cost | SOLID-S | 🟡 | P1 |
+| 18 | `test_strategy_compliance.py` forbids "budget/agent/drift" endpoints — enforces the **old** strategy, contradicts the new blueprint | TDD | 🟡 | P1 |
+| 19 | No **domain layer** — Safety/Budget/Governance are routers, not bounded contexts; raw SQL in routes, no repositories/entities | DDD | 🟡 | P2 |
+| 20 | No "application service" orchestrator — budget + safety + audit are inlined in `run_full_pipeline()` instead of a composed pipeline service | GRASP-Pure-Fabrication | 🟡 | P2 |
 
 ---
 
