@@ -2,7 +2,8 @@
  *  All backend calls go through here. Auth header injection, error handling, retry.
  */
 var api = (function () {
-  var BASE = 'http://localhost:8002';
+  // Relative path — nginx (frontend container or edge proxy) forwards /api/ to the gateway.
+  var BASE = '';
 
   async function _fetch(method, endpoint, body) {
     var headers = { 'Content-Type': 'application/json' };

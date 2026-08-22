@@ -1,5 +1,6 @@
 // PolarisGate v2.3 — Application logic
-var API = 'http://localhost:8002';
+// Relative path — nginx forwards /api/ to the gateway.
+var API = '';
 
 var lang = localStorage.getItem('polarisgate-lang') || 'en';
 function t(key) { return (T[lang] && T[lang][key]) || (T.en[key] || key); }

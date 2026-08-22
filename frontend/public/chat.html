@@ -325,7 +325,8 @@
 </div>
 
 <script>
-var API = 'http://localhost:8002';
+// Relative path — nginx forwards /api/ to the gateway.
+var API = '';
 var chatToken = localStorage.getItem('pg-chat-token');
 var currentProvider = 'ollama';
 var conversations = [];
