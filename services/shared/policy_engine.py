@@ -68,7 +68,7 @@ class PolicyEngine:
                     action = rule_action
                     reason = rule.get("message", f"Policy '{rule.get('name')}' matched")
                     if action == "mask":
-                        for pattern in rule.get("patterns", []):
+                        for pattern in (rule.get("patterns") or []):
                             rewritten = re.sub(pattern, f"[{rule.get('category', 'REDACTED').upper()}]", rewritten)
                     elif action == "block":
                         rewritten = reason

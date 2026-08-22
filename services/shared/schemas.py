@@ -74,7 +74,7 @@ class GuardrailCheckRequest(BaseModel):
 
 class GuardrailCheckResponse(BaseModel):
     action: str
-    reason: str
+    reason: Optional[str] = None
     rewritten_text: Optional[str] = None
     toxic: bool = False
     toxic_score: float = 0.0

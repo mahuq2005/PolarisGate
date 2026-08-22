@@ -88,7 +88,7 @@ async def run_input_guardrails(
     inj = await safety.detect_injection(text)
     inj_detected = inj.detected
     inj_score = inj.score
-    inj_matches = inj.patterns_matched
+    inj_matches = len(inj.patterns_matched or [])  # int count (SDK contract)
     inj_category = inj.category
     inj_severity = inj.severity
 

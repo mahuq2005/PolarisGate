@@ -125,14 +125,20 @@ class LocalSafetyProvider(SafetyProvider):
         # (Gap 2: move to a Presidio anonymizer endpoint on the guardrails service.)
         try:
             from services.gateway.app.constants import redact_text, PII_PATTERNS
+        except ImportError:
+            try:
+                from app.constants import redact_text, PII_PATTERNS
+            except ImportError:
+                redact_text = PII_PATTERNS = None
+        if redact_text is not None:
             redacted = redact_text(text)
             detected = redacted != text
             types = []
-            if detected:
+            if detected and PII_PATTERNS:
                 for p, pt, _ in PII_PATTERNS:
                     if p.search(text):
                         types.append(pt)
-        except ImportError:
+        else:
             redacted, detected, types = text, False, []
             import re as _re
             email_pat = _re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")

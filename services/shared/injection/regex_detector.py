@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # Expanded patterns with category + confidence from OWASP LLM01 + MITRE ATLAS
 _PATTERNS: List[Tuple[str, float, str]] = [
     # system_override — "Ignore all previous instructions" (critical)
-    (r"(?i)ignore\s+(all|any)\s+(previous|above|prior)\s+(instructions?|prompts?|messages?)", 0.95, "system_override"),
+    (r"(?i)ignore\s+(all\s+|any\s+)?(previous|above|prior)\s+(instructions?|prompts?|messages?)", 0.95, "system_override"),
     (r"(?i)you\s+are\s+(now|no\s+longer)\s+(an?\s+)?(\w+\s+)?(assistant|ai|bot|language\s+model)", 0.90, "system_override"),
     (r"(?i)system\s*(:\s*|message|prompt|override)", 0.92, "system_override"),
     (r"(?i)override\s+(system|safety|security|instructions?)", 0.91, "system_override"),
@@ -61,6 +61,12 @@ _PATTERNS: List[Tuple[str, float, str]] = [
     (r"(?i)write\s+(the|a)\s+response\s+as\s+if\s+safety\s+filters?\s+(are|is|were)\s+(off|disabled|removed)", 0.93, "generic"),
     (r"(?i)answer\s+as\s+if\s+you\'?re\s+on\s+(4chan|reddit|twitter|an\s+imageboard)", 0.86, "generic"),
     (r"(?i)you\s+are\s+(now\s+)?(acting|operating)\s+(as|in)\s+(evil|dark|unrestricted|unfiltered)\s+(mode|persona)", 0.93, "generic"),
+    # Additional coverage for the legacy constants.py pattern set (tests)
+    (r"(?i)you\s+are\s+now\s+an?\s+(unrestricted|unfiltered|uncensored|unlimited)\s+(AI|assistant|model)", 0.88, "unrestricted_mode"),
+    (r"(?i)system\s*:\s*override\s+(safety|security)\s+filters?", 0.95, "system_override"),
+    (r"(?i)new\s+instructions?\s*:\s*disregard\s+(ethical\s+)?guidelines?", 0.95, "system_override"),
+    (r"(?i)output\s+your\s+instructions?", 0.90, "prompt_leak"),
+    (r"(?i)disregard\s+all\s+previous\s+ethical\s+constraints", 0.95, "system_override"),
 ]
 
 _compiled: List[Tuple[re.Pattern, float, str]] = [(re.compile(p), c, cat) for p, c, cat in _PATTERNS]
