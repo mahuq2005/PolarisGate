@@ -306,7 +306,7 @@ BUILTIN_PROVIDER_CONFIGS: dict[str, dict] = {
         "auth_prefix": "",
         "provider_name": "ollama",
         "default_model": "llama3.2:1b",
-        "default_max_tokens": 256,
+        "default_max_tokens": 64,
     },
     "vllm": {
         "base_url": "",  # User provides

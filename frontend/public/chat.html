@@ -385,7 +385,7 @@ async function loadProviders() {
     var data = await res.json();
     var providers = data.providers || [];
     contextLimits = data.context_limits || {};
-    currentProvider = providers.indexOf('ollama')>=0 ? 'ollama' : (providers.indexOf('mock')>=0 ? 'mock' : providers[0]);
+    currentProvider = providers.indexOf('mock')>=0 ? 'mock' : (providers.indexOf('ollama')>=0 ? 'ollama' : providers[0]);
     var opts = providers.map(function(p) { return {value:p, label:p.charAt(0).toUpperCase()+p.slice(1)}; });
     var html = '<div class="custom-select chat-custom-select" id="chat-provider-cs" onclick="event.stopPropagation();var el=document.getElementById(\'chat-provider-cs\');if(el.classList.contains(\'open\')){el.classList.remove(\'open\')}else{el.classList.add(\'open\')}"><div class="custom-select-trigger"><span class="cs-label">'+escapeHtml(currentProvider.charAt(0).toUpperCase()+currentProvider.slice(1))+'</span><span class="chevron">&#9660;</span></div><div class="custom-select-menu">'+opts.map(function(o){return '<div class="custom-option'+(o.value===currentProvider?' selected':'')+'" onclick="event.stopPropagation();document.getElementById(\'chat-provider-cs\').classList.remove(\'open\');document.querySelector(\'#chat-provider-cs .cs-label\').textContent=\''+escapeHtml(o.label).replace(/'/g,"\\'")+'\';onProviderChange(\''+o.value+'\');">'+escapeHtml(o.label)+'</div>';}).join('')+'</div></div>';
     document.getElementById('provider-dropdown').innerHTML = html;
