@@ -165,7 +165,7 @@ class OpenAICompatProvider(BaseProvider):
 
         logger.debug("%s chat → %s model=%s", self.provider_name, url, req.model)
 
-        async with httpx.AsyncClient(timeout=300.0) as client:
+        async with httpx.AsyncClient(timeout=900.0) as client:
             resp = await client.post(url, json=body, headers=headers)
             resp.raise_for_status()
             return self.normalize_response(resp.json())
@@ -196,7 +196,7 @@ class OpenAICompatProvider(BaseProvider):
 
         logger.debug("%s stream → %s model=%s", self.provider_name, url, req.model)
 
-        async with httpx.AsyncClient(timeout=300.0) as client:
+        async with httpx.AsyncClient(timeout=900.0) as client:
             async with client.stream("POST", url, json=body, headers=headers) as resp:
                 resp.raise_for_status()
                 async for line in resp.aiter_lines():

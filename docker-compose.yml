@@ -327,6 +327,12 @@ services:
       - ollama list 2>/dev/null || exit 1
       timeout: 10s
     image: ollama/ollama:0.4.0
+    environment:
+      # Keep the model loaded indefinitely — otherwise it unloads after 5m and
+      # reloading on CPU fails with "timed out waiting for llama runner to start".
+      OLLAMA_KEEP_ALIVE: "-1"
+      # Cap context to keep CPU KV-cache small (llama3.2:1b metadata claims 128k).
+      OLLAMA_CONTEXT_LENGTH: "4096"
     ports:
     - 11434:11434
     networks:
