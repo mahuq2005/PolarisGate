@@ -8,10 +8,11 @@ os.environ["JWT_SECRET"] = "test-secret-key-that-is-at-least-32-bytes-long-for-h
 os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5432/test"
 os.environ["REDIS_PASSWORD"] = "test-redis-password"
 
-# Ensure a clean import of shared modules
-for mod in list(sys.modules.keys()):
-    if mod.startswith("shared"):
-        del sys.modules[mod]
+# Force the auth module to re-read the test JWT_SECRET. Only clear the auth
+# module (not all shared.*) — clearing all shared.* breaks module identity for
+# other tests and causes enum-key mismatches (e.g. SafetyProviderType).
+sys.modules.pop("shared.security.auth", None)
+sys.modules.pop("shared.config", None)
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'services'))
 
