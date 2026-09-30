@@ -19,6 +19,7 @@ from typing import Optional
 from fastapi import HTTPException, Request
 
 from ..providers import get_provider
+from shared.guardrail_repository import GuardrailEvent, guardrail_repository
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,6 @@ class SafetyPipelineService:
         # Lazy import to avoid a circular import: pipeline.py delegates to this
         # service, and these helpers live in pipeline.py.
         from .pipeline import (
-            _get_db_pool_safe,
             _get_safety_provider,
             run_input_guardrails,
         )
@@ -56,26 +56,21 @@ class SafetyPipelineService:
         if input_check["blocklisted"] or input_check["injection_detected"]:
             # Persist the blocked trace even though the request will be rejected
             try:
-                pool = await _get_db_pool_safe()
-                if pool is not None:
-                    async with pool.acquire() as conn:
-                        await conn.execute(
-                            """INSERT INTO guardrail_results
-                               (trace_id, toxic, toxic_score, reason, pii_detected, pii_types, blocklisted,
-                                injection_detected, injection_score, injection_category, injection_severity, timestamp)
-                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())""",
-                            str(uuid.uuid4()),
-                            input_check.get("toxic", False),
-                            input_check.get("toxic_score", 0.0),
-                            input_check.get("reason"),
-                            input_check.get("pii_detected", False),
-                            ",".join(input_check.get("pii_types", [])) if input_check.get("pii_types") else None,
-                            input_check.get("blocklisted", False),
-                            input_check.get("injection_detected", False),
-                            input_check.get("injection_score", 0.0),
-                            input_check.get("injection_category"),
-                            input_check.get("injection_severity", 0),
-                        )
+                await guardrail_repository.record(
+                    GuardrailEvent(
+                        trace_id=str(uuid.uuid4()),
+                        toxic=input_check.get("toxic", False),
+                        toxic_score=input_check.get("toxic_score", 0.0),
+                        reason=input_check.get("reason"),
+                        pii_detected=input_check.get("pii_detected", False),
+                        pii_types=input_check.get("pii_types", []),
+                        blocklisted=input_check.get("blocklisted", False),
+                        injection_detected=input_check.get("injection_detected", False),
+                        injection_score=input_check.get("injection_score", 0.0),
+                        injection_category=input_check.get("injection_category"),
+                        injection_severity=input_check.get("injection_severity"),
+                    )
+                )
             except Exception as exc:
                 logger.warning("Failed to persist blocked injection trace: %s", exc)
 
@@ -152,32 +147,26 @@ class SafetyPipelineService:
 
         # 4. Write to guardrail_results (for dashboard visibility — both input + output)
         try:
-            pool = await _get_db_pool_safe()
-            if pool is None:
-                raise RuntimeError("DB pool not available")
-            async with pool.acquire() as conn:
-                # Write ALL flagged traces (toxic, PII, injection — always persisted)
-                has_input = input_check.get("toxic") or input_check.get("pii_detected") or input_check.get("injection_detected")
-                has_output = output_check.get("toxic") or output_check.get("pii_detected") or output_check.get("blocklisted") or output_check.get("injection_detected")
+            # Write ALL flagged traces (toxic, PII, injection — always persisted)
+            has_input = input_check.get("toxic") or input_check.get("pii_detected") or input_check.get("injection_detected")
+            has_output = output_check.get("toxic") or output_check.get("pii_detected") or output_check.get("blocklisted") or output_check.get("injection_detected")
 
-                if has_input or has_output:
-                    await conn.execute(
-                        """INSERT INTO guardrail_results
-                           (trace_id, toxic, toxic_score, reason, pii_detected, pii_types, blocklisted,
-                            injection_detected, injection_score, injection_category, injection_severity, timestamp)
-                           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())""",
-                        str(uuid.uuid4()),
-                        input_check.get("toxic") if has_input else output_check.get("toxic"),
-                        input_check.get("toxic_score") if has_input else output_check.get("toxic_score"),
-                        input_check.get("reason") if has_input else output_check.get("reason"),
-                        input_check.get("pii_detected") if has_input else output_check.get("pii_detected"),
-                        (input_check.get("pii_types") or []) if has_input else (output_check.get("pii_types") or []),
-                        input_check.get("blocklisted") if has_input else output_check.get("blocklisted"),
-                        input_check.get("injection_detected") if has_input else output_check.get("injection_detected"),
-                        input_check.get("injection_score") if has_input else output_check.get("injection_score"),
-                        input_check.get("injection_category") if has_input else output_check.get("injection_category"),
-                        input_check.get("injection_severity") if has_input else output_check.get("injection_severity"),
+            if has_input or has_output:
+                await guardrail_repository.record(
+                    GuardrailEvent(
+                        trace_id=str(uuid.uuid4()),
+                        toxic=input_check.get("toxic") if has_input else output_check.get("toxic"),
+                        toxic_score=input_check.get("toxic_score") if has_input else output_check.get("toxic_score"),
+                        reason=input_check.get("reason") if has_input else output_check.get("reason"),
+                        pii_detected=input_check.get("pii_detected") if has_input else output_check.get("pii_detected"),
+                        pii_types=(input_check.get("pii_types") or []) if has_input else (output_check.get("pii_types") or []),
+                        blocklisted=input_check.get("blocklisted") if has_input else output_check.get("blocklisted"),
+                        injection_detected=input_check.get("injection_detected") if has_input else output_check.get("injection_detected"),
+                        injection_score=input_check.get("injection_score") if has_input else output_check.get("injection_score"),
+                        injection_category=input_check.get("injection_category") if has_input else output_check.get("injection_category"),
+                        injection_severity=input_check.get("injection_severity") if has_input else output_check.get("injection_severity"),
                     )
+                )
         except Exception as exc:
             logger.error("Failed to write guardrail result: %s", exc)
 

@@ -135,6 +135,14 @@ def _install_mocks(monkeypatch, provider, input_check, output_check, quota):
 
     monkeypatch.setattr(rc, "get_redis", fake_redis)
 
+    # The pipeline persists guardrail events via GuardrailRepository — mock it
+    # so the test never attempts a real DB connection.
+    class _FakeGuardrailRepo:
+        async def record(self, event):
+            return None
+
+    monkeypatch.setattr(svc, "guardrail_repository", _FakeGuardrailRepo())
+
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
