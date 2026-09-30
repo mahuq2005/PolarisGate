@@ -19,7 +19,6 @@ import os
 from typing import Optional
 
 from shared.interfaces.safety import SafetyProvider, SafetyProviderConfig
-from shared.interfaces.llm import LLMProvider
 from shared.interfaces.auth import AuthProvider, AuthProviderConfig
 from shared.interfaces.infra import InfraProvider, InfraProviderConfig
 

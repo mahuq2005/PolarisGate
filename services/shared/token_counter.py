@@ -1,8 +1,8 @@
 """Token Counting Middleware — intercepts LLM calls and tracks usage.
 
 Writes usage data to the database for cost management, budgeting, and
-anomaly detection.  Works with any provider that implements
-``LLMProvider.count_tokens()``.
+anomaly detection.  Works with any provider that exposes a ``count_tokens()``
+method.
 
 Usage:
     from shared.token_counter import TokenCounter
