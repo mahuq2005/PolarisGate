@@ -45,58 +45,10 @@ setup_logging(service_name="northguard-guardrails")
 setup_logging(service_name="northguard-guardrails")
 logger = logging.getLogger("guardrails")
 
-# ─── Semantic Cache ──────────────────────────────────────────────────────────
-# Cache toxicity/PII results for identical inputs to reduce latency and cost
-_PREDICTION_CACHE = {}
-_CACHE_MAX_SIZE = 10000  # Max entries in cache
-_CACHE_TTL_SECONDS = 300  # 5 minutes default TTL
+# ─── Semantic Cache (extracted to app.cache — Gap 17) ────────────────────────
+from app.cache import ResponseCache, cache_hit_counter, cache_miss_counter
 
-def _cache_key(text: str) -> str:
-    """Generate a deterministic cache key from input text."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-def _cache_get(text: str) -> dict | None:
-    """Get cached prediction result, or None if not found/expired."""
-    key = _cache_key(text)
-    entry = _PREDICTION_CACHE.get(key)
-    if entry is None:
-        return None
-    # Check TTL
-    if time.time() - entry["timestamp"] > _CACHE_TTL_SECONDS:
-        del _PREDICTION_CACHE[key]
-        return None
-    return entry["result"]
-
-def _cache_set(text: str, result: dict) -> None:
-    """Store prediction result in cache, evicting oldest if full."""
-    key = _cache_key(text)
-    # Eviction: remove oldest entry if cache is full
-    if len(_PREDICTION_CACHE) >= _CACHE_MAX_SIZE:
-        try:
-            oldest_key = min(_PREDICTION_CACHE, key=lambda k: _PREDICTION_CACHE[k]["timestamp"])
-            del _PREDICTION_CACHE[oldest_key]
-        except (ValueError, KeyError):
-            # If cache is empty or key disappears, just continue
-            if len(_PREDICTION_CACHE) >= _CACHE_MAX_SIZE:
-                _PREDICTION_CACHE.clear()
-    _PREDICTION_CACHE[key] = {"result": result, "timestamp": time.time()}
-
-def _cache_stats() -> dict:
-    """Get cache statistics for monitoring."""
-    if not _PREDICTION_CACHE:
-        return {"size": 0, "max_size": _CACHE_MAX_SIZE, "ttl_seconds": _CACHE_TTL_SECONDS}
-    ages = [time.time() - e["timestamp"] for e in _PREDICTION_CACHE.values()]
-    return {
-        "size": len(_PREDICTION_CACHE),
-        "max_size": _CACHE_MAX_SIZE,
-        "ttl_seconds": _CACHE_TTL_SECONDS,
-        "oldest_seconds": round(max(ages), 1) if ages else 0,
-        "newest_seconds": round(min(ages), 1) if ages else 0,
-    }
-
-# Semantic cache hit/miss counters for Prometheus
-cache_hit_counter = Counter("guardrail_cache_hits_total", "Semantic cache hits")
-cache_miss_counter = Counter("guardrail_cache_misses_total", "Semantic cache misses")
+response_cache = ResponseCache()
 
 # ─── Online Evaluation ───────────────────────────────────────────────────────
 # Tracks feedback on model predictions to compute out-of-sample accuracy
@@ -147,49 +99,10 @@ elif ENABLE_BERT:
     preload_model_async("unitary/toxic-bert")
 logger.info("Background model preloading initiated")
 
-# Lazy-loaded classifiers — initialized on first use to speed up startup
-# Lazy-loaded classifiers — initialized on first use to speed up startup
-_bert_classifier = None
-_roberta_classifier = None
-_shap_explainer = None
+# Lazy-loaded classifiers — extracted to app.models (Gap 17)
+from app.models import ModelLoader
 
-def get_bert_classifier():
-    """Lazy-load BERT classifier on first use."""
-    global _bert_classifier
-    if _bert_classifier is None and ENABLE_BERT:
-        try:
-            _bert_classifier = BertToxicityClassifier(threshold=0.5)
-            _bert_classifier.load()
-            logger.info("BERT classifier loaded lazily")
-        except Exception as e:
-            logger.warning(f"BERT load failed, disabling: {e}")
-            _bert_classifier = None
-    return _bert_classifier
-
-def get_roberta_classifier():
-    """Lazy-load RoBERTa classifier on first use."""
-    global _roberta_classifier
-    if _roberta_classifier is None and ENABLE_ROBERTA:
-        try:
-            _roberta_classifier = RobertaToxicityClassifier(threshold=0.5)
-            _roberta_classifier.load()
-            logger.info("RoBERTa classifier loaded lazily")
-        except Exception as e:
-            logger.warning(f"RoBERTa load failed, disabling: {e}")
-            _roberta_classifier = None
-    return _roberta_classifier
-
-def get_shap_explainer():
-    """Lazy-load SHAP explainer on first use."""
-    global _shap_explainer
-    if _shap_explainer is None and ENABLE_BERT:
-        try:
-            _shap_explainer = ShapExplainer()
-            logger.info("SHAP explainer loaded lazily")
-        except Exception as e:
-            logger.warning(f"SHAP explainer load failed, disabling: {e}")
-            _shap_explainer = None
-    return _shap_explainer
+model_loader = ModelLoader(enable_bert=ENABLE_BERT, enable_roberta=ENABLE_ROBERTA)
 
 llm_classifier = OllamaToxicityClassifier(model_name=TOXIC_MODEL, ollama_url=OLLAMA_URL)
 pii_detector = PIIDetector()
@@ -309,7 +222,7 @@ def detect_toxicity_ensemble(text: str) -> tuple:
     label_details = {}
     
     # Step 1: Try RoBERTa first (primary, highest accuracy)
-    roberta = get_roberta_classifier()
+    roberta = model_loader.get_roberta()
     if roberta:
         try:
             roberta_result = roberta.predict(text)
@@ -325,7 +238,7 @@ def detect_toxicity_ensemble(text: str) -> tuple:
                             roberta_result.get("reason", "RoBERTa"), "roberta_high", label_details)
                 elif roberta_score >= 0.5:
                     # Medium confidence — verify with BERT
-                    bert = get_bert_classifier()
+                    bert = model_loader.get_bert()
                     if bert:
                         bert_result = bert.predict(text)
                         if bert_result and bert_result.get("flagged"):
@@ -349,7 +262,7 @@ def detect_toxicity_ensemble(text: str) -> tuple:
             logger.warning(f"RoBERTa detection failed: {e}")
     
     # Step 2: Try BERT (secondary)
-    bert = get_bert_classifier()
+    bert = model_loader.get_bert()
     if bert:
         try:
             bert_result = bert.predict(text)
@@ -443,7 +356,7 @@ async def enforce_check(payload: GuardrailCheckRequest, auth: dict = Depends(req
         raise HTTPException(status_code=400, detail="Missing text")
     
     # Check semantic cache first
-    cached = _cache_get(text)
+    cached = response_cache.get(text)
     if cached:
         cache_hit_counter.inc()
         return GuardrailCheckResponse(**cached)
@@ -478,7 +391,7 @@ async def enforce_check(payload: GuardrailCheckRequest, auth: dict = Depends(req
     )
     
     # Store in cache (only cache non-toxic results for longer, toxic results have shorter TTL)
-    _cache_set(text, result.model_dump())
+    response_cache.set(text, result.model_dump())
     
     return result
 
@@ -486,7 +399,7 @@ async def enforce_check(payload: GuardrailCheckRequest, auth: dict = Depends(req
 
 @api_app.post("/api/v1/shap", response_model=SHAPResponse)
 async def get_shap(payload: SHAPRequest, auth: dict = Depends(require_auth)):
-    explainer = get_shap_explainer()
+    explainer = model_loader.get_shap()
     if not explainer:
         raise HTTPException(status_code=501, detail="SHAP not available on this tier")
     text = payload.text
@@ -512,24 +425,14 @@ async def get_shap(payload: SHAPRequest, auth: dict = Depends(require_auth)):
 @api_app.post("/api/v1/reload-model")
 async def reload_model(auth: dict = Depends(require_auth)):
     """Reload ML models. Uses lazy-loading getters to force re-initialization."""
-    global _bert_classifier, _roberta_classifier
     results = {}
-    
-    # Force re-initialize BERT by resetting and calling getter
-    _bert_classifier = None
-    bert = get_bert_classifier()
-    if bert:
-        results["bert"] = "reloaded"
-    else:
-        results["bert"] = "not_enabled"
-    
-    # Force re-initialize RoBERTa
-    _roberta_classifier = None
-    roberta = get_roberta_classifier()
-    if roberta:
-        results["roberta"] = "reloaded"
-    else:
-        results["roberta"] = "not_enabled"
+
+    # Force re-initialize BERT and RoBERTa via the ModelLoader
+    bert = model_loader.reload_bert()
+    results["bert"] = "reloaded" if bert else "not_enabled"
+
+    roberta = model_loader.reload_roberta()
+    results["roberta"] = "reloaded" if roberta else "not_enabled"
     
     return {"status": "completed", "results": results}
 
@@ -549,7 +452,7 @@ async def get_tier(auth: dict = Depends(require_auth)):
 @api_app.get("/api/v1/cache/stats")
 async def get_cache_stats(auth: dict = Depends(require_auth)):
     """Get semantic cache statistics."""
-    return _cache_stats()
+    return response_cache.stats()
 
 
 @api_app.post("/api/v1/feedback")
